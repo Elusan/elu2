@@ -22,11 +22,15 @@ The goal of elu2 is to ...
 
 ## Installation
 
-You can install the development version of elu2 like so:
+## Installation
 
-``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+You can install the development version of `elu2` from [GitHub](https://github.com/Elusan/elu2) with:
+
+```{r}
+# install.packages("devtools")
+devtools::install_github("Elusan/elu2")
 ```
+
 
 ## Example
 
@@ -35,6 +39,7 @@ This is a basic example which shows you how to solve a common problem:
 ```{r example}
 library(elu2)
 ## basic example code
+hello()
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
