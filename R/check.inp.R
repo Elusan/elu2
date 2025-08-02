@@ -268,7 +268,7 @@ check.inp <- function(inp, verbose = TRUE, mancheck = TRUE){
 
   # -- MODEL OPTIONS --
   if (!"RE" %in% names(inp)) inp$RE <- c('logF', 'logu', 'logB', 'logmre','SARvec')
-  if (!"scriptname" %in% names(inp)) inp$scriptname <- 'ELU'
+  if (!"scriptname" %in% names(inp)) inp$scriptname <- 'elu2'
   # Index related
   if (!"onealpha" %in% names(inp)){
     if (!"onesdi" %in% names(inp)){

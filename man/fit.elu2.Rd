@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit.elu2.R
 \name{fit.elu2}
 \alias{fit.elu2}
-\title{Fit ELU2 Model}
+\title{Fit elu2 Model}
 \usage{
 fit.elu2(inp, verbose = TRUE, dbg = 0)
 }

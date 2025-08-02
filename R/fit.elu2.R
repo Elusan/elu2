@@ -1,4 +1,4 @@
-#' Fit ELU2 Model
+#' Fit elu2 Model
 #'
 #' Fits the customized ELU2 stock assessment model using TMB.
 #'
@@ -11,6 +11,10 @@ fit.elu2 <- function(inp, verbose=TRUE, dbg=0){
   rep <- NULL
   # Check input list
   inp <- check.inp(inp, verbose = verbose)
+
+  # Automatically set DLL name if not provided
+  #if (is.null(inp$scriptname)) inp$scriptname <- "elu2"
+
   datin <- make.datin(inp, dbg)
   pl <- inp$parlist
   tic <- Sys.time()
