@@ -22,13 +22,6 @@
 #'     \item{Model}{Model name, for use in faceting or coloring in plots.}
 #'   }
 #' Returns `NULL` if the input is not compatible.
-#'
-#' @examples
-#' \dontrun{
-#'   df <- get_production_data(fit.spict_result, model_name = "Pella-Tomlinson")
-#'   ggplot(df, aes(x = B_K, y = Production, color = Model)) + geom_line()
-#' }
-#'
 #' @export
 get_production_data <- function(rep, model_name = "Model") {
   if (!"sderr" %in% names(rep)) {

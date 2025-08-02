@@ -22,14 +22,6 @@
 #'     \item{scenario}{Name of the scenario/model for labeling.}
 #'   }
 #'
-#' @examples
-#' \dontrun{
-#'   catch_df <- elu_extract_catch_data(fit.elu2_object, scenario_name = "Scenario 1")
-#'   ggplot(catch_df, aes(x = time, y = catch, color = catch_type)) +
-#'     geom_line() +
-#'     facet_wrap(~ scenario)
-#' }
-#'
 #' @export
 elu_extract_catch_data <- function(fit, scenario_name = "Base", CI = 0.95) {
   # Defensive checks
