@@ -197,7 +197,6 @@ calc.gamma <- function(n) n^(n/(n-1)) / (n-1)
 #'     upper 95\% confidence limit; 4) the parameter standard deviation in the
 #'     domain it was estimated (log or non-log). `list.quantities` returns a
 #'     vector with the names of all estimated parameters and derived quantities.
-#' @export
 #' @examples
 #' ## Run the South Atlantic albacore assessment
 #' data(pol)
@@ -214,6 +213,7 @@ calc.gamma <- function(n) n^(n/(n-1)) / (n-1)
 #'
 #' ## Extract the estimated carrying capacity
 #' K <- get.par('logK', rep, exp=TRUE)
+#' @export
 get.par <- function(parname, rep=rep, exp=FALSE, random=FALSE, fixed=FALSE, CI = 0.95){
   if(CI > 1 || CI < 0) stop("CI has to be between 0 and 1!")
   zscore <- qnorm(CI + (1 - CI)/2)
