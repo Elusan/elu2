@@ -1,4 +1,4 @@
-go <- function(fname) {
+goto <- function(fname) {
   from <- file.path("functions_dev", fname)
   to   <- file.path("R", fname)
   if (!file.exists(from)) stop("Function file does not exist in functions_dev/")

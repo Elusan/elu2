@@ -1,3 +1,12 @@
+#' Fit ELU2 Model
+#'
+#' Fits the customized ELU2 stock assessment model using TMB.
+#'
+#' @param inp List of input variables as output by check.inp.
+#' @param verbose Should detailed outputs be provided (default: TRUE).
+#' @param dbg Debugging option. Will print out runtime information useful for debugging if set to 1. Will print even more if set to 2.
+#' @return A result report containing estimates of model parameters, random effects (biomass and fishing mortality), reference points (Fmsy, Bmsy, MSY) including uncertainties given as standard deviations.
+#' @export
 fit.elu2 <- function(inp, verbose=TRUE, dbg=0){
   rep <- NULL
   # Check input list
@@ -37,7 +46,7 @@ fit.elu2 <- function(inp, verbose=TRUE, dbg=0){
           opt$objective <- opt$value
           pl <- obj$env$parList(opt$par)
         }
-        
+
       }
     }
   }
@@ -127,6 +136,12 @@ calc.prager.stats <- function(rep){
   return(rep)
 }
 
+#' @name make.datin
+#' @title Create data list used as input to TMB::MakeADFun.
+#' @param inp List of input variables as output by check.inp.
+#' @param dbg Debugging option. Will print out runtime information useful for debugging if set to 1.
+#' @return List to be used as data input to TMB::MakeADFun.
+#' @export
 make.datin <- function(inp, dbg=0){
   datin <- list(reportall=as.numeric(inp$reportall),
                 reportRel=as.numeric(inp$reportRel),
@@ -179,7 +194,7 @@ make.datin <- function(inp, dbg=0){
                 MSYregime=inp$MSYregime,
                 iuse=as.numeric(inp$iuse),
                 residFlag=as.numeric(inp$residFlag),
-                
+
                 priorn=inp$priors$logn,
                 priorngamma=inp$priors$logngamma,
                 priorr=inp$priors$logr,
@@ -203,7 +218,7 @@ make.datin <- function(inp, dbg=0){
                 priorBBmsy=inp$priors$logBBmsy,
                 priorFFmsy=inp$priors$logFFmsy,
                 priorBmsyB0=inp$priors$BmsyB0,
-                
+
                 simple=inp$simple,
                 reportmode=inp$reportmode,
                 simRandomEffects=inp$sim.random.effects,
@@ -211,6 +226,15 @@ make.datin <- function(inp, dbg=0){
   return(datin)
 }
 
+#' @name make.obj
+#' @title Create TMB obj using TMB::MakeADFun and squelch screen printing.
+#' @param datin Data list.
+#' @param pl Parameter list.
+#' @param inp List of input variables as output by check.inp.
+#' @param phase Estimation phase, integer.
+#' @return List to be used as data input to TMB.
+#' @export
+#' @import TMB
 make.obj <- function(datin, pl, inp, phase=1){
   obj <- TMB::MakeADFun(data=datin, parameters=pl, random=inp$RE, DLL=inp$scriptname,
                         hessian=TRUE, map=inp$map[[phase]])

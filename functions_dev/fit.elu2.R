@@ -8,13 +8,11 @@
 #' @return A result report containing estimates of model parameters, random effects (biomass and fishing mortality), reference points (Fmsy, Bmsy, MSY) including uncertainties given as standard deviations.
 #' @export
 #' @examples
-#' \dontrun{
-#' data(pol)  # or your own test data
-#' inp <- check.inp(pol$albacore)  # or your custom input preparation
-#' rep <- fit.elu2(inp)
+#' data(pol)
+#' rep <- fit.spict(pol$albacore)
+#' Bmsy <- get.par('logBmsy', rep, exp=TRUE)
 #' summary(rep)
 #' plot(rep)
-#' }
 #' @import TMB
 fit.elu2 <- function(inp, verbose=TRUE, dbg=0){
   rep <- NULL
