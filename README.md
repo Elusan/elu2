@@ -1,3 +1,10 @@
+---
+output: 
+  md_document:
+    variant: gfm
+    preserve_yaml: true
+knit: "rmarkdown::render"
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -10,26 +17,12 @@ The goal of elu2 is to …
 
 ## Installation
 
-## Installation
-
 You can install the development version of `elu2` from
 [GitHub](https://github.com/Elusan/elu2) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("Elusan/elu2")
-#> Using github PAT from envvar GITHUB_PAT. Use `gitcreds::gitcreds_set()` and unset GITHUB_PAT in .Renviron (or elsewhere) if you want to use the more secure git credential store instead.
-#> Downloading GitHub repo Elusan/elu2@HEAD
-#> ── R CMD build ─────────────────────────────────────────────────────────────────
-#> * checking for file ‘/private/var/folders/h2/gtrfj58d751fknk0r1n1sct00000gn/T/Rtmp8uqgex/remotes5731648d45d0/Elusan-elu2-acb5a6a/DESCRIPTION’ ... OK
-#> * preparing ‘elu2’:
-#> * checking DESCRIPTION meta-information ... OK
-#> * checking for LF line-endings in source and make files and shell scripts
-#> * checking for empty or unneeded directories
-#> Omitted ‘LazyData’ from DESCRIPTION
-#> * building ‘elu2_0.1.0.tar.gz’
-#> Installing package into '/private/var/folders/h2/gtrfj58d751fknk0r1n1sct00000gn/T/RtmpTqTuj4/temp_libpath54fb61cba57f'
-#> (as 'lib' is unspecified)
 ```
 
 ## Example
