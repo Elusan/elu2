@@ -32,12 +32,3 @@ This function extracts both observed and predicted catch time series from a SPiC
 
 Output columns include time, catch (tons), lower and upper CI (for predicted only), type ("Observed" or "Predicted"), and scenario label.
 }
-\examples{
-\dontrun{
-  catch_df <- elu_extract_catch_data(fit.elu2_object, scenario_name = "Scenario 1")
-  ggplot(catch_df, aes(x = time, y = catch, color = catch_type)) +
-    geom_line() +
-    facet_wrap(~ scenario)
-}
-
-}
