@@ -38,6 +38,40 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
     )
 }
 
+
+#' Smart Label Formatter for Axis Ticks (with Scientific Notation for q1/q2)
+#'
+#' Converts numeric values into readable labels. Uses scientific notation if values have more than two decimal digits or are very small/large.
+#'
+#' @param x Numeric vector of axis tick values.
+#'
+#' @return A character vector of formatted labels.
+#' @export
+smart_label <- function(x) {
+  sapply(x, function(xx) {
+    if (is.na(xx) || !is.finite(xx)) return(NA_character_)
+
+    # Use scientific notation if value is < 0.01 or > 10000
+    if (abs(xx) < 0.01 || abs(xx) > 10000) {
+      return(format(xx, scientific = TRUE, digits = 2))
+    }
+
+    # Count number of decimal digits
+    decimal_digits <- nchar(strsplit(sub("0+$", "", as.character(xx %% 1)), ".", fixed = TRUE)[[1]][2])
+
+    if (decimal_digits > 2) {
+      return(format(xx, scientific = TRUE, digits = 2))
+    } else if (decimal_digits == 2) {
+      return(sprintf("%.2f", xx))
+    } else if (decimal_digits == 1) {
+      return(sprintf("%.1f", xx))
+    } else {
+      return(formatC(xx, format = "f", digits = 0))
+    }
+  })
+}
+
+
 #' Plot Priors and Posteriors for ELU/SPiCT Model Parameters
 #'
 #' This function generates density plots comparing prior and posterior distributions for all
@@ -170,16 +204,23 @@ priors.elu6 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versio
                    label = model_id, hjust = 0, vjust = 1,
                    fontface = "bold", size = 4, color = "grey20")
 
+        # Use scientific notation only for q1 and q2
+        use_sci_label <- current_nmpl %in% c("q1", "q2")
+
         if (use_log_scale) {
-          p <- p + scale_x_log10(
-            breaks = scales::log_breaks(n = 8),
-            labels = smart_label
-          ) + coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
+          p <- p +
+            scale_x_log10(
+              breaks = scales::log_breaks(n = 8),
+              labels = if (use_sci_label) scales::label_scientific(digits = 2) else smart_label
+            ) +
+            coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
         } else {
-          p <- p + scale_x_continuous(
-            breaks = scales::pretty_breaks(n = 8),
-            labels = smart_label
-          ) + coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
+          p <- p +
+            scale_x_continuous(
+              breaks = scales::pretty_breaks(n = 8),
+              labels = if (use_sci_label) scales::label_scientific(digits = 2) else smart_label
+            ) +
+            coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
         }
 
         if (is.na(par[rr, 4]) && !is.na(par[rr, 2])) {
