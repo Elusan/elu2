@@ -53,18 +53,36 @@ elu_prior_posterior_grid <- function(models,
   n_priors <- length(all_priors)
   model_ids <- names(models)
 
+  # TO KEEP HERE ---------
+  # get_prior_plot_or_empty <- function(rep, prior, model_id) {
+  #   inp <- rep$inp
+  #   useflags <- inp$priorsuseflags
+  #   priors_avail <- names(inp$priors)[which(useflags == 1)]
+  #   if (prior %in% priors_avail) {
+  #     priors_row <- priors_fun(rep, model_id = model_id, do.plot = NULL, stamp = NULL)
+  #     which_col <- which(priors_avail == prior)
+  #     if (length(which_col) == 1 && length(priors_row) >= which_col) {
+  #       return(priors_row[[which_col]])
+  #     }
+  #   }
+  #   patchwork::plot_spacer() + theme_void()
+  # }
+
   get_prior_plot_or_empty <- function(rep, prior, model_id) {
     inp <- rep$inp
     useflags <- inp$priorsuseflags
     priors_avail <- names(inp$priors)[which(useflags == 1)]
-    if (prior %in% priors_avail) {
-      priors_row <- priors_fun(rep, model_id = model_id, do.plot = NULL, stamp = NULL)
-      which_col <- which(priors_avail == prior)
-      if (length(which_col) == 1 && length(priors_row) >= which_col) {
-        return(priors_row[[which_col]])
-      }
+
+    # Call priors.elu6() to get all plots with names
+    plot_list <- priors_fun(rep, model_id = model_id, do.plot = NULL, stamp = NULL, return_list = TRUE)
+
+    # Safely return the matching plot if available
+    if (!is.null(plot_list) && prior %in% names(plot_list)) {
+      return(plot_list[[prior]])
     }
-    patchwork::plot_spacer() + theme_void()
+
+    # Return blank panel if not available
+    patchwork::plot_spacer() + ggplot2::theme_void()
   }
 
   plots_grid <- lapply(seq_along(models), function(i) {
