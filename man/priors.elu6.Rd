@@ -2,53 +2,42 @@
 % Please edit documentation in R/priors.elu6.R
 \name{priors.elu6}
 \alias{priors.elu6}
-\title{Plot Priors and Posteriors for ELU/SPiCT Model Parameters}
+\title{Plot Priors and Posteriors for ELU Model Parameters}
 \usage{
 priors.elu6(
   rep,
   model_id = NULL,
   do.plot = NULL,
   stamp = get.version(),
-  CI = 0.95,
-  return_list = FALSE
+  CI = 0.95
 )
 }
 \arguments{
-\item{rep}{A fitted model object returned by \code{fit.elu2()} or equivalent. Must contain a valid \code{inp} list and estimated parameters.}
+\item{rep}{A fitted model object (typically output from \code{fit.elu2()}).}
 
-\item{model_id}{Optional character string specifying the model label shown in plot annotations. If \code{NULL}, uses \code{rep$name} or defaults to \code{"Model"}.}
+\item{model_id}{Optional label for the model, shown on the plot. Defaults to \code{rep$name} if available.}
 
-\item{do.plot}{Integer. Optional limit on the number of prior–posterior panels to display (useful for debugging or limiting output). Default is \code{NULL} (plot all).}
+\item{do.plot}{Integer; maximum number of priors to plot. Default: \code{NULL} (all).}
 
-\item{stamp}{Optional text string used for internal version tracking. If not \code{NULL}, prints a message when the function runs.}
+\item{stamp}{Optional text annotation for provenance/version info (used internally).}
 
-\item{CI}{Numeric (default = 0.95). Confidence interval width used when computing posterior uncertainty.}
-
-\item{return_list}{Logical (default = \code{FALSE}). If \code{TRUE}, returns a named list of individual ggplot objects for each prior; if \code{FALSE}, returns a \code{patchwork} object.}
+\item{CI}{Confidence interval width for the posterior. Default: 0.95.}
 }
 \value{
-A \code{patchwork} object (default) or a named list of \code{ggplot} objects if \code{return_list = TRUE}.
-Returns \code{NULL} if no active priors are found.
+A \code{patchwork} plot object combining the individual prior-posterior plots.
 }
 \description{
-This function generates density plots comparing prior and posterior distributions for all
-active priors in a fitted ELU/SPiCT model. It supports log- or linear-scaled x-axes,
-highlights posterior means, and allows for faceted visualization using \code{patchwork}.
+Generates density plots comparing prior and posterior distributions for all active priors in an ELU/SPiCT model fit, with intelligent x-axis scaling and plot annotations.
 }
 \details{
-The function iterates through all priors actively used in the model (\code{inp$priorsuseflags == 1}),
-computes their prior and posterior densities (on the original scale), and plots them using
-consistent styling and annotation. Posterior means (if available) are marked with a dashed line.
-Axis scale (log or linear) is chosen heuristically based on the range of each parameter.
-
-This function supports both visual inspection (as a patchwork grid) and programmatic extraction
-(via \code{return_list = TRUE}) for use in other plotting layouts like \code{elu_prior_posterior_grid()}.
+For each parameter with an active prior, this function computes the prior and posterior densities,
+chooses an appropriate x-axis scale (logarithmic or linear), and plots the results. Plots are
+combined into a single layout using \code{patchwork::wrap_plots}. If \code{do.plot} is specified,
+plotting stops after that many priors.
 }
 \examples{
 \dontrun{
-fit <- fit.elu2(inp1)
-priors.elu6(fit, model_id = "S1P")
-# To return list of ggplot objects:
-plots <- priors.elu6(fit, model_id = "S1P", return_list = TRUE)
+fit <- fit.elu2(inp)
+priors.elu6(fit, model_id = "Scenario 1")
 }
 }

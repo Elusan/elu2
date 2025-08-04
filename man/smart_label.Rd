@@ -2,16 +2,20 @@
 % Please edit documentation in R/priors.elu6.R
 \name{smart_label}
 \alias{smart_label}
-\title{Smart Label Formatter for Axis Ticks (with Scientific Notation for q1/q2)}
+\title{Format Numeric Values for Smart Axis Labels}
 \usage{
 smart_label(x)
 }
 \arguments{
-\item{x}{Numeric vector of axis tick values.}
+\item{x}{A numeric vector of values to format.}
 }
 \value{
 A character vector of formatted labels.
 }
 \description{
-Converts numeric values into readable labels. Uses scientific notation if values have more than two decimal digits or are very small/large.
+Provides rounded numeric labels for plotting, showing one decimal place for integer values (e.g. 2.0) and two for non-integers (e.g. 2.75). Handles NA and Inf gracefully.
+}
+\examples{
+smart_label(c(1, 2.5, 3, NA, Inf))
+# [1] "1.0" "2.50" "3.0" NA NA
 }

@@ -9,7 +9,7 @@ elu_nice_priors(
   priors_fun = priors.elu6,
   outdir = "FIG",
   width = 8,
-  height = 6,
+  height = 4,
   dpi = 300
 )
 }
