@@ -26,72 +26,71 @@
 elu_prior_posterior_grid <- function(models,
                                      priors_fun = priors.elu6,
                                      width = 15, height = 10, dpi = 300,
-                                     outdir = "FIG", file_prefix = NULL,
+                                     outdir = "FIG", file_prefix = NULL,  # <- NULL by default
                                      return_patchwork = TRUE) {
-  # Dependencies
-  requireNamespace("patchwork")
-  requireNamespace("ggplot2")
+  require(patchwork)
+  require(ggplot2)
 
-  # Auto file prefix from first model
+  # -- Automatically set scenario prefix for filename --
+  scenario_prefix <- ""
   model_names <- names(models)
-  scenario_prefix <- if (length(model_names) > 0) {
-    tmp <- sub("([A-Za-z]+)$", "", model_names[1])
-    gsub("_+$", "", tmp)
-  } else ""
+  if (length(model_names) > 0) {
+    scenario_prefix <- sub("([A-Za-z]+)$", "", model_names[1]) # remove trailing letters (P/S/F)
+    scenario_prefix <- gsub("_+$", "", scenario_prefix) # clean trailing underscores
+  }
   if (is.null(file_prefix) || file_prefix == "") {
     file_prefix <- paste0("prior_posterior_grid_", scenario_prefix)
   }
+  # ----------------------------------------------------
 
-  # 1. Determine stable list of priors:
-  #    Start with first model's priors, then append any new ones from others
-  first_rep   <- models[[1]]
-  first_inds  <- which(first_rep$inp$priorsuseflags == 1)
-  priors_first<- names(first_rep$inp$priors)[first_inds]
-  # Use lapply instead of vapply to collect multiple priors per model
-  extra_priors<- unique(unlist(lapply(models[-1], function(r) {
-    names(r$inp$priors)[ which(r$inp$priorsuseflags == 1) ]
+  all_priors <- unique(unlist(lapply(models, function(rep) {
+    inp <- rep$inp
+    useflags <- inp$priorsuseflags
+    inds <- which(useflags == 1)
+    names(inp$priors)[inds]
   })))
-  all_priors  <- c(priors_first, setdiff(extra_priors, priors_first))
-
   n_models <- length(models)
   n_priors <- length(all_priors)
-  model_ids<- model_names
+  model_ids <- names(models)
 
-  # 2. Helper: get each cell by name
-  get_cell <- function(rep, model_id, prior) {
-    plots_list <- priors_fun(rep, model_id = model_id,
-                             do.plot = NULL, stamp = NULL)
-    if (prior %in% names(plots_list)) {
-      plots_list[[prior]]
-    } else {
-      patchwork::plot_spacer() + ggplot2::theme_void()
+  get_prior_plot_or_empty <- function(rep, prior, model_id) {
+    inp <- rep$inp
+    useflags <- inp$priorsuseflags
+    priors_avail <- names(inp$priors)[which(useflags == 1)]
+    if (prior %in% priors_avail) {
+      priors_row <- priors_fun(rep, model_id = model_id, do.plot = NULL, stamp = NULL)
+      which_col <- which(priors_avail == prior)
+      if (length(which_col) == 1 && length(priors_row) >= which_col) {
+        return(priors_row[[which_col]])
+      }
     }
+    patchwork::plot_spacer() + theme_void()
   }
 
-  # 3. Build grid: row per model, col per prior
-  plots_grid <- unlist(
-    lapply(seq_along(models), function(i) {
-      rep <- models[[i]]
-      id  <- model_ids[i]
-      lapply(all_priors, function(p) get_cell(rep, id, p))
-    }), recursive = FALSE
-  )
+  plots_grid <- lapply(seq_along(models), function(i) {
+    model_id <- model_ids[i]
+    rep <- models[[i]]
+    lapply(all_priors, function(prior) {
+      get_prior_plot_or_empty(rep, prior, model_id)
+    })
+  })
 
-  final_pw <- patchwork::wrap_plots(
-    plots_grid, nrow = n_models, ncol = n_priors
-  )
+  plots_vec <- unlist(plots_grid, recursive = FALSE)
 
-  # 4. Save if requested
+  final_patchwork <- wrap_plots(plots_vec, nrow = n_models, ncol = n_priors)
+
+
+  #final_patchwork <- wrap_plots(plots_vec, nrow = n_models, ncol = n_priors) +
+  #plot_layout(guides = "collect")
+
   if (!is.null(outdir)) {
     if (!dir.exists(outdir)) dir.create(outdir)
     out_file <- file.path(outdir, paste0(file_prefix, ".png"))
-    ggplot2::ggsave(out_file, final_pw,
-                    width = width, height = height, dpi = dpi)
+    ggsave(out_file, final_patchwork, width = width, height = height, dpi = dpi)
   }
 
-  # 5. Return or invisible
   if (return_patchwork) {
-    return(final_pw)
+    return(final_patchwork)
   } else {
     invisible(NULL)
   }

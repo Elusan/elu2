@@ -88,13 +88,8 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
   plots <- list()
   counter <- 0
 
-  # If model_id not provided, try to infer from rep$name or stop
   if (is.null(model_id)) {
-    if (!is.null(rep$name)) {
-      model_id <- rep$name
-    } else {
-      model_id <- "Model"
-    }
+    model_id <- rep$name %||% "Model"
   }
 
   if (ninds > 0) {
@@ -137,11 +132,7 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
         }
 
         xpr <- xpo <- seq(xmin, xmax, length.out = 200)
-        priorvals <- if (!isGamma) {
-          dnorm(xpr, prvec[1], prvec[2])
-        } else {
-          dgamma(xpr, prvec[1], prvec[2])
-        }
+        priorvals <- if (!isGamma) dnorm(xpr, prvec[1], prvec[2]) else dgamma(xpr, prvec[1], prvec[2])
 
         df_prior <- data.frame(
           x = exp(xpr),
@@ -162,24 +153,17 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
 
         df_plot <- dplyr::bind_rows(df_prior, df_post)
 
-        # If only one type, ensure both are in legend for consistent layout
-        if (!"Prior" %in% df_plot$type) {
-          df_plot <- rbind(df_plot, data.frame(x = NA, density = NA, type = "Prior"))
-        }
-        if (!"Posterior" %in% df_plot$type) {
-          df_plot <- rbind(df_plot, data.frame(x = NA, density = NA, type = "Posterior"))
-        }
+        if (!"Prior" %in% df_plot$type) df_plot <- rbind(df_plot, data.frame(x = NA, density = NA, type = "Prior"))
+        if (!"Posterior" %in% df_plot$type) df_plot <- rbind(df_plot, data.frame(x = NA, density = NA, type = "Posterior"))
 
-        # Heuristic: decide whether to use log or linear x-scale
         x_range_ratio <- max(df_plot$x, na.rm = TRUE) / max(min(df_plot$x, na.rm = TRUE), 1e-10)
         use_log_scale <- x_range_ratio > 10
 
-        # Get y max for text placement
         y_top <- max(df_plot$density, na.rm = TRUE)
         x_left <- min(df_plot$x, na.rm = TRUE)
 
         p <- ggplot(df_plot, aes(x = x, y = density, color = type)) +
-          geom_line(linewidth = 0.8, linetype = "solid", na.rm = TRUE, show.legend = TRUE) +
+          geom_line(linewidth = 0.8, linetype = "solid", na.rm = TRUE) +
           geom_area(aes(fill = type), alpha = 0.14, position = "identity", show.legend = FALSE) +
           labs(title = current_nmpl, x = NULL, y = "Density", color = NULL) +
           scale_color_manual(values = c("Prior" = "black", "Posterior" = "red")) +
@@ -188,24 +172,16 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
           theme(
             legend.position = c(0.98, 0.98),
             legend.justification = c("right", "top"),
-            legend.background = element_rect(fill = "white", color = NA, linewidth = 0),
-            legend.box.background = element_rect(color = "grey60", linewidth = 0),
+            legend.background = element_rect(fill = "white", color = NA),
+            legend.box.background = element_rect(color = "grey60"),
             legend.key.width = unit(0.5, "lines"),
             legend.key.height = unit(0.2, "lines"),
             legend.text = element_text(face = "bold", size = 8),
-            legend.title = element_blank(),
-            legend.spacing.y = unit(0, "pt"),
             plot.margin = margin(8, 8, 8, 8)
           ) +
-          guides(
-            color = guide_legend(override.aes = list(linewidth = 2.5), nrow = 2, byrow = TRUE),
-            fill = "none"
-          ) +
-          annotate("text",
-                   x = x_left, y = y_top * 1.06,
-                   label = model_id,
-                   hjust = 0, vjust = 1, fontface = "bold", size = 4, color = "grey20"
-          )
+          guides(color = guide_legend(override.aes = list(linewidth = 2.5), nrow = 2)) +
+          annotate("text", x = x_left, y = y_top * 1.06, label = model_id,
+                   hjust = 0, vjust = 1, fontface = "bold", size = 4, color = "grey20")
 
         if (use_log_scale) {
           p <- p + scale_x_log10()
@@ -213,13 +189,13 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
           p <- p + scale_x_continuous()
         }
 
-        # Optional: dashed line at posterior mean
         if (is.na(par[rr, 4]) && !is.na(par[rr, 2])) {
-          p <- p + geom_vline(xintercept = exp(par[rr, 2]),
-                              linetype = "dashed", color = "red", linewidth = 1)
+          p <- p + geom_vline(xintercept = exp(par[rr, 2]), linetype = "dashed", color = "red", linewidth = 1)
         }
 
-        plots[[length(plots) + 1]] <- p
+        # Use the parameter name (nm) as key — matches what elu_prior_posterior_grid2() expects
+        plots[[nm]] <- p
+
         counter <- counter + 1
         if (!is.null(do.plot) && counter >= do.plot) break
       }
@@ -227,8 +203,9 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
   }
 
   if (length(plots) > 0) {
-    final_plot <- wrap_plots(plots)  # NO legend collection, each plot gets own legend
     if (!is.null(stamp)) message("elu custom spict")
-    return(final_plot)
+    return(plots)  # ✅ named list of ggplot objects
+  } else {
+    return(list())  # empty list if no priors used
   }
 }

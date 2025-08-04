@@ -17,7 +17,7 @@
 #' @importFrom ggplot2 theme_void ggsave
 #' @export
 elu_prior_posterior_grid2 <- function(models,
-                                      priors_fun = priors.elu66,
+                                      priors_fun = plotspict.priors.ggplot98,
                                       width = 15, height = 10, dpi = 300,
                                       outdir = "FIG", file_prefix = NULL,
                                       return_patchwork = TRUE) {
