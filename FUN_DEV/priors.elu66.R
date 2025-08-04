@@ -27,6 +27,31 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
     )
 }
 
+
+#' Format Numeric Values for Smart Axis Labels
+#'
+#' Provides rounded numeric labels for plotting, showing one decimal place for integer values (e.g. 2.0) and two for non-integers (e.g. 2.75). Handles NA and Inf gracefully.
+#'
+#' @param x A numeric vector of values to format.
+#'
+#' @return A character vector of formatted labels.
+#' @examples
+#' smart_label(c(1, 2.5, 3, NA, Inf))
+#' # [1] "1.0" "2.50" "3.0" NA NA
+#' @export
+smart_label <- function(x) {
+  sapply(x, function(xx) {
+    if (is.na(xx) || !is.finite(xx)) return(NA_character_) # Safely handle NA and Inf
+    xx_round <- round(xx, 2)
+    # If value is an integer after rounding, show with .0
+    if (abs(xx_round - round(xx_round)) < .Machine$double.eps^0.5) {
+      return(sprintf("%.1f", xx_round)) # e.g., 1.0, 2.0, etc.
+    } else {
+      return(sprintf("%.2f", xx_round)) # e.g., 2.50, 2.75, etc.
+    }
+  })
+}
+
 #' Plot Priors and Posteriors for ELU Model Parameters
 #'
 #' Generates density plots comparing prior and posterior distributions for all active priors in an ELU/SPiCT model fit, with intelligent x-axis scaling and plot annotations.
@@ -55,7 +80,7 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
 #' priors.elu6(fit, model_id = "Scenario 1")
 #' }
 #' @export
-priors.elu6 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.version(), CI = 0.95) {
+priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.version(), CI = 0.95) {
   inp <- rep$inp
   useflags <- inp$priorsuseflags
   inds <- which(useflags == 1)
