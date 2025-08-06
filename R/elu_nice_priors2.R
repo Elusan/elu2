@@ -27,7 +27,7 @@
 #' elu_nice_priors(models)
 #' }
 #' @export
-elu_nice_priors2 <- function(models, priors_fun = priors.elu66, outdir = "FIG", width = 8, height = 4, dpi = 300) {
+elu_nice_priors2 <- function(models, priors_fun = priors.elu66, outdir = "FIG", width = 8, height = 5, dpi = 300) {
   if (!dir.exists(outdir)) dir.create(outdir)
   for (nm in names(models)) {
     cat("Saving priors for model:", nm, "\n")

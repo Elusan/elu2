@@ -240,22 +240,11 @@ priors.elu6 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versio
           )
 
         if (use_log_scale) {
-          p <- p +
-            scale_x_log10(
-              breaks = scales::log_breaks(n = 8),
-              labels = smart_label,
-              #labels = function(x) sprintf("%.1f", x)
-            ) +
-            coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
+          p <- p + scale_x_log10()
         } else {
-          p <- p +
-            scale_x_continuous(
-              breaks = scales::pretty_breaks(n = 8),
-              labels = smart_label,
-              #labels = function(x) sprintf("%.1f", x)
-            ) +
-            coord_cartesian(xlim = c(min(df_plot$x, na.rm = TRUE), max(df_plot$x, na.rm = TRUE)))
+          p <- p + scale_x_continuous()
         }
+
         # Optional: dashed line at posterior mean
         if (is.na(par[rr, 4]) && !is.na(par[rr, 2])) {
           p <- p + geom_vline(xintercept = exp(par[rr, 2]),

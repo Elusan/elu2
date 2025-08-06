@@ -8,8 +8,8 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
       axis.text = element_text(size = 8, face = "bold"),
       legend.position = "bottom",
       legend.title = element_blank(),
-      legend.text = element_text(size = 10, face = "bold"),
-      legend.key.size = unit(0.6, "lines"),
+      legend.text = element_text(size = 3, face = "bold"),
+      legend.key.size = unit(0.1, "lines"),
       legend.spacing.y = unit(0, "pt"),
       legend.spacing.x = unit(0, "pt"),
       legend.margin = margin(0, 0, 0, 0),
@@ -163,7 +163,7 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
         x_left <- min(df_plot$x, na.rm = TRUE)
 
         p <- ggplot(df_plot, aes(x = x, y = density, color = type)) +
-          geom_line(linewidth = 0.8, linetype = "solid", na.rm = TRUE) +
+          geom_line(linewidth = 0.5, linetype = "solid", na.rm = TRUE) +
           geom_area(aes(fill = type), alpha = 0.14, position = "identity", show.legend = FALSE) +
           labs(title = current_nmpl, x = NULL, y = "Density", color = NULL) +
           scale_color_manual(values = c("Prior" = "black", "Posterior" = "red")) +
@@ -174,12 +174,12 @@ priors.elu66 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versi
             legend.justification = c("right", "top"),
             legend.background = element_rect(fill = "white", color = NA),
             legend.box.background = element_rect(color = "grey60"),
-            legend.key.width = unit(0.5, "lines"),
-            legend.key.height = unit(0.2, "lines"),
-            legend.text = element_text(face = "bold", size = 8),
+            legend.key.width = unit(0.2, "lines"),
+            legend.key.height = unit(0.05, "lines"),
+            legend.text = element_text(face = "bold", size = 2),
             plot.margin = margin(8, 8, 8, 8)
           ) +
-          guides(color = guide_legend(override.aes = list(linewidth = 2.5), nrow = 2)) +
+          guides(color = guide_legend(override.aes = list(linewidth = 2.2), nrow = 2)) +
           annotate("text", x = x_left, y = y_top * 1.06, label = model_id,
                    hjust = 0, vjust = 1, fontface = "bold", size = 4, color = "grey20")
 
