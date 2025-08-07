@@ -14,13 +14,13 @@
 #'
 #' @return A patchwork plot object (or a list of plots if return_patchwork = FALSE).
 #' @export
-plot_spict_scenarios_by_model_NEW2 <- function(models,
-                                          production_fun = NULL,
-                                          extract_catch_data = NULL,
-                                          scenario_colors = NULL,
-                                          return_patchwork = TRUE,
-                                          lindwd = 0.8,
-                                          show_CIs = TRUE) {
+plot_spict_scenarios_by_model_NEW2_legend <- function(models,
+                                                      production_fun = NULL,
+                                                      extract_catch_data = NULL,
+                                                      scenario_colors = NULL,
+                                                      return_patchwork = TRUE,
+                                                      lindwd = 0.8,
+                                                      show_CIs = TRUE) {
   library(ggplot2)
   library(dplyr)
   library(patchwork)
@@ -40,12 +40,8 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
   # Assign model colors based on number of models
   if (is.null(scenario_colors)) {
     if (length(models) == 3) {
-
       # Fixed colors for 3 canonical models: Pella, Fox, Schaefer
-      #model_colors <- setNames(c("#D7191C", "#2B83BA", "#1A9641"), model_names)
-
-      # Fixed colors for 3 canonical models:Schaefer, Fox, Pella,
-      model_colors <- setNames(c("#1A9641", "#2B83BA", "#D7191C"), model_names)
+      model_colors <- setNames(c("#D7191C", "#2B83BA", "#1A9641"), model_names)
     } else {
       # Use your predefined full scenario color set
       default_scenario_colors <- c(
@@ -79,13 +75,19 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
         axis.title = element_text(face = "bold", size = 12),
         axis.text = element_text(size = 10, face = "bold"),
-        legend.position = c(0.98, 0.98),
-        legend.justification = c("right", "top"),
+        #legend.position = c(0.98, 0.98),
+        #legend.justification = c("right", "top"),
+
+        legend.position = "right",
+        legend.justification = "center",
+        legend.box = "vertical",
+        legend.box.just = "left",
+
         legend.background = element_blank(),
         legend.box.background = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size = 10, face = "bold"),
-        legend.key.size = unit(0.8, "lines"),
+        legend.key.size = unit(1, "lines"),
         panel.grid = element_blank(),
         panel.border = element_rect(fill = NA, colour = "grey35", linewidth = 2),
         axis.ticks = element_line(linewidth = 0.5, color = "grey35"),
@@ -115,13 +117,13 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
   make_plot <- function(df, ylab_expr, hline = NULL) {
     df$model <- factor(df$model, levels = model_names)
     p <- ggplot(df, aes(x = time, y = est, color = model, fill = model)) +
-      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.14, color = NA, show.legend = FALSE) } +
+      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.22, color = NA, show.legend = FALSE) } +
       geom_line(linewidth = 0.8) +
       scale_color_manual(values = model_colors) +
       scale_fill_manual(values = model_colors) +
       labs(x = "Year", y = ylab_expr) +
       theme_minimal_compact2() +
-      guides(color = guide_legend(override.aes = list(linewidth = 1.8)))
+      guides(color = guide_legend(override.aes = list(linewidth = 1.8, ncol = 2)))
     if (!is.null(hline)) {
       p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "black", linewidth = 0.8)
     }
@@ -149,13 +151,13 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
     observed$model  <- factor(observed$scenario,  levels = model_names)
 
     plots$catch <- ggplot() +
-      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.14, show.legend = FALSE) } +
+      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.22, show.legend = FALSE) } +
       geom_line(data = predicted, aes(x = time, y = catch, color = model), size = 0.8) +
       geom_point(data = observed, aes(x = time, y = catch), color = "black", size = 1.3) +
       scale_color_manual(values = model_colors) +
       labs(x = "Year", y = "Catch (tons)") +
       theme_minimal_compact2() +
-      guides(color = guide_legend(override.aes = list(linewidth = 2)))
+      guides(color = guide_legend(override.aes = list(linewidth = 2, ncol = 2)))
   } else {
     plots$catch <- ggplot() + labs(title = "No catch data provided") + theme_void()
   }
@@ -183,9 +185,23 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
     layout <- (plots$biomass | plots$bbmsy | plots$catch) /
       patchwork::plot_spacer() /
       (plots$f | plots$ffmsy | plots$production)
+    # return(layout +
+    #          plot_layout(heights = c(1, 0.05, 1)) &
+    #          theme(plot.margin = margin(4, 4, 4, 4)))
     return(layout +
-             plot_layout(heights = c(1, 0.05, 1)) &
-             theme(plot.margin = margin(4, 4, 4, 4)))
+             plot_layout(heights = c(1, 0.05, 1), guides = "collect") &
+             theme(
+               plot.margin = margin(4, 4, 4, 4),
+               legend.position = "right",
+               legend.justification = "center",
+               legend.box = "vertical",
+               legend.box.just = "left",
+               legend.title = element_blank(),
+               legend.text = element_text(size = 10, face = "bold"),
+               legend.key.size = unit(0.8, "lines")
+             ) &
+             guides(color = guide_legend(ncol = 2)))
+
   } else {
     return(plots)
   }
