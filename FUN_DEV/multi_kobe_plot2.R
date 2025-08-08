@@ -50,12 +50,12 @@ multi_kobe_plot2 <- function(
     model_labels = NULL,
     scenario_label = NULL,
     ncol = NULL,
-    width = 8, height = 5,
+    width = 8, height = 8,
     save_pdf = NULL,
     save_png = NULL,           # New: Save grid as PNG
     save_panel_pngs = TRUE,    # New: Save each panel as PNG?
     panel_dir = "kobe_panels", # New: Output dir for panels
-    text_cex = 2,              # Larger for clarity
+    text_cex = 1.5,              # Larger for clarity
     ...
 ) {
   require(gridExtra)
