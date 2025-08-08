@@ -9,7 +9,7 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
       legend.position = "bottom",
       legend.title = element_blank(),
       legend.text = element_text(size = 10, face = "bold"),
-      legend.key.size = unit(0.6, "lines"),
+      #legend.key.size = unit(0.3, "lines"),
       legend.spacing.y = unit(0, "pt"),
       legend.spacing.x = unit(0, "pt"),
       legend.margin = margin(0, 0, 0, 0),
@@ -222,9 +222,9 @@ priors.elu6 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versio
             legend.justification = c("right", "top"),
             legend.background = element_rect(fill = "white", color = NA, linewidth = 0),
             legend.box.background = element_rect(color = "grey60", linewidth = 0),
-            legend.key.width = unit(0.5, "lines"),
-            legend.key.height = unit(0.2, "lines"),
-            legend.text = element_text(face = "bold", size = 8),
+            legend.key.width = unit(0.2, "lines"),
+            legend.key.height = unit(0, "lines"),
+            legend.text = element_text(face = "bold", size = 6),
             legend.title = element_blank(),
             legend.spacing.y = unit(0, "pt"),
             plot.margin = margin(8, 8, 8, 8)
@@ -236,7 +236,7 @@ priors.elu6 <- function(rep, model_id = NULL, do.plot = NULL, stamp = get.versio
           annotate("text",
                    x = x_left, y = y_top * 1.06,
                    label = model_id,
-                   hjust = 0, vjust = 1, fontface = "bold", size = 4, color = "grey20"
+                   hjust = 0, vjust = 1, fontface = "bold", size = 3, color = "grey15"
           )
 
         if (use_log_scale) {

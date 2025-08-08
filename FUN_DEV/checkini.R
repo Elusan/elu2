@@ -31,7 +31,7 @@ check.ini <- function(input, ntrials=10, verbose=TRUE, numdigits=2){
   } else {
     if ('obsC' %in% names(input)){
       inp <- check.inp(input)
-      rep <- fit.spict(inp)
+      rep <- fit.elu2(inp)
     } else {
       stop('Invalid input! use either an inp list or a fit.spict() result.')
     }

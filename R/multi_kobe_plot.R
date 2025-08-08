@@ -36,7 +36,7 @@ multi_kobe_plot <- function(
     model_labels = NULL,        # Named vector for panel model names
     scenario_label = NULL,      # Main grid title
     ncol = NULL,
-    width = 6, height = 5,
+    width = 8, height = 5,
     save_pdf = NULL,
     text_cex = 1.5,             # Text size for model label inside plot
     ...

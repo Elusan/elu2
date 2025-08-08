@@ -44,15 +44,82 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
       model_colors <- setNames(c("#D7191C", "#2B83BA", "#1A9641"), model_names)
     } else {
       # Use your predefined full scenario color set
-      default_scenario_colors <- c(
-        "S1P" = "#1b9e77", "S1S" = "#d95f02", "S1F" = "#7570b3",
-        "S2P" = "#e7298a", "S2S" = "#66a61e", "S2F" = "#e6ab02",
-        "S3P" = "#666666", "S3S" = "#1f78b4", "S3F" = "#b2df8a",
-        "S4P" = "#a6761d", "S4S" = "#fb9a99", "S4F" = "#8dd3c7",
-        "S5P" = "#66c2a5", "S5S" = "#fc8d62", "S5F" = "#8da0cb",
-        "S6P" = "#e78ac3", "S6S" = "#a6d854", "S6F" = "#ffd92f",
-        "S7P" = "#e5c494", "S7S" = "#b3b3b3", "S7F" = "#1b7837",
-        "S8P" = "#762a83", "S8S" = "#af8dc3", "S8F" = "#7fbf7b"
+      # default_scenario_colors <- c(
+      #   "S1P" = "#1b9e77", "S1S" = "#d95f02", "S1F" = "#7570b3",
+      #   "S2P" = "#e7298a", "S2S" = "#66a61e", "S2F" = "#e6ab02",
+      #   "S3P" = "#666666", "S3S" = "#1f78b4", "S3F" = "#b2df8a",
+      #   "S4P" = "#a6761d", "S4S" = "#fb9a99", "S4F" = "#8dd3c7",
+      #   "S5P" = "#66c2a5", "S5S" = "#fc8d62", "S5F" = "#8da0cb",
+      #   "S6P" = "#e78ac3", "S6S" = "#a6d854", "S6F" = "#ffd92f",
+      #   "S7P" = "#e5c494", "S7S" = "#b3b3b3", "S7F" = "#1b7837",
+      #   "S8P" = "#762a83", "S8S" = "#af8dc3", "S8F" = "#7fbf7b"
+      # )
+      default_sdm_model_colors <- c(
+        "S1P.SDM" = "#0072B2",  # Okabe-Ito blue
+        "S1S.SDM" = "#D55E00",  # Okabe-Ito vermillion
+        "S1F.SDM" = "#009E73",  # Okabe-Ito bluish green
+
+        "S2P.SDM" = "#CC79A7",  # Okabe-Ito purple
+        "S2S.SDM" = "#E69F00",  # Okabe-Ito orange
+        "S2F.SDM" = "#56B4E9",  # Okabe-Ito sky blue
+
+        "S3P.SDM" = "#F0E442",  # Okabe-Ito yellow
+        "S3S.SDM" = "#7F3C8D",  # Nature dark violet
+        "S3F.SDM" = "#BCBD22",  # Tableau olive
+
+        "S4P.SDM" = "#FF7F0E",  # Tableau orange
+        "S4S.SDM" = "#1F77B4",  # Tableau blue
+        "S4F.SDM" = "#2CA02C",  # Tableau green
+
+        "S5P.SDM" = "#A6CEE3",  # Brewer Set2 blue
+        "S5S.SDM" = "#FB9A99",  # Brewer Set2 pink
+        "S5F.SDM" = "#B15928",  # Brewer Set2 brown
+
+        "S6P.SDM" = "#E31A1C",  # Brewer Set2 red
+        "S6S.SDM" = "#6A3D9A",  # Brewer Set2 purple
+        "S6F.SDM" = "#B2DF8A",  # Brewer Set2 green
+
+        "S7P.SDM" = "#17BECF",  # Tableau cyan
+        "S7S.SDM" = "#FF9896",  # Tableau pink
+        "S7F.SDM" = "#9467BD",  # Tableau purple
+
+        "S8P.SDM" = "#C49C94",  # Tableau brown
+        "S8S.SDM" = "#8C564B",  # Tableau dark brown
+        "S8F.SDM" = "#C7C7C7"   # Tableau light grey
+      )
+
+      default_glm_model_colors <- c(
+        "S1P.GLM" = "#0072B2",  # Okabe-Ito blue
+        "S1S.GLM" = "#D55E00",  # Okabe-Ito vermillion
+        "S1F.GLM" = "#009E73",  # Okabe-Ito bluish green
+
+        "S2P.GLM" = "#CC79A7",  # Okabe-Ito purple
+        "S2S.GLM" = "#E69F00",  # Okabe-Ito orange
+        "S2F.GLM" = "#56B4E9",  # Okabe-Ito sky blue
+
+        "S3P.GLM" = "#F0E442",  # Okabe-Ito yellow
+        "S3S.GLM" = "#7F3C8D",  # Nature dark violet
+        "S3F.GLM" = "#BCBD22",  # Tableau olive
+
+        "S4P.GLM" = "#FF7F0E",  # Tableau orange
+        "S4S.GLM" = "#1F77B4",  # Tableau blue
+        "S4F.GLM" = "#2CA02C",  # Tableau green
+
+        "S5P.GLM" = "#A6CEE3",  # Brewer Set2 blue
+        "S5S.GLM" = "#FB9A99",  # Brewer Set2 pink
+        "S5F.GLM" = "#B15928",  # Brewer Set2 brown
+
+        "S6P.GLM" = "#E31A1C",  # Brewer Set2 red
+        "S6S.GLM" = "#6A3D9A",  # Brewer Set2 purple
+        "S6F.GLM" = "#B2DF8A",  # Brewer Set2 green
+
+        "S7P.GLM" = "#17BECF",  # Tableau cyan
+        "S7S.GLM" = "#FF9896",  # Tableau pink
+        "S7F.GLM" = "#9467BD",  # Tableau purple
+
+        "S8P.GLM" = "#C49C94",  # Tableau brown
+        "S8S.GLM" = "#8C564B",  # Tableau dark brown
+        "S8F.GLM" = "#C7C7C7"   # Tableau light grey
       )
 
       # Ensure that model names are present in the palette
@@ -87,7 +154,7 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
         legend.box.background = element_blank(),
         legend.title = element_blank(),
         legend.text = element_text(size = 10, face = "bold"),
-        legend.key.size = unit(1, "lines"),
+        legend.key.size = unit(0.9, "lines"),
         panel.grid = element_blank(),
         panel.border = element_rect(fill = NA, colour = "grey35", linewidth = 2),
         axis.ticks = element_line(linewidth = 0.5, color = "grey35"),
@@ -117,15 +184,17 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
   make_plot <- function(df, ylab_expr, hline = NULL) {
     df$model <- factor(df$model, levels = model_names)
     p <- ggplot(df, aes(x = time, y = est, color = model, fill = model)) +
-      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.22, color = NA, show.legend = FALSE) } +
-      geom_line(linewidth = 0.8) +
+      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.1, color = NA, show.legend = FALSE) } +
+      geom_line(linewidth = 0.6) +
       scale_color_manual(values = model_colors) +
+      #scale_color_manual(values = default_sdm_model_colors)+
+      #scale_color_manual(values = default_sdm_model_colors)+
       scale_fill_manual(values = model_colors) +
       labs(x = "Year", y = ylab_expr) +
       theme_minimal_compact2() +
       guides(color = guide_legend(override.aes = list(linewidth = 1.8, ncol = 2)))
     if (!is.null(hline)) {
-      p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "black", linewidth = 0.8)
+      p <- p + geom_hline(yintercept = hline, linetype = "dashed", color = "black", linewidth = 0.6)
     }
     return(p)
   }
@@ -151,8 +220,8 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
     observed$model  <- factor(observed$scenario,  levels = model_names)
 
     plots$catch <- ggplot() +
-      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.22, show.legend = FALSE) } +
-      geom_line(data = predicted, aes(x = time, y = catch, color = model), size = 0.8) +
+      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.1, show.legend = FALSE) } +
+      geom_line(data = predicted, aes(x = time, y = catch, color = model), size = 0.6) +
       geom_point(data = observed, aes(x = time, y = catch), color = "black", size = 1.3) +
       scale_color_manual(values = model_colors) +
       labs(x = "Year", y = "Catch (tons)") +
@@ -198,7 +267,9 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
                legend.box.just = "left",
                legend.title = element_blank(),
                legend.text = element_text(size = 10, face = "bold"),
-               legend.key.size = unit(0.8, "lines")
+               legend.key.size = unit(0.9, "lines")
+               #legend.key.width = unit(0.1, "lines"),
+               #legend.key.height = unit(0.2, "lines"),
              ) &
              guides(color = guide_legend(ncol = 2)))
 

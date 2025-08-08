@@ -9,7 +9,7 @@ multi_kobe_plot(
   model_labels = NULL,
   scenario_label = NULL,
   ncol = NULL,
-  width = 6,
+  width = 8,
   height = 5,
   save_pdf = NULL,
   text_cex = 1.5,

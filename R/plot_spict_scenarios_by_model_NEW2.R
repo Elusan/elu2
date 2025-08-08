@@ -15,12 +15,12 @@
 #' @return A patchwork plot object (or a list of plots if return_patchwork = FALSE).
 #' @export
 plot_spict_scenarios_by_model_NEW2 <- function(models,
-                                          production_fun = NULL,
-                                          extract_catch_data = NULL,
-                                          scenario_colors = NULL,
-                                          return_patchwork = TRUE,
-                                          lindwd = 0.8,
-                                          show_CIs = TRUE) {
+                                               production_fun = NULL,
+                                               extract_catch_data = NULL,
+                                               scenario_colors = NULL,
+                                               return_patchwork = TRUE,
+                                               lindwd = 0.8,
+                                               show_CIs = TRUE) {
   library(ggplot2)
   library(dplyr)
   library(patchwork)
@@ -39,9 +39,16 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
   # Assign model colors based on number of models
   # Assign model colors based on number of models
   if (is.null(scenario_colors)) {
-    if (length(models) == 3) {
-      # Fixed colors for 3 canonical models: Pella, Fox, Schaefer
-      model_colors <- setNames(c("#D7191C", "#2B83BA", "#1A9641"), model_names)
+    if (length(models) == 6) {
+      # Fixed colors for 3 canonical models: Pella, Fox, Schaefe
+
+      #model_colors <- setNames(c("#D7191C", "#2B83BA","#4DAF4A","blue","#FF7F00","#A65628"), model_names)
+
+      model_colors <- setNames(c("blue","#FF7F00","#A65628", "#D7191C", "#2B83BA","#4DAF4A"), model_names)
+
+      #model_colors <- setNames(c("#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628"), model_names)
+
+
     } else {
       # Use your predefined full scenario color set
       default_scenario_colors <- c(
@@ -80,8 +87,8 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
         legend.background = element_blank(),
         legend.box.background = element_blank(),
         legend.title = element_blank(),
-        legend.text = element_text(size = 10, face = "bold"),
-        legend.key.size = unit(0.8, "lines"),
+        legend.text = element_text(size = 9, face = "bold"),
+        legend.key.size = unit(0.7, "lines"),
         panel.grid = element_blank(),
         panel.border = element_rect(fill = NA, colour = "grey35", linewidth = 2),
         axis.ticks = element_line(linewidth = 0.5, color = "grey35"),
@@ -111,7 +118,7 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
   make_plot <- function(df, ylab_expr, hline = NULL) {
     df$model <- factor(df$model, levels = model_names)
     p <- ggplot(df, aes(x = time, y = est, color = model, fill = model)) +
-      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.22, color = NA, show.legend = FALSE) } +
+      { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.06, color = NA, show.legend = FALSE) } +
       geom_line(linewidth = 0.8) +
       scale_color_manual(values = model_colors) +
       scale_fill_manual(values = model_colors) +
@@ -145,8 +152,8 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
     observed$model  <- factor(observed$scenario,  levels = model_names)
 
     plots$catch <- ggplot() +
-      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.22, show.legend = FALSE) } +
-      geom_line(data = predicted, aes(x = time, y = catch, color = model), size = 0.8) +
+      { if (show_CIs) geom_ribbon(data = predicted, aes(x = time, ymin = lwr, ymax = upr, fill = model), alpha = 0.06, show.legend = FALSE) } +
+      geom_line(data = predicted, aes(x = time, y = catch, color = model), linewidth = 0.8) +
       geom_point(data = observed, aes(x = time, y = catch), color = "black", size = 1.3) +
       scale_color_manual(values = model_colors) +
       labs(x = "Year", y = "Catch (tons)") +
