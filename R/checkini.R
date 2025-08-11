@@ -78,7 +78,7 @@ check.ini <- function(input, ntrials=10, verbose=TRUE, numdigits=2){
       }
       inidist[i] <- calc.dist(inimat[i, ], inibasevec)
       inpsens$osar.method <- "none"
-      repsens <- try(fit.spict(inpsens))
+      repsens <- try(fit.elu2(inpsens))
       if (class(repsens) != 'try-error' & 'opt' %in% names(repsens)){
         if (repsens$opt$convergence == 0){
           resmat[i, ] <- trans2real(repsens$opt$par, names(repsens$opt$par))
