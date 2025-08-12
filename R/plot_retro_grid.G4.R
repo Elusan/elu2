@@ -152,7 +152,7 @@ plot_retro_grid.G4 <- function(
             face = "bold", size = 11
           )
         ) +
-        {if (!is.null(rho_text)) annotate("text", x = Inf, y = Inf, label = rho_text, parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3.5) else NULL}
+        {if (!is.null(rho_text)) annotate("text", x = Inf, y = Inf, label = rho_text, parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3) else NULL}
     }
     list(
       B    = make_panel(df_B,    expression(bold(B[t]))),

@@ -7,7 +7,7 @@
 elu_nice_priors_999(
   models,
   priors_fun = priors.elu6,
-  outdir = "FIG",
+  outdir = "FIG/Elu_Priors",
   width = 8,
   height = 4,
   dpi = 300

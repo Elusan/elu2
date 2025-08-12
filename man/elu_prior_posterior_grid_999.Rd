@@ -10,7 +10,7 @@ elu_prior_posterior_grid_999(
   width = 13,
   height = 10,
   dpi = 300,
-  outdir = "FIG",
+  outdir = "FIG/Priors_posterios_grids",
   file_prefix = NULL,
   return_patchwork = TRUE
 )
