@@ -730,6 +730,5 @@ kobe_all_in_one_gg <- function(rep,
                                label = stamp, hjust = 1, vjust = 0, size = 3)
   }
 
-  print(p)
   invisible(p)
 }

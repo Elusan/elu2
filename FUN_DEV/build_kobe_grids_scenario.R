@@ -213,9 +213,12 @@ build_kobe_01 <- function(all_models,
                             get_id("F", "GLM"))
 
     # Final 3x2 layout: SDM column | GLM column
-    g <- (p_P_SDM | p_P_GLM) /
-      (p_S_SDM | p_S_GLM) /
-      (p_F_SDM | p_F_GLM)
+    #g <- (p_P_SDM | p_P_GLM) /
+     # (p_S_SDM | p_S_GLM) /
+      #(p_F_SDM | p_F_GLM)
+
+    g <- (p_P_SDM | p_S_SDM |p_F_SDM) /
+      (p_P_GLM | p_S_GLM | p_F_GLM)
 
     return(g)
   }
@@ -341,7 +344,7 @@ build_kobe_grids_scenario <- function(all_models,
                                       layout = "3x2",
                                       save = TRUE,
                                       out_dir = file.path("FIG", "KobePhases"),
-                                      width = if (layout == "3x2") 15 else 6,
+                                      width = if (layout == "3x2") 10 else 6,
                                       height = if (layout == "3x2") 6.5 else 10,
                                       dpi = 300,
                                       ...) {
