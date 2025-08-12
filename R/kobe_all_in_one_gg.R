@@ -505,8 +505,8 @@ kobe_all_in_one_gg <- function(rep,
   # Ellipse (banana CI) — transparent gray
   if (nrow(df_ellipse) > 1) {
     p <- p + ggplot2::geom_polygon(data = df_ellipse, ggplot2::aes(x = x, y = y),
-                                   fill = grDevices::adjustcolor("gray80", alpha.f = 0.7),
-                                   color = grDevices::adjustcolor("gray80", alpha.f = 0.7), linewidth = 0.5)
+                                   fill = grDevices::adjustcolor("gray80", alpha.f = 0.9),
+                                   color = grDevices::adjustcolor("gray80", alpha.f = 0.9), linewidth = 0.2)
   } else {
     p <- p + ggplot2::geom_point(data = df_ellipse, ggplot2::aes(x = x, y = y),
                                  color = "gray40", size = 2)
@@ -527,7 +527,7 @@ kobe_all_in_one_gg <- function(rep,
                                    color = "blue", linetype = "33", linewidth = 1.0)
     p <- p + ggplot2::geom_point(data = data.frame(x = df_EBseg$xend, y = df_EBseg$yend),
                                  ggplot2::aes(x = x, y = y),
-                                 shape = 23, fill = "gold", color = "black", size = 3, stroke = 0.7)
+                                 shape = 23, fill = "gold", color = "black", size = 3, stroke = 0.5)
   }
 
   # Management lines
@@ -559,11 +559,11 @@ kobe_all_in_one_gg <- function(rep,
 
   # First/last time labels
   p <- p + ggplot2::geom_point(data = df_first, ggplot2::aes(x = x, y = y),
-                               shape = 21, fill = "white", color = "black", size = 3, stroke = 0.5)
+                               shape = 21, fill = "white", color = "black", size = 2.5, stroke = 0.5)
   p <- p + ggplot2::geom_text(data = df_first, ggplot2::aes(x = x, y = y, label = lab),
                               vjust = -0.8, size = 3)
   p <- p + ggplot2::geom_point(data = df_last, ggplot2::aes(x = x, y = y),
-                               shape = 22, fill = "white", color = "black", size = 3, stroke = 0.5)
+                               shape = 22, fill = "white", color = "black", size = 2.5, stroke = 0.5)
   p <- p + ggplot2::geom_text(data = df_last, ggplot2::aes(x = x, y = y, label = lab),
                               vjust = -0.8, size = 3)
 
@@ -702,9 +702,9 @@ kobe_all_in_one_gg <- function(rep,
   if (plot.legend && !(min(rep$inp$dtc) < 1)) {
     px <- xlim[2] - 0.02 * diff(xlim)
     py <- ylim[2] - 0.04 * diff(ylim)
-    gap <- 0.15 * diff(xlim)   # more horizontal spacing
+    gap <- 0.17 * diff(xlim)   # more horizontal spacing
     p <- p + ggplot2::annotate("point", x = px - gap, y = py,
-                               shape = 23, size = 2.5, fill = "gold", color = "black", stroke = 0.6)
+                               shape = 23, size = 2.5, fill = "gold", color = "black", stroke = 0.5)
     p <- p + ggplot2::annotate("text", x = px, y = py,
                                label = "E(B[infinity])", parse = TRUE,
                                hjust = 1, vjust = 0.5, fontface = "bold", size = 4)
