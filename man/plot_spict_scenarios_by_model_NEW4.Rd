@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_spict_scenarios_by_model_NEW4.R
 \name{plot_spict_scenarios_by_model_NEW4}
 \alias{plot_spict_scenarios_by_model_NEW4}
-\title{Plot SPiCT Model Scenarios with Observed Indices and Dashed-Dot Confidence Intervals}
+\title{Plot SPiCT Model Scenarios (6 panels) with Dotted Confidence Bounds}
 \usage{
 plot_spict_scenarios_by_model_NEW4(
   models,
@@ -37,19 +37,31 @@ If \code{FALSE}, returns a list of individual ggplot objects.}
 \item{show_CIs}{Logical; if \code{TRUE} (default) draw CI lines (dotted) for upper and lower bounds.}
 }
 \value{
+If \code{return_patchwork = TRUE}, a patchwork object suitable for printing
+or \code{ggplot2::ggsave()}; otherwise, a list with elements
+\code{$biomass}, \code{$bbmsy}, \code{$catch}, \code{$f}, \code{$ffmsy}, \code{$production}.
+
 If \code{return_patchwork = TRUE}, a patchwork object is returned which can
 be printed or saved using \code{\link[ggplot2]{ggsave}}.
 If \code{return_patchwork = FALSE}, a list of ggplot objects with elements:
 \code{$biomass}, \code{$bbmsy}, \code{$catch}, \code{$f}, \code{$ffmsy}, and \code{$production}.
 }
 \description{
-This function produces a 3x2 patchwork grid of plots for SPiCT model outputs:
-biomass, B/Bmsy, catch, fishing mortality (F), F/Fmsy, and production.
-It is similar to \code{plot_spict_scenarios_by_model_NEW3()} but displays
-confidence intervals as dashed-dot (dotted) lines instead of shaded ribbons.
-Observed indices (scaled by estimated catchability) are added to the biomass panel.
+Produces a 3×2 patchwork grid for SPiCT scenario outputs: biomass, \eqn{B/B_{\mathrm{MSY}}},
+catch, fishing mortality (\eqn{F}), \eqn{F/F_{\mathrm{MSY}}}, and a production curve.
+Compared to \code{plot_spict_scenarios_by_model_NEW3()}, confidence intervals are drawn
+as dotted (upper/lower) lines instead of shaded ribbons. Observed indices (scaled by
+estimated catchability \eqn{\hat q}) are added to the biomass panel. Thin solid grey
+vertical lines mark the end of observed data in each panel; the catch panel uses the
+SPiCT convention for the last observed catch.
 }
 \details{
+Observed indices in the biomass panel are scaled by \eqn{\hat q} (per SPiCT mapping),
+i.e. \eqn{\mathrm{obsI}_{\mathrm{scaled}} = \mathrm{obsI} / \hat q}. The end-of-observation
+vertical line is derived from \code{$inp$timerangeObs} when available; for the catch panel,
+it follows SPiCT's \code{plotspict.catch()} behavior (seasonal data use the last integer
+\code{timeC}, otherwise the last \code{timeC}).
+
 This function overlays observed indices on the biomass panel after scaling
 by estimated catchability (\eqn{\hat{q}}):
 \deqn{\mathrm{obsI}_{scaled} = \frac{\mathrm{obsI}}{\hat{q}}}
@@ -58,7 +70,37 @@ Index 1 is plotted as blue circles, index 2 as green-filled squares with black b
 Confidence intervals for biomass, B/Bmsy, F, F/Fmsy, and catch are shown as
 dotted lines representing lower (\code{lwr}) and upper (\code{upr}) bounds.
 }
+\section{Aesthetics}{
+
+\itemize{
+\item CI bounds: dotted lines at \code{lwr}/\code{upr}.
+\item End-of-observation marker: thin solid grey vertical line.
+\item Production curves: dashed, width \code{lindwd}.
+}
+}
+
 \examples{
+\dontrun{
+# Suppose inp_Pella, inp_Fox, inp_Schaefer are valid SPiCT inputs:
+models <- list(
+  S1P = fit.elu2(inp_Pella),
+  S1F = fit.elu2(inp_Fox),
+  S1S = fit.elu2(inp_Schaefer)
+)
+
+# Minimal call (no production or catch adapters):
+plot_spict_scenarios_by_model_NEW4(models)
+
+# With adapters:
+p <- plot_spict_scenarios_by_model_NEW4(
+  models,
+  production_fun    = get_production_data,     # returns B_K, Production, Model
+  extract_catch_data = elu_extract_catch_data, # returns time, catch, lwr, upr, catch_type, scenario
+  show_CIs = TRUE
+)
+print(p)
+}
+
 \dontrun{
 models <- list(
   S1P = fit.elu2(inp_Pella),
@@ -70,6 +112,9 @@ plot_spict_scenarios_by_model_NEW4(models)
 
 }
 \seealso{
+\code{spict::plotspict.biomass}, \code{patchwork::plot_layout},
+\code{ggplot2::geom_line}, \code{ggplot2::geom_point}
+
 \code{\link[spict]{plotspict.biomass}}, \code{\link[patchwork]{plot_layout}},
 \code{\link[ggplot2]{geom_line}}, \code{\link[ggplot2]{geom_point}}
 }

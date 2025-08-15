@@ -1,11 +1,85 @@
-#' Plot SPiCT Model Scenarios with Observed Indices and Dashed-Dot Confidence Intervals
+#' Plot SPiCT Model Scenarios (6 panels) with Dotted Confidence Bounds
 #'
-#' This function produces a 3x2 patchwork grid of plots for SPiCT model outputs:
-#' biomass, B/Bmsy, catch, fishing mortality (F), F/Fmsy, and production.
-#' It is similar to \code{plot_spict_scenarios_by_model_NEW3()} but displays
-#' confidence intervals as dashed-dot (dotted) lines instead of shaded ribbons.
-#' Observed indices (scaled by estimated catchability) are added to the biomass panel.
+#' Produces a 3×2 patchwork grid for SPiCT scenario outputs: biomass, \eqn{B/B_{\mathrm{MSY}}},
+#' catch, fishing mortality (\eqn{F}), \eqn{F/F_{\mathrm{MSY}}}, and a production curve.
+#' Compared to \code{plot_spict_scenarios_by_model_NEW3()}, confidence intervals are drawn
+#' as dotted (upper/lower) lines instead of shaded ribbons. Observed indices (scaled by
+#' estimated catchability \eqn{\hat q}) are added to the biomass panel. Thin solid grey
+#' vertical lines mark the end of observed data in each panel; the catch panel uses the
+#' SPiCT convention for the last observed catch.
 #'
+#' @name plot_spict_scenarios_by_model_NEW4
+#' @export
+#'
+#' @param models Named list of fitted SPiCT objects (class \code{spictcls}),
+#'   e.g. \code{list(S1P = ..., S1F = ..., S1S = ...)}. Each must contain
+#'   \code{$inp$timeI} and \code{$inp$obsI} with consistent structure.
+#' @param production_fun Optional function that extracts production-curve data for
+#'   a model. It must return a data frame with columns \code{B_K}, \code{Production},
+#'   and \code{Model} (model/scenario name).
+#' @param extract_catch_data Optional function that extracts observed and predicted
+#'   catch for a model. It must return a data frame with columns:
+#'   \code{time}, \code{catch}, \code{lwr}, \code{upr}, \code{catch_type}
+#'   (values \code{"Observed"} or \code{"Predicted"}), and \code{scenario}.
+#' @param scenario_colors Optional named character vector mapping scenario names
+#'   in \code{models} to colors. If \code{NULL}, a stable default palette is used.
+#' @param return_patchwork Logical; if \code{TRUE} (default) return a patchwork
+#'   object; if \code{FALSE}, return a named list of ggplot objects.
+#' @param lindwd Numeric line width for dashed production curves (default \code{0.8}).
+#' @param show_CIs Logical; if \code{TRUE} (default) draw dotted CI lines for
+#'   lower/upper bounds where available.
+#'
+#' @details
+#' Observed indices in the biomass panel are scaled by \eqn{\hat q} (per SPiCT mapping),
+#' i.e. \eqn{\mathrm{obsI}_{\mathrm{scaled}} = \mathrm{obsI} / \hat q}. The end-of-observation
+#' vertical line is derived from \code{$inp$timerangeObs} when available; for the catch panel,
+#' it follows SPiCT's \code{plotspict.catch()} behavior (seasonal data use the last integer
+#' \code{timeC}, otherwise the last \code{timeC}).
+#'
+#' @return If \code{return_patchwork = TRUE}, a patchwork object suitable for printing
+#'   or \code{ggplot2::ggsave()}; otherwise, a list with elements
+#'   \code{$biomass}, \code{$bbmsy}, \code{$catch}, \code{$f}, \code{$ffmsy}, \code{$production}.
+#'
+#' @section Aesthetics:
+#' \itemize{
+#'   \item CI bounds: dotted lines at \code{lwr}/\code{upr}.
+#'   \item End-of-observation marker: thin solid grey vertical line.
+#'   \item Production curves: dashed, width \code{lindwd}.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose inp_Pella, inp_Fox, inp_Schaefer are valid SPiCT inputs:
+#' models <- list(
+#'   S1P = fit.elu2(inp_Pella),
+#'   S1F = fit.elu2(inp_Fox),
+#'   S1S = fit.elu2(inp_Schaefer)
+#' )
+#'
+#' # Minimal call (no production or catch adapters):
+#' plot_spict_scenarios_by_model_NEW4(models)
+#'
+#' # With adapters:
+#' p <- plot_spict_scenarios_by_model_NEW4(
+#'   models,
+#'   production_fun    = get_production_data,     # returns B_K, Production, Model
+#'   extract_catch_data = elu_extract_catch_data, # returns time, catch, lwr, upr, catch_type, scenario
+#'   show_CIs = TRUE
+#' )
+#' print(p)
+#' }
+#'
+#' @seealso
+#' \code{spict::plotspict.biomass}, \code{patchwork::plot_layout},
+#' \code{ggplot2::geom_line}, \code{ggplot2::geom_point}
+#'
+#' @importFrom ggplot2 ggplot aes geom_line geom_point geom_ribbon geom_vline geom_hline
+#' @importFrom ggplot2 scale_color_manual scale_fill_manual labs theme guide_legend guides
+#' @importFrom ggplot2 theme_minimal element_text element_blank element_rect element_line margin
+#' @importFrom dplyr bind_rows filter mutate arrange left_join group_by summarise ungroup
+#' @importFrom dplyr slice_min slice_max
+#' @importFrom patchwork plot_spacer plot_layout
+#' @importFrom grid unit
 #' @param models Named list of fitted SPiCT model objects
 #'   (e.g., \code{list(S1P = ..., S1F = ..., S1S = ...)}). All models must
 #'   contain \code{$inp$timeI} and \code{$inp$obsI} with the same structure.
@@ -65,6 +139,39 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
 
   model_names <- names(models)
 
+  # --- NEW: vertical-line style (thin solid grey) --------------------------------
+  vline_col  <- "grey50"
+  vline_size <- 0.2
+
+  # --- NEW: compute overall end-of-observation for non-catch panels --------------
+  get_obs_end_generic <- function(m) {
+    tr <- m$inp$timerangeObs
+    if (!is.null(tr) && length(tr) >= 2 && is.finite(tr[2])) return(tr[2])
+    if (!is.null(m$inp$timeC) && length(m$inp$timeC))       return(tail(m$inp$timeC, 1))
+    if (!is.null(m$inp$timeI) && length(m$inp$timeI) &&
+        length(m$inp$timeI[[1]]) > 0)                      return(tail(m$inp$timeI[[1]], 1))
+    if (!is.null(m$inp$time)  && length(m$inp$time))        return(max(m$inp$time, na.rm = TRUE))
+    NA_real_
+  }
+  cand_noncatch <- vapply(models, get_obs_end_generic, numeric(1))
+  obs_end_overall <- if (all(!is.finite(cand_noncatch))) NA_real_ else suppressWarnings(max(cand_noncatch, na.rm = TRUE))
+
+  # --- NEW: SPiCT-like end of observed catch for the Catch panel -----------------
+  # Mirrors plotspict.catch(): if seasonal (min(dtc) < 1), pick last integer timeC; else last timeC.
+  get_catch_obs_end <- function(m) {
+    inp <- m$inp
+    if (is.null(inp$timeC) || !length(inp$timeC)) return(NA_real_)
+    if (!is.null(inp$dtc) && length(inp$dtc) && min(inp$dtc, na.rm = TRUE) < 1) {
+      ix <- which((inp$timeC %% 1) == 0)
+      if (length(ix)) return(tail(inp$timeC[ix], 1))
+      return(tail(inp$timeC, 1))
+    } else {
+      return(tail(inp$timeC, 1))
+    }
+  }
+  catch_obs_end_global <- suppressWarnings(max(vapply(models, get_catch_obs_end, numeric(1)), na.rm = TRUE))
+  # -------------------------------------------------------------------------------
+
   get_base_model <- function(modname) {
     if (grepl("P", modname, fixed = TRUE)) return("Pella")
     if (grepl("F", modname, fixed = TRUE)) return("Fox")
@@ -97,6 +204,29 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
   }
 
   theme_minimal_compact2 <- function(base_size = 10, base_family = "") {
+    theme_minimal(base_size = base_size, base_family = base_family) +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+        axis.title = element_text(face = "bold", size = 12),
+        axis.text = element_text(size = 10, face = "bold"),
+        legend.position = c(0.85, 0.98),
+        legend.justification = c("right", "top"),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9, face = "bold"),
+        legend.key.size = unit(0.7, "lines"),
+        panel.grid = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey35", linewidth = 2),
+        axis.ticks = element_line(linewidth = 0.5, color = "grey35"),
+        axis.ticks.length = unit(3, "pt"),
+        strip.background = element_rect(fill = "grey35", color = "grey35", linewidth = 0.5),
+        strip.text = element_text(face = "bold", size = rel(1)),
+        text = element_text(face = "bold", size = 10),
+        plot.margin = margin(3, 3, 3, 3)
+      )
+  }
+  theme_minimal_compact3 <- function(base_size = 10, base_family = "") {
     theme_minimal(base_size = base_size, base_family = base_family) +
       theme(
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
@@ -139,7 +269,11 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
       { if (show_CIs) geom_line(aes(y = lwr), linetype = "dotted", linewidth = 0.6) } +
       { if (show_CIs) geom_line(aes(y = upr), linetype = "dotted", linewidth = 0.6) } +
       geom_line(linewidth = 0.8) +
-      scale_color_manual(values = model_colors) +
+      # --- NEW: vertical end-of-observation line for biomass panel ---------------
+    { if (is.finite(obs_end_overall))
+      geom_vline(xintercept = obs_end_overall, color = vline_col, linewidth = vline_size) } +
+      # --------------------------------------------------------------------------
+    scale_color_manual(values = model_colors) +
       labs(x = "Year", y = "Biomass (tons)") +
       theme_minimal_compact2() +
       guides(color = guide_legend(override.aes = list(linewidth = 1.8)))
@@ -169,7 +303,11 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
       { if (show_CIs) geom_line(aes(y = lwr), linetype = "dotted", linewidth = 0.6) } +
       { if (show_CIs) geom_line(aes(y = upr), linetype = "dotted", linewidth = 0.6) } +
       geom_line(linewidth = 0.8) +
-      scale_color_manual(values = model_colors) +
+      # --- NEW: vertical end-of-observation line for non-catch panels ------------
+    { if (is.finite(obs_end_overall))
+      geom_vline(xintercept = obs_end_overall, color = vline_col, linewidth = vline_size) } +
+      # --------------------------------------------------------------------------
+    scale_color_manual(values = model_colors) +
       labs(x = "Year", y = ylab_expr) +
       theme_minimal_compact2() +
       guides(color = guide_legend(override.aes = list(linewidth = 1.8)))
@@ -200,7 +338,11 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
       { if (show_CIs) geom_line(data = predicted, aes(x = time, y = upr, color = model), linetype = "dotted", linewidth = 0.6) } +
       geom_line(data = predicted, aes(x = time, y = catch, color = model), linewidth = 0.8) +
       geom_point(data = observed, aes(x = time, y = catch), color = "black", size = 1.3) +
-      scale_color_manual(values = model_colors) +
+      # --- NEW: vertical end-of-observed CATCH line ------------------------------
+    { if (is.finite(catch_obs_end_global))
+      geom_vline(xintercept = catch_obs_end_global, color = vline_col, linewidth = vline_size) } +
+      # --------------------------------------------------------------------------
+    scale_color_manual(values = model_colors) +
       labs(x = "Year", y = "Catch (tons)") +
       theme_minimal_compact2() +
       guides(color = guide_legend(override.aes = list(linewidth = 2)))
@@ -220,7 +362,7 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
       scale_color_manual(values = model_colors) +
       scale_shape_manual(values = 15 + seq_along(model_names)) +
       labs(x = expression(bold(B/K)), y = "Production") +
-      theme_minimal_compact2()
+      theme_minimal_compact3()
   } else {
     plots$production <- ggplot() + labs(title = "No production data provided") + theme_void()
   }
