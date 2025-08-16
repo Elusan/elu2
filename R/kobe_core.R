@@ -24,7 +24,9 @@ kobe_safe <- function(rep_obj,
   res <- try(
     {
       # delegate the real work to your ggplot builder
-      p <- kobe_all_in_one_gg(
+      p <- Original_kobe_all_in_gg(
+
+      #p <- kobe_all_in_one_gg(
         rep = rep_obj,
         logax = logax, plot.legend = plot.legend, man.legend = man.legend,
         ext = ext, rel.axes = rel.axes,
