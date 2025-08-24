@@ -1,11 +1,11 @@
-elu_prior_posterior_grid <- function(models, 
+elu_prior_posterior_grid_999 <- function(models,
                                      priors_fun = priors.elu6,
                                      width = 15, height = 10, dpi = 300,
                                      outdir = "FIG", file_prefix = NULL,  # <- NULL by default
                                      return_patchwork = TRUE) {
   require(patchwork)
   require(ggplot2)
-  
+
   # -- Automatically set scenario prefix for filename --
   scenario_prefix <- ""
   model_names <- names(models)
@@ -17,7 +17,7 @@ elu_prior_posterior_grid <- function(models,
     file_prefix <- paste0("prior_posterior_grid_", scenario_prefix)
   }
   # ----------------------------------------------------
-  
+
   all_priors <- unique(unlist(lapply(models, function(rep) {
     inp <- rep$inp
     useflags <- inp$priorsuseflags
@@ -27,7 +27,7 @@ elu_prior_posterior_grid <- function(models,
   n_models <- length(models)
   n_priors <- length(all_priors)
   model_ids <- names(models)
-  
+
   get_prior_plot_or_empty <- function(rep, prior, model_id) {
     inp <- rep$inp
     useflags <- inp$priorsuseflags
@@ -41,7 +41,7 @@ elu_prior_posterior_grid <- function(models,
     }
     patchwork::plot_spacer() + theme_void()
   }
-  
+
   plots_grid <- lapply(seq_along(models), function(i) {
     model_id <- model_ids[i]
     rep <- models[[i]]
@@ -49,21 +49,21 @@ elu_prior_posterior_grid <- function(models,
       get_prior_plot_or_empty(rep, prior, model_id)
     })
   })
-  
+
   plots_vec <- unlist(plots_grid, recursive = FALSE)
-  
+
   final_patchwork <- wrap_plots(plots_vec, nrow = n_models, ncol = n_priors)
-  
-  
+
+
   #final_patchwork <- wrap_plots(plots_vec, nrow = n_models, ncol = n_priors) +
     #plot_layout(guides = "collect")
-  
+
   if (!is.null(outdir)) {
     if (!dir.exists(outdir)) dir.create(outdir)
     out_file <- file.path(outdir, paste0(file_prefix, ".png"))
     ggsave(out_file, final_patchwork, width = width, height = height, dpi = dpi)
   }
-  
+
   if (return_patchwork) {
     return(final_patchwork)
   } else {

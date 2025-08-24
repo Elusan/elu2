@@ -115,7 +115,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(seasons);        // A vector of length ns indicating to which season a state belongs
   DATA_VECTOR(seasonindex);    // A vector of length ns giving the number stepped within the current year
   DATA_INTEGER(nseasons);      // Number of seasons pr year
-  DATA_VECTOR(seasonindex2)    // A vector of length ns mapping states to seasonal AR component (for seasontype=3)
+  DATA_VECTOR(seasonindex2);    // A vector of length ns mapping states to seasonal AR component (for seasontype=3)
     DATA_MATRIX(splinemat);      // Design matrix for the seasonal spline
   DATA_MATRIX(splinematfine);  // Design matrix for the seasonal spline on a fine time scale to get spline uncertainty
   DATA_SCALAR(omega);          // Period time of seasonal SDEs (2*pi = 1 year period)
@@ -159,7 +159,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(priorF);         // Prior vector for F, [log(mean), stdev in log, useflag, year, if]
   DATA_VECTOR(priorBBmsy);     // Prior vector for B/Bmsy, [log(mean), stdev in log, useflag, year, ib]
   DATA_VECTOR(priorFFmsy);     // Prior vector for F/Fmsy, [log(mean), stdev in log, useflag, year, if]
-  DATA_VECTOR(priorBmsyB0)     // Prior vector for Bmsy/B_0, [mean, stdev, useflag]
+  DATA_VECTOR(priorBmsyB0);     // Prior vector for Bmsy/B_0, [mean, stdev, useflag]
     // Options
     DATA_SCALAR(simple);         // If simple=1 then use simple model (catch assumed known, no F process)
   DATA_SCALAR(dbg);            // Debug flag, if == 1 then print stuff.
@@ -220,6 +220,14 @@ Type objective_function<Type>::operator() ()
     ind = CppAD::Integer(ise(i)-1);
     logobsE(i) = obssrt(ind);
   }
+
+  // === WAIC: storage for pointwise log-likelihood aligned to obssrt order
+  const int N_total = obssrt.size();
+  vector<Type> loglik_point(N_total);    // log p(y_i | theta_hat) for each datum in obssrt order
+  vector<Type> waic_used_mask(N_total);  // 1 if datum contributes, 0 otherwise
+  for (int i=0; i<N_total; ++i){ loglik_point(i)=0.0; waic_used_mask(i)=0.0; }
+  // === end WAIC storage
+
 
   // Length of vectors
   int nm = logm.size();
@@ -934,9 +942,17 @@ Type objective_function<Type>::operator() ()
         }
       }
       ans-= keep(inds) * likval;
+
+      // === WAIC
+      loglik_point(inds)   = keep(inds) * likval;
+      waic_used_mask(inds) = keep(inds);
+      // === end WAIC
+
       // DEBUGGING
       if(dbg>1){
         std::cout << "-- i: " << i << " -   logobsC(i): " << logobsC(i) << " -   stdevfacc(i): " << stdevfacc(i) << "  sdc: " << sdc << "  likval: " << likval << "  ans:" << ans << std::endl;
+
+
       }
     }
     SIMULATE{
@@ -972,9 +988,17 @@ Type objective_function<Type>::operator() ()
       }
       inds = CppAD::Integer(ise(i)-1);
       ans-= keep(inds) * likval;
+
+      // === WAIC
+      loglik_point(inds)   = keep(inds) * likval;
+      waic_used_mask(inds) = keep(inds);
+      // === end WAIC
+
       // DEBUGGING
       if(dbg>1){
         std::cout << "-- i: " << i << " -   logobsE(i): " << logobsE(i) << " -   stdevface(i): " << stdevface(i) << "  sde: " << sde << "  likval: " << likval << "  ans:" << ans << std::endl;
+
+
       }
     }
     SIMULATE{
@@ -1015,9 +1039,16 @@ Type objective_function<Type>::operator() ()
       }
     }
     ans-= keep(inds) * likval * iuse(i);
+
+    // === WAIC
+    loglik_point(inds)   = keep(inds) * likval * iuse(i);
+    waic_used_mask(inds) = keep(inds) * iuse(i);
+    // === end WAIC
+
     // DEBUGGING
     if(dbg>1){
       std::cout << "-- i: " << i << " -  ind: " << ind << " -  indq: " << indq << " -  indsdi: " << indsdi << " -  inds: " << inds << " -   logobsI(i): " << logobsI(i) << "  logIpred(i): " << logIpred(i) << "  stdevfaci(i): " << stdevfaci(i) << "  likval: " << likval << "  sdi: " << sdi << "  ans:" << ans << std::endl;
+
     }
   }
   SIMULATE{
@@ -1307,6 +1338,27 @@ Type objective_function<Type>::operator() ()
     ADREPORT(residB);
     ADREPORT(residF);
   }
+
+  // === WAIC summary (plug-in) and ingredients
+  Type n_used = 0.0;
+  for (int i=0; i<N_total; ++i) n_used += waic_used_mask(i);
+  if (n_used <= 0) n_used = 1.0;
+
+  Type sum_loglik = 0.0;        // Σ log p(y_i | θ̂ ), zero where unused
+  for (int i=0; i<N_total; ++i) sum_loglik += loglik_point(i);
+
+  // First-term-only proxy of WAIC components (− average log predictive density at mode):
+  Type WAIC_plug_mean  = - sum_loglik / n_used;
+  // Same on −2 scale (handy for ranking models like AIC):
+  Type WAIC_plug_total = -2.0 * sum_loglik;
+
+  REPORT(loglik_point);     // length = length(obssrt)
+  REPORT(waic_used_mask);   // 1/0 per datum
+  REPORT(WAIC_plug_mean);   // −(1/N_used) * Σ log p(y_i | θ̂ )
+  REPORT(WAIC_plug_total);  // −2 * Σ log p(y_i | θ̂ )
+  REPORT(n_used);
+  // === end WAIC
+
 
   return ans;
 }

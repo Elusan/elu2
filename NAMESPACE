@@ -3,6 +3,7 @@
 S3method(plot,spictcls)
 S3method(print,spictcls)
 S3method(summary,spictcls)
+export(All_scenarios_Tables_Grouped)
 export(Original_kobe_all_in_gg)
 export(add.man.scenario)
 export(add.manlines)
