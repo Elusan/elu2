@@ -4,7 +4,7 @@
 \alias{mohns_rho}
 \title{Calculate Mohn's rho for different estimates}
 \usage{
-mohns_rho(rep, what = c("FFmsy", "BBmsy"), annualfunc = mean)
+mohns_rho(rep, what = c("FFmsy", "BBmsy", "B", "F"), annualfunc = mean)
 }
 \arguments{
 \item{rep}{A valid result from fit.spict}

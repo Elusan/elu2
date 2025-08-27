@@ -7,7 +7,7 @@
 extract.hindcast.info(rep, CI = 0.95, verbose = TRUE)
 }
 \arguments{
-\item{rep}{Result of \code{\link{fit.spict}} that contains hindcasted runs
+\item{rep}{Result of \code{\link{fit.elu2}} that contains hindcasted runs
 added by \code{\link{hindcast}}.}
 
 \item{CI}{Confidence intervals to be calculated, e.g. 0.9 for the 90\\%

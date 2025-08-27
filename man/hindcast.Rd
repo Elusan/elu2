@@ -13,7 +13,7 @@ hindcast(
 )
 }
 \arguments{
-\item{rep}{rep Result of \code{\link{fit.spict}}.}
+\item{rep}{rep Result of \code{\link{fit.elu2}}.}
 
 \item{npeels}{Number of years/seasons (dependent on dtc) of data (catch and
 effort) to remove (this is also the total number of model runs).}
@@ -57,7 +57,7 @@ The predicted indices can be visualised with the function
 \examples{
 data(pol)
 inp <- pol$albacore
-rep <- fit.spict(inp)
+rep <- fit.elu2(inp)
 rep <- hindcast(rep, npeels = 5)
 plotspict.hindcast(rep)
 }

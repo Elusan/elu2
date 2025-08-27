@@ -1,5 +1,5 @@
 elu_prior_posterior_grid_999 <- function(models,
-                                     priors_fun = priors.elu6,
+                                     priors_fun = priors.elu10,
                                      width = 15, height = 10, dpi = 300,
                                      outdir = "FIG", file_prefix = NULL,  # <- NULL by default
                                      return_patchwork = TRUE) {

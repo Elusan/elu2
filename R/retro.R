@@ -104,12 +104,12 @@ retro <- function(rep, nretroyear=5, reduce_output_size = TRUE, mc.cores = 1){
 #' rep <- retro(rep, nretroyear = 4)
 #' mohns_rho(rep)
 #' @export
-mohns_rho <- function(rep, what = c("FFmsy", "BBmsy"), annualfunc = mean) {
+mohns_rho <- function(rep, what = c("FFmsy", "BBmsy", "B", "F"), annualfunc = mean) {
   if (!"spictcls" %in% class(rep)) stop("This function only works with a fitted spict object (class 'spictcls'). Please run `fit.spict` first.")
   if (!"retro" %in% names(rep)) stop("No results of the retro function found. Please run the retrospective analysis using the `retro` function.")
   if ("Ipred" %in% what && rep$inp$nindex > 1) warning("Mohn's rho will be calculated only for index 1.")
 
-  getFullYearEstimates <- function(x, what = c("FFmsy", "BBmsy"), annualfunc = mean) {
+  getFullYearEstimates <- function(x, what = c("FFmsy", "BBmsy", "B", "F"), annualfunc = mean) {
     res <- lapply(what, function(ww) {
       if (ww == "Ipred" || ww == "Ipred1") {
         if (x$inp$nindex == 1) {

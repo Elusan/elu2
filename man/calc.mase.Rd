@@ -7,7 +7,7 @@
 calc.mase(rep, verbose = TRUE)
 }
 \arguments{
-\item{rep}{Result of \code{\link{fit.spict}} that contains hindcasted runs added by \code{\link{hindcast}}.}
+\item{rep}{Result of \code{\link{fit.elu2}} that contains hindcasted runs added by \code{\link{hindcast}}.}
 
 \item{verbose}{Should detailed outputs be provided (default: TRUE).}
 }
@@ -41,7 +41,7 @@ printed.
 \examples{
 data(pol)
 inp <- pol$albacore
-rep <- fit.spict(inp)
+rep <- fit.elu2(inp)
 rep <- hindcast(rep)
 calc.mase(rep)
 }

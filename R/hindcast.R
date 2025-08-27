@@ -18,7 +18,7 @@
 #' @name hindcast
 #' @title Conduct hindcasting analysis
 #'
-#' @param rep rep Result of \code{\link{fit.spict}}.
+#' @param rep rep Result of \code{\link{fit.elu2}}.
 #' @param npeels Number of years/seasons (dependent on dtc) of data (catch and
 #'     effort) to remove (this is also the total number of model runs).
 #' @param reduce.output.size logical, if \code{TRUE} (default) hindcasting is
@@ -54,7 +54,7 @@
 #' @examples
 #' data(pol)
 #' inp <- pol$albacore
-#' rep <- fit.spict(inp)
+#' rep <- fit.elu2(inp)
 #' rep <- hindcast(rep, npeels = 5)
 #' plotspict.hindcast(rep)
 #' @export
@@ -147,9 +147,9 @@ hindcast <- function(rep, npeels = 7, reduce.output.size = TRUE, mc.cores = 1, p
       sapply(inpall[[i]]$timeI, function(x) !(max(x) >= hindcastTimes[i]))
   }
 
-  asd <- try(parallel::mclapply(inpall, fit.spict, mc.cores = mc.cores))
+  asd <- try(parallel::mclapply(inpall, fit.elu2, mc.cores = mc.cores))
   if(inherits(asd, "try-error")){
-    rep$hindcast <- lapply(inpall, fit.spict)
+    rep$hindcast <- lapply(inpall, fit.elu2)
   }else{
     rep$hindcast <- asd
   }
@@ -164,7 +164,7 @@ hindcast <- function(rep, npeels = 7, reduce.output.size = TRUE, mc.cores = 1, p
 #' @name extract.hindcast.info
 #' @title Extract hindcast info from a fitted spict object
 #'
-#' @param rep Result of \code{\link{fit.spict}} that contains hindcasted runs
+#' @param rep Result of \code{\link{fit.elu2}} that contains hindcasted runs
 #'     added by \code{\link{hindcast}}.
 #' @param CI Confidence intervals to be calculated, e.g. 0.9 for the 90\%
 #'     confidence intervals. By default (CI = 0.95), the 95\% confidence
@@ -315,7 +315,7 @@ extract.hindcast.info <- function(rep, CI = 0.95, verbose = TRUE) {
 #' @name calc.mase
 #' @title Calculate Mean Absolute Scaled Error (MASE)
 #'
-#' @param rep Result of \code{\link{fit.spict}} that contains hindcasted runs added by \code{\link{hindcast}}.
+#' @param rep Result of \code{\link{fit.elu2}} that contains hindcasted runs added by \code{\link{hindcast}}.
 #' @param verbose Should detailed outputs be provided (default: TRUE).
 #'
 #' @details This function calculates the Mean Absolute Scaled Error (MASE) for
@@ -342,7 +342,7 @@ extract.hindcast.info <- function(rep, CI = 0.95, verbose = TRUE) {
 #' @examples
 #' data(pol)
 #' inp <- pol$albacore
-#' rep <- fit.spict(inp)
+#' rep <- fit.elu2(inp)
 #' rep <- hindcast(rep)
 #' calc.mase(rep)
 #' @export
