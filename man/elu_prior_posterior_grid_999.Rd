@@ -2,63 +2,69 @@
 % Please edit documentation in R/elu_prior_posterior_grid_999.R
 \name{elu_prior_posterior_grid_999}
 \alias{elu_prior_posterior_grid_999}
-\title{Plot and Export a Grid of Prior vs. Posterior Distributions for Multiple Models}
+\title{Prior–Posterior Grid (rows = models, cols = priors)}
 \usage{
 elu_prior_posterior_grid_999(
   models,
-  priors_fun = priors.elu6,
-  width = 13,
-  height = 10,
+  priors_fun = priors_as_named_list,
+  width = 12,
+  height = 11,
   dpi = 300,
-  outdir = "FIG/Priors_posterios_grids",
+  outdir = "FIG",
   file_prefix = NULL,
   return_patchwork = TRUE
 )
 }
 \arguments{
-\item{models}{A named list of model fit objects (e.g., SPiCT/ELU fits), each with \code{$inp$} and active priors.}
+\item{models}{Named list of fitted ELU/SPiCT model objects. Names are used
+to label rows and to infer a default file prefix.}
 
-\item{priors_fun}{A function (default: \code{priors.elu6}) that generates a list of ggplot prior vs posterior plots for a single model.}
+\item{priors_fun}{Function that takes a single model and returns a \strong{named
+list of ggplot objects} (one per active prior). Default:
+\code{priors_as_named_list}.}
 
-\item{width}{Numeric. Width (in inches) of the saved grid plot. Default is 13.}
+\item{width, height}{Numbers. Output image size (in inches) if saving. Defaults:
+\code{width = 12}, \code{height = 11}.}
 
-\item{height}{Numeric. Height (in inches) of the saved grid plot. Default is 10.}
+\item{dpi}{Integer. Output resolution (dots per inch) if saving. Default: \code{300}.}
 
-\item{dpi}{Numeric. Resolution (in dots per inch) for the saved image. Default is 300.}
+\item{outdir}{Character or \code{NULL}. Output directory to save PNG. If \code{NULL},
+nothing is written. Default: \code{"FIG"} (created if missing).}
 
-\item{outdir}{Character. Output directory where the grid plot image will be saved. Default is \code{"FIG"}.}
+\item{file_prefix}{Character or \code{NULL}. File name stem for the PNG. If \code{NULL}
+or empty, a prefix is inferred from the first model name (scenario part).}
 
-\item{file_prefix}{Character. Optional file name prefix for the saved plot. If \code{NULL} (default), will use the scenario name extracted from model names.}
-
-\item{return_patchwork}{Logical. If \code{TRUE} (default), returns the patchwork grid object. If \code{FALSE}, returns \code{NULL} invisibly.}
+\item{return_patchwork}{Logical. If \code{TRUE}, return the combined patchwork object;
+otherwise return \code{NULL} (invisibly). Default: \code{TRUE}.}
 }
 \value{
-A patchwork grid object if \code{return_patchwork = TRUE}; otherwise, \code{NULL} invisibly.
+A \pkg{patchwork} object (if \code{return_patchwork = TRUE}) or
+\code{NULL} invisibly after saving.
 }
 \description{
-Generates and saves a grid of prior vs. posterior plots for all active prior parameters across multiple SPiCT or ELU models. Each row represents a model, and each column a prior parameter; only priors actively used (estimated) in each model are shown. Empty panels are included where a prior is not used in a particular model.
+Builds a patchwork grid where \strong{each row} corresponds to a model and
+\strong{each column} corresponds to a prior parameter (with multi-row priors
+expanded in numeric order, e.g., \code{logsdi1}, \code{logsdi2}). The
+function calls a panel-builder (by default \code{priors_as_named_list})
+for each model, aligns columns across models by parameter name, and
+optionally saves the resulting grid to disk.
 }
 \details{
-The function:
-\itemize{
-\item Automatically determines the set of prior parameters that are active (used/estimated) in any of the models provided.
-\item Calls \code{priors_fun} for each model to generate the relevant prior vs posterior plots.
-\item Arranges all plots in a grid (rows = models, columns = priors), filling empty panels if a given prior is not estimated for a particular model.
-\item Saves the grid as a high-resolution PNG image to \code{outdir}, with a file name based on \code{file_prefix} or scenario.
-\item Optionally returns the \code{patchwork} object for further customization or immediate display.
-}
-This is especially useful for scenario-based sensitivity analysis and manuscript reporting.
+Column order is derived from the union of prior names across all models,
+arranged by each model's \code{$inp$priorsuseflags} order, with multi-row
+priors expanded as \code{name1}, \code{name2}, ... in numeric order.
+Missing cells (a model without a given prior) are filled with a spacer.
 }
 \examples{
 \dontrun{
-grid_plot <- elu_prior_posterior_grid_999(
-  models = list(S1P = fit1, S1S = fit2, S1F = fit3),
-  outdir = "FIG",
-  file_prefix = "prior_posterior_grid_S1"
-)
+g <- elu_prior_posterior_grid_999(models_all$S1,
+                                  priors_fun = priors_as_named_list,
+                                  outdir = "FIG",
+                                  file_prefix = "prior_grid_S1")
+g
 }
 
 }
 \seealso{
-\code{\link{priors.elu6}}
+\code{\link{priors_as_named_list}}, \code{\link{theme_minimal_compact}}
 }
