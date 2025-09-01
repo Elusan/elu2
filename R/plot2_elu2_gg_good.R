@@ -363,24 +363,67 @@ plot2_elu2_gg_good <- function(rep_man,
   ## --------------------
   ## Panel: Kobe (absolute primary axes + relative secondary axes)
   ## --------------------
-  pK <- kobe_all_in_one_gg(
-    rep                 = rep_man,
-    logax               = FALSE,
-    plot.legend         = TRUE,
-    man.legend          = FALSE,   # hide scenario legend here
-    ext                 = TRUE,
-    rel.axes            = FALSE,
-    CI                  = CI,
-    scenario_colors     = cols,
-    origin_offset_frac  = 0.04
-  )
+#   pK <- kobe_all_in_one_gg(
+#     rep                 = rep_man,
+#     logax               = FALSE,
+#     plot.legend         = TRUE,
+#     man.legend          = FALSE,   # hide scenario legend here
+#     ext                 = TRUE,
+#     rel.axes            = FALSE,
+#     CI                  = CI,
+#     scenario_colors     = cols,
+#     origin_offset_frac  = 0.04
+#   )
+#
+#   if (isTRUE(return_patchwork)) {
+#     ((pB | pC) / (pF | pK)) + patchwork::plot_layout(heights = c(1, 1))
+#   } else {
+#     list(bbmsy = pB, catch = pC, ffmsy = pF, kobe = pK)
+#   }
+# }
 
-  if (isTRUE(return_patchwork)) {
-    ((pB | pC) / (pF | pK)) + patchwork::plot_layout(heights = c(1, 1))
-  } else {
-    list(bbmsy = pB, catch = pC, ffmsy = pF, kobe = pK)
-  }
+
+## ----------- REPLACEMENT FOR ADDING SAVE DIRECTORY =------
+## --------------------
+## Panel: Kobe (absolute primary axes + relative secondary axes)
+## --------------------
+pK <- kobe_all_in_one_gg(
+  rep                 = rep_man,
+  logax               = FALSE,
+  plot.legend         = TRUE,
+  man.legend          = FALSE,   # hide scenario legend here
+  ext                 = TRUE,
+  rel.axes            = FALSE,
+  CI                  = CI,
+  scenario_colors     = cols,
+  origin_offset_frac  = 0.04
+)
+
+# ---- Compose the 2x2 grid *always* so we can save it ----
+pw <- ((pB | pC) / (pF | pK)) + patchwork::plot_layout(heights = c(1, 1))
+
+# ---- Auto-save to FIG/Manage/manage_best_model.png ----
+out_dir  <- file.path("FIG", "Manage")
+out_file <- file.path(out_dir, "manage_best_model.png")
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Use a robust canvas size; tweak if you prefer a different aspect
+ggplot2::ggsave(
+  filename = out_file,
+  plot     = pw,
+  width    = 14,     # inches
+  height   = 8,      # inches
+  dpi      = 300
+)
+
+# ---- Return behavior preserved ----
+if (isTRUE(return_patchwork)) {
+  return(pw)
+} else {
+  return(list(bbmsy = pB, catch = pC, ffmsy = pF, kobe = pK))
 }
+}
+
 
 # ----- helpers (internal) -----------------------------------------------------
 

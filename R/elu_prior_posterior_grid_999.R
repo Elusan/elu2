@@ -29,7 +29,7 @@ theme_minimal_compact_this <- function(base_size = 8, base_family = "") {
       plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
       axis.title = element_text(face = "bold", size = 8),
       axis.text = element_text(size = 8, face = "bold"),
-      legend.position = "bottom",
+      #legend.position = "bottom",
       legend.title = element_blank(),
       legend.text = element_text(size = 10, face = "bold"),
       legend.key.size = unit(0.6, "lines"),

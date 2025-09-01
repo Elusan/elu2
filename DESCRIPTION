@@ -24,7 +24,11 @@ Imports:
     kableExtra,
     dplyr,
     purrr,
-    ggplot2
+    ggplot2,
+    grid,
+    grDevices,
+    stats,
+    patchwork
 Suggests: 
     rmarkdown,
     testthat (>= 3.0.0)
