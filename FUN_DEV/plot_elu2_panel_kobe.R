@@ -1,47 +1,173 @@
-#' Kobe panel (complete, ggplot2) — OSA on, MSY ellipse, scenarios, E(B∞) mini-legend
+#' Truth overlay color (semi-transparent orange)
 #'
-#' @description
-#' Draws a Kobe-style phase plot for a fitted SPiCT model. Supports:
+#' Returns a semi-transparent orange color used to draw "true" trajectories
+#' and reference levels in simulation/OSA overlays.
+#'
+#' @return A length-1 character string with RGBA hex color.
+#' @keywords internal
+#' @noRd
+true.col <- function() grDevices::rgb(1, 165/255, 0, alpha = 0.7)  # orange, semi-transp.
+
+#' Add "truth" overlays to a panel ggplot
+#'
+#' Conditionally overlays simulated **true** trajectories / levels onto a
+#' panel ggplot, based on fields present in \code{rep$inp$true}.
+#' Supported panels: \code{"biomass"}, \code{"f"}, \code{"bbmsy"},
+#' \code{"ffmsy"}, \code{"catch"}.
+#'
+#' - \strong{biomass}: draws true \code{B(t)} line and \code{Bmsy} (as a line or series).
+#' - \strong{f}: draws true \code{F(t)} line and \code{Fmsy} (as a line or series).
+#' - \strong{bbmsy}: draws true \code{B(t)/Bmsy(t)}.
+#' - \strong{ffmsy}: draws true \code{F(t)/Fmsy(t)}.
+#' - \strong{catch}: draws horizontal \code{MSY} line.
+#'
+#' If no \code{rep$inp$true} is present, the plot is returned unchanged.
+#'
+#' @param p A ggplot object built by a panel function.
+#' @param rep A fitted \code{spictcls} object; may contain \code{rep$inp$true}.
+#' @param panel Single string, one of \code{"biomass"}, \code{"f"},
+#'   \code{"bbmsy"}, \code{"ffmsy"}, \code{"catch"}.
+#'
+#' @return The input ggplot \code{p} with overlays added (or unchanged).
+#' @examples
+#' \dontrun{
+#' p <- plot_elu2_panel_biomass(rep)
+#' p <- .elu2_overlay_truth(p, rep, panel = "biomass")
+#' }
+#' @keywords internal
+#' @noRd
+.elu2_overlay_truth <- function(p, rep, panel) {
+  if (!("true" %in% names(rep$inp)) || is.null(rep$inp$true)) return(p)
+  tr <- rep$inp$true
+  has <- function(nm) !is.null(tr[[nm]]) && length(tr[[nm]]) > 0
+
+  if (panel == "biomass") {
+    if (has("time") && has("B")) {
+      p <- p + ggplot2::geom_line(
+        data = data.frame(time = tr$time, y = tr$B),
+        ggplot2::aes(x = time, y = y),
+        inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+      )
+    }
+    if (has("Bmsy")) {
+      if (length(tr$Bmsy) == 1L) {
+        p <- p + ggplot2::geom_hline(yintercept = tr$Bmsy, color = true.col(), linewidth = 0.8) +
+          ggplot2::geom_hline(yintercept = tr$Bmsy, color = "black", linetype = "dotted")
+      } else if (has("time")) {
+        p <- p + ggplot2::geom_line(
+          data = data.frame(time = tr$time, y = tr$Bmsy),
+          ggplot2::aes(x = time, y = y),
+          inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+        )
+      }
+    }
+  }
+
+  if (panel == "f") {
+    if (has("time") && has("Fs")) {
+      p <- p + ggplot2::geom_line(
+        data = data.frame(time = tr$time, y = tr$Fs),
+        ggplot2::aes(x = time, y = y),
+        inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+      )
+    }
+    if (has("Fmsy")) {
+      if (length(tr$Fmsy) == 1L) {
+        p <- p + ggplot2::geom_hline(yintercept = tr$Fmsy, color = true.col(), linewidth = 0.8) +
+          ggplot2::geom_hline(yintercept = tr$Fmsy, color = "black", linetype = "dotted")
+      } else if (has("time")) {
+        p <- p + ggplot2::geom_line(
+          data = data.frame(time = tr$time, y = tr$Fmsy),
+          ggplot2::aes(x = time, y = y),
+          inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+        )
+      }
+    }
+  }
+
+  if (panel == "bbmsy") {
+    if (has("time") && has("B") && has("Bmsy")) {
+      p <- p + ggplot2::geom_line(
+        data = data.frame(time = tr$time, y = tr$B / tr$Bmsy),
+        ggplot2::aes(x = time, y = y),
+        inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+      )
+    }
+  }
+
+  if (panel == "ffmsy") {
+    if (has("time") && has("Fs") && has("Fmsy")) {
+      p <- p + ggplot2::geom_line(
+        data = data.frame(time = tr$time, y = tr$Fs / tr$Fmsy),
+        ggplot2::aes(x = time, y = y),
+        inherit.aes = FALSE, color = true.col(), linewidth = 0.8
+      )
+    }
+  }
+
+  if (panel == "catch") {
+    if (has("MSY")) {
+      p <- p + ggplot2::geom_hline(yintercept = tr$MSY, color = true.col(), linewidth = 0.8) +
+        ggplot2::geom_hline(yintercept = tr$MSY, color = "black", linetype = "dotted")
+    }
+  }
+
+  p
+}
+
+#' Kobe panel (ggplot2): OSA on, MSY ellipse, scenarios, and left-aligned mini-legend
+#'
+#' Draws a phase plot of biomass vs. fishing mortality (absolute or relative to
+#' MSY), including the MSY ellipse, historical and predicted trajectories,
+#' optional management scenarios, and a compact, left-aligned mini-legend that
+#' shows \eqn{E(B_\infty)} and the \strong{True} MSY marker when available.
+#'
+#' The function supports:
 #' \itemize{
-#'   \item Relative or absolute axes (B\eqn{_t}/B\eqn{_{MSY}} vs F\eqn{_t}/F\eqn{_{MSY}} or B\eqn{_t} vs F\eqn{_t})
-#'   \item MSY uncertainty ellipse (when available)
-#'   \item Historical trajectory, predicted segment, and E(B\eqn{\infty}) marker
-#'   \item Optional management scenario trajectories and legend
-#'   \item OSA/time-varying growth handling (forces relative axes)
+#'   \item Absolute axes (\eqn{B_t}, \eqn{F_t}) with optional secondary relative axes.
+#'   \item Relative axes (\eqn{B_t/B_{MSY}}, \eqn{F_t/F_{MSY}}) via \code{rel.axes = TRUE}.
+#'   \item Annual averaging when sub-annual time steps are present.
+#'   \item Optional scenario overlays from \code{model$man} (solid in-management,
+#'         dashed pre-management).
+#'   \item A gold diamond for \eqn{E(B_\infty)} and an orange triangle (not in legend)
+#'         for the true MSY point if \code{model$inp$true} exists.
 #' }
 #'
-#' @param model Fitted SPiCT object (`spictcls`) with `inp$reportmode == 0`.
-#' @param logax Logical; use log10 scales on both axes. Default `FALSE`.
-#' @param plot.legend Logical; show the small top-right legend for **E(B\[infinity])**. Default `TRUE`.
-#' @param man.legend Logical; if scenarios exist in `model$man`, show their legend. Default `TRUE`.
-#' @param ext Logical; add secondary relative axes when `rel.axes = FALSE`. Default `TRUE`.
-#' @param rel.axes Logical; plot as B\eqn{_t}/B\eqn{_{MSY}} vs F\eqn{_t}/F\eqn{_{MSY}}. Forces `ext = FALSE`. Default `FALSE`.
-#' @param xlim,ylim Optional numeric length-2 axis limits (computed if `NULL`).
-#' @param labpos Reserved; integer length-2 offsets for first/last-year labels. Default `c(1, 1)`.
-#' @param xlabel Optional x-axis label override.
-#' @param stamp Optional small text stamped at lower-right (e.g., version tag).
-#' @param verbose Logical; emit extraction warnings. Default `TRUE`.
-#' @param CI Confidence level for parameter extraction (0,1). Default `0.95`.
-#' @param print_it Logical; if `TRUE`, print the plot and return it. Default `FALSE`.
+#' @param model A fitted \code{spictcls} object (\code{fit.spict()}) with
+#'   \code{model$inp$reportmode == 0}.
+#' @param logax Logical; use log10 scales for both axes. Default \code{FALSE}.
+#' @param plot.legend Logical; draw the compact mini-legend
+#'   (\eqn{E(B_\infty)} and \strong{True}). Default \code{TRUE}.
+#' @param man.legend Logical; show scenario legend when \code{model$man} exists.
+#'   Default \code{TRUE}.
+#' @param ext Logical; add secondary relative axes when plotting absolute axes.
+#'   Ignored when \code{rel.axes = TRUE}. Default \code{TRUE}.
+#' @param rel.axes Logical; plot relative axes \eqn{B_t/B_{MSY}} vs \eqn{F_t/F_{MSY}}.
+#'   Forces \code{ext = FALSE}. Default \code{FALSE}.
+#' @param xlim,ylim Optional numeric length-2 limits for x and y. Computed if \code{NULL}.
+#' @param labpos Numeric length-2; reserved for future label placement (currently unused).
+#' @param xlabel Optional x-axis label override (expression or character).
+#' @param stamp Optional character stamp (currently unused).
+#' @param verbose Logical; show extraction fallbacks warnings. Default \code{TRUE}.
+#' @param CI Confidence level for intervals (used in internal extractors). Default \code{0.95}.
+#' @param print_it Logical; if \code{TRUE}, also prints the ggplot. Default \code{FALSE}.
 #'
-#' @return A `ggplot` object.
+#' @return A \code{ggplot} object representing the Kobe panel.
 #'
-#' @details
-#' This function avoids depending on SPiCT helper functions by inlining
-#' minimal equivalents (see internal helpers below). If the package
-#' \pkg{ellipse} is installed, an MSY ellipse is drawn; otherwise a point.
+#' @section Dependencies:
+#' Uses \pkg{ggplot2} geoms/scales and base \pkg{stats}/\pkg{grDevices}.
+#' If \pkg{ellipse} is available, the MSY ellipse is drawn; otherwise a point
+#' at \eqn{(B_{MSY}, F_{MSY})} is shown.
 #'
 #' @examples
 #' \dontrun{
-#'   rep <- fit.spict(inp)
-#'   p <- plot_elu2_panel_kobe(rep, rel.axes = TRUE)
-#'   print(p)
+#' p <- plot_elu2_panel_kobe(fit, rel.axes = TRUE)
+#' print(p)
 #' }
 #'
 #' @import ggplot2
-#' @importFrom scales pretty_breaks
+#' @importFrom grDevices adjustcolor rgb
 #' @importFrom stats qnorm cov2cor
-#' @importFrom grDevices adjustcolor
 #' @export
 plot_elu2_panel_kobe <- function(model,
                                  logax       = FALSE,
@@ -58,10 +184,7 @@ plot_elu2_panel_kobe <- function(model,
                                  CI          = 0.95,
                                  print_it    = FALSE) {
 
-  # ----------------------- Internal helpers (file-local) ---------------------- #
-
-  #' @keywords internal
-  #' @noRd
+  # ----------------------- file-local helpers ---------------------- #
   .elu2_check_rep <- function(rep, reportmode0 = TRUE) {
     if (!inherits(rep, "spictcls") || !"opt" %in% names(rep)) {
       stop("The argument 'model' must be a fitted spict object (fit.spict()).")
@@ -70,21 +193,14 @@ plot_elu2_panel_kobe <- function(model,
     }
     TRUE
   }
-
-  #' Extract parameter (random/fixed/SDreport/optim fallback)
-  #' @keywords internal
-  #' @noRd
   .elu2_get_par <- function(parname, rep, exp = FALSE, CI = 0.95) {
     if (CI <= 0 || CI >= 1) stop("CI must be in (0,1).")
     z <- stats::qnorm(CI + (1 - CI) / 2)
-
     ind_ran <- which(names(rep$par.random) == parname)
     ind_fix <- which(names(rep$par.fixed)  == parname)
     ind_sdr <- which(names(rep$value)      == parname)
     ind_opt <- which(names(rep$opt$par)    == parname)
-
     est <- ll <- ul <- sdv <- NULL
-
     if (length(ind_ran)) {
       est <- rep$par.random[ind_ran]
       sdv <- sqrt(rep$diag.cov.random[ind_ran])
@@ -101,7 +217,6 @@ plot_elu2_panel_kobe <- function(model,
       sdv <- rep$sd[ind_sdr]
       ll  <- est - z * sdv; ul <- est + z * sdv
     }
-
     if (length(est) == 0) {
       if (length(ind_opt)) {
         est <- rep$opt$par[ind_opt]
@@ -124,11 +239,9 @@ plot_elu2_panel_kobe <- function(model,
         est <- sdv <- ll <- ul <- NA_real_
       }
     }
-
     n <- length(est); if (length(sdv) == 0) sdv <- rep(NA_real_, n)
     if (length(ll) == 0) ll <- rep(NA_real_, n)
     if (length(ul) == 0) ul <- rep(NA_real_, n)
-
     if (isTRUE(exp)) {
       cv <- ifelse(is.finite(sdv), sqrt(exp(sdv^2) - 1), NA_real_)
       ll <- exp(ll); ul <- exp(ul); est <- exp(est)
@@ -141,17 +254,10 @@ plot_elu2_panel_kobe <- function(model,
       rownames(out) <- rep$inp$time
     out
   }
-
-  #' @keywords internal
-  #' @noRd
   .elu2_add_catchunit <- function(lab, cu) {
     cu <- as.character(cu)
     if (nzchar(cu)) eval(bquote(.(lab[[1]]) * ',' ~ .(cu))) else lab
   }
-
-  #' MSY ellipse in (logBmsy, logFmsy) plane
-  #' @keywords internal
-  #' @noRd
   .elu2_make_rp_ellipse <- function(rep) {
     inds <- c(max(which(names(rep$value) == "logBmsy")),
               max(which(names(rep$value) == "logFmsy")))
@@ -167,10 +273,6 @@ plot_elu2_panel_kobe <- function(model,
     } else matrix(c(parBF[1], parBF[2]), ncol = 2,
                   dimnames = list(NULL, c("x","y")))
   }
-
-  #' Annual mean helper (for sub-annual dt)
-  #' @keywords internal
-  #' @noRd
   .elu2_annual_avg <- function(intime, vec, type = "mean") {
     fun <- match.fun(type)
     anntime   <- unique(floor(intime))
@@ -180,10 +282,6 @@ plot_elu2_panel_kobe <- function(model,
     annvec    <- vapply(anntime, function(a) fun(vec[which(a == floortime)]), numeric(1))
     list(anntime = anntime, annvec = annvec)
   }
-
-  #' E(B_inf) for given last F and uncertainty correction
-  #' @keywords internal
-  #' @noRd
   .elu2_calc_EBinf <- function(K, n, Fl, Fmsy, sdb2) {
     base <- 1 - (n - 1)/n * (Fl/Fmsy)
     base <- max(0, base)
@@ -191,10 +289,6 @@ plot_elu2_panel_kobe <- function(model,
     EB   <- K * (base)^(1/(n - 1)) * (1 - corr*sdb2)
     max(0, EB)
   }
-
-  #' Wrapper to compute E(B_inf) from report
-  #' @keywords internal
-  #' @noRd
   .elu2_get_EBinf <- function(rep, CI = 0.95) {
     K    <- .elu2_get_par("logK", rep, exp = TRUE, CI = CI)[2]
     n    <- .elu2_get_par("logn", rep, exp = TRUE, CI = CI)[2]
@@ -208,32 +302,18 @@ plot_elu2_panel_kobe <- function(model,
     Fl <- tail(unname(fff), 1)
     .elu2_calc_EBinf(K, n, Fl, Fmsy, sdb2)
   }
-
-  #' Scenario color set
-  #' @keywords internal
-  #' @noRd
   .elu2_man_cols <- function() {
     colvec <- c('darkmagenta','cyan3','darkgreen','coral1','black','magenta',
                 'gold','green','cadetblue3','chocolate3','darkolivegreen3',
                 'cyan','darkred')
     rep(colvec, 3)
   }
-
-  #' Format helpers
-  #' @keywords internal
-  #' @noRd
   .elu2_fmt1 <- function(x) { x <- as.numeric(x); ifelse(is.finite(x),
                                                          formatC(x, format = "f", digits = 1),
                                                          NA_character_) }
-  #' @keywords internal
-  #' @noRd
   .elu2_lab_rel_1 <- function(vals) {
     out <- .elu2_fmt1(vals); out[abs(vals - 1) < 1e-9] <- "1"; out
   }
-
-  #' Clamp helper
-  #' @keywords internal
-  #' @noRd
   .elu2_clamp <- function(val, lo, hi) pmin(pmax(val, lo), hi)
 
   # ------------------ Validate & derive quantities --------------- #
@@ -307,7 +387,6 @@ plot_elu2_panel_kobe <- function(model,
     if (ylim[1] < logminval) ylim[1] <- logminval
   }
 
-  # Slight padding so fills/paths don't hug the frame
   pad_frac <- 0.02; xpad <- pad_frac * diff(xlim); ypad <- pad_frac * diff(ylim)
   xlim <- c(max(if (isTRUE(logax)) logminval else 0, xlim[1] - xpad), xlim[2] + xpad)
   ylim <- c(max(if (isTRUE(logax)) logminval else 0, ylim[1] - ypad), ylim[2] + ypad)
@@ -317,7 +396,6 @@ plot_elu2_panel_kobe <- function(model,
   bx <- if (rel.axes) 1 else Bmsy[2]; bx <- .elu2_clamp(bx, xminq, xmaxq)
   fy <- if (rel.axes) 1 else Fmsy[2]; fy <- .elu2_clamp(fy, yminq, ymaxq)
 
-  # Quadrants (fill panel fully)
   df_green_rect   <- data.frame(xmin = bx,   xmax =  Inf, ymin = -Inf, ymax =  fy)
   df_yellowL_rect <- data.frame(xmin = -Inf, xmax =  bx,  ymin = -Inf, ymax =  fy)
   df_yellowT_rect <- data.frame(xmin = bx,   xmax =  Inf, ymin =  fy,  ymax =  Inf)
@@ -455,10 +533,14 @@ plot_elu2_panel_kobe <- function(model,
     p <- p + ggplot2::geom_point(data = df_msy_curr, ggplot2::aes(x = x, y = y),
                                  shape = 3, color = "black", size = 2)
 
-  if (!is.null(df_true)) {
-    p <- p + ggplot2::geom_point(data = df_true, ggplot2::aes(x = x, y = y),
-                                 shape = 25, fill = grDevices::adjustcolor(rgb(1, 165/255, 0), alpha.f = 0.7),
-                                 color = "black", size = 3)
+  # True MSY point (plotted in the phase space; no ggplot legend)
+  if (!is.null(df_true) && nrow(df_true)) {
+    p <- p + ggplot2::geom_point(
+      data = df_true,
+      ggplot2::aes(x = x, y = y),
+      shape = 25, fill = true.col(),
+      color = "black", size = 3, stroke = 0.5, show.legend = FALSE
+    )
   }
 
   p <- p + ggplot2::geom_point(data = df_first, ggplot2::aes(x = x, y = y),
@@ -474,7 +556,7 @@ plot_elu2_panel_kobe <- function(model,
     p <- p + ggplot2::geom_vline(xintercept = 0, color = "darkred", linetype = 2)
   }
 
-  # Labels & scales (with optional secondary relative axes)
+  # Axes
   xlab_final <- if (is.null(xlabel)) xlab_expr else xlabel
   ylab_final <- ylab_expr
   if (isTRUE(logax)) {
@@ -519,6 +601,7 @@ plot_elu2_panel_kobe <- function(model,
       )
   }
 
+  # Scenario legend (color)
   if (!is.null(df_man) && nrow(df_man) && man.legend) {
     uniq_sc <- unique(df_man$scenario)
     colv <- .elu2_man_cols()[seq_along(uniq_sc)]; names(colv) <- uniq_sc
@@ -527,12 +610,16 @@ plot_elu2_panel_kobe <- function(model,
     p <- p + ggplot2::scale_color_discrete(guide = "none")
   }
 
+  # Theme
+  show_scen_legend <- (!is.null(df_man) && nrow(df_man) && man.legend)
+  legend_pos <- if (show_scen_legend) "top" else "none"
+
   p <- p + ggplot2::theme_bw() +
     ggplot2::theme(
       panel.grid = ggplot2::element_blank(),
       panel.border = ggplot2::element_rect(color = "gray25", fill = NA, linewidth = 2),
       legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor("white", alpha.f = 0.8), color = NA),
-      legend.position = if (man.legend) "top" else "none",
+      legend.position = legend_pos,
       legend.direction = "horizontal",
       axis.text.x  = ggplot2::element_text(size = 10, face = "bold", color = "gray25"),
       axis.text.y  = ggplot2::element_text(size = 10, face = "bold", color = "gray25"),
@@ -541,36 +628,54 @@ plot_elu2_panel_kobe <- function(model,
       plot.margin = ggplot2::margin(4, 4, 4, 4)
     )
 
-  # Mini-legend for E(B∞)
-  if (plot.legend && !(min(rep$inp$dtc) < 1)) {
-    px <- xlim[2] - 0.02 * diff(xlim)
-    py <- ylim[2] - 0.04 * diff(ylim)
-    gap <- 0.12 * diff(xlim)
-    p <- p + ggplot2::annotate("point", x = px - gap, y = py, shape = 23,
-                               size = 2.5, fill = "gold", color = "black", stroke = 0.6) +
-      ggplot2::annotate("text", x = px, y = py,
-                        label = "bold(E(B[infinity]))", parse = TRUE,
-                        hjust = 1, vjust = 0.5, size = 4)
-  }
+  # === Mini-legend for E(B∞) + "True" (left-aligned text; tighter spacing) ===
+  if (plot.legend) {
+    dx <- diff(xlim); dy <- diff(ylim)
 
-  # Non-convergence badge
-  if (rep$opt$convergence != 0) {
-    p <- p + ggplot2::annotate("text",
-                               x = xlim[1] + 0.01 * diff(xlim),
-                               y = ylim[2] + 0.02 * diff(ylim),
-                               label = "▲", color = "black", size = 6) +
-      ggplot2::annotate("text",
-                        x = xlim[1] + 0.01 * diff(xlim),
-                        y = ylim[2] + 0.02 * diff(ylim),
-                        label = "!", color = "black", size = 3, vjust = 0.35)
-  }
+    # a little closer to the right edge than before
+    px_right <- xlim[2] - 0.015 * dx
 
-  # Optional stamp
-  if (!is.null(stamp) && nzchar(stamp)) {
-    p <- p + ggplot2::annotate("text",
-                               x = xlim[2] - 0.01 * diff(xlim),
-                               y = ylim[1] - 0.04 * diff(ylim),
-                               label = stamp, hjust = 1, vjust = 0, size = 3)
+    # tighter horizontal spacing (marker from right edge + text from marker)
+    gapx   <- 0.1 * dx
+    txtpad <- 0.02 * dx
+
+    # tighter vertical spacing between the two rows
+    vgap <- 0.06 * dy
+
+    x_marker <- px_right - gapx
+    x_text   <- x_marker + txtpad  # LEFT-ALIGNED label anchor for both rows
+
+    py_top <- ylim[2] - 0.04 * dy
+
+    # E(B∞) mini-legend (only when seasonal off), LEFT-aligned text
+    eb_inf_shown <- !(min(rep$inp$dtc) < 1)
+    if (eb_inf_shown) {
+      p <- p +
+        ggplot2::annotate("point",
+                          x = x_marker, y = py_top,
+                          shape = 23, size = 2.4, fill = "gold", color = "black", stroke = 0.6
+        ) +
+        ggplot2::annotate("text",
+                          x = x_text, y = py_top,
+                          label = "bold(E(B[infinity]))", parse = TRUE,
+                          hjust = 0, vjust = 0.5, size = 4
+        )
+    }
+
+    # True MSY mini-legend entry (if available), text LEFT-aligned and bold
+    if ("true" %in% names(model$inp) && !is.null(model$inp$true)) {
+      y_true <- if (eb_inf_shown) py_top - vgap else py_top
+      p <- p +
+        ggplot2::annotate("point",
+                          x = x_marker, y = y_true,
+                          shape = 25, size = 2.4, fill = true.col(), color = "black", stroke = 0.6
+        ) +
+        ggplot2::annotate("text",
+                          x = x_text, y = y_true,
+                          label = "True",
+                          hjust = 0, vjust = 0.5, size = 4, fontface = "bold"
+        )
+    }
   }
 
   if (isTRUE(print_it)) print(p)

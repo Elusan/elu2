@@ -617,7 +617,7 @@ plot_elu2_panel_kobe <- function(model,
   p <- p + ggplot2::theme_bw() +
     ggplot2::theme(
       panel.grid = ggplot2::element_blank(),
-      panel.border = ggplot2::element_rect(color = "gray25", fill = NA, linewidth = 2),
+      panel.border = ggplot2::element_rect(color = "grey35", fill = NA, linewidth = 2),
       legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor("white", alpha.f = 0.8), color = NA),
       legend.position = legend_pos,
       legend.direction = "horizontal",
