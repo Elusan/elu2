@@ -17,10 +17,10 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       panel.background = element_blank(),
-      panel.border = element_rect(fill = NA, colour = "grey45", linewidth = 1.5),
-      axis.ticks = element_line(linewidth = 0.5, color = "grey45"),
+      panel.border = element_rect(fill = NA, colour = "grey35", linewidth = 2),
+      axis.ticks = element_line(linewidth = 0.5, color = "grey35"),
       axis.ticks.length = unit(3, "pt"),
-      strip.background = element_rect(fill = "grey45", color = "grey45", linewidth = 0.5),
+      strip.background = element_rect(fill = "grey35", color = "grey35", linewidth = 0.5),
       strip.text = element_text(face = "bold", size = rel(1)),
       text = element_text(face = "bold", size = 10),
       plot.margin = margin(2, 2, 2, 2)
