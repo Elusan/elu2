@@ -53,13 +53,13 @@
 #' @examples
 #' \dontrun{
 #' # Assuming `fit` is a fitted spictcls object:
-#' g <- plot.spictcls_elu2_gg(fit, CI = 0.95)
+#' g <- plot_spictcls_elu2_gg(fit, CI = 0.95)
 #' # `g` is returned invisibly; print explicitly if needed:
 #' print(g)
 #' }
 #'
 #' @export
-plot.spictcls_elu2_gg <- function(x, stamp = get.version(), verbose = TRUE, CI = 0.95, ...) {
+plot_spictcls_elu2_gg <- function(x, stamp = get.version(), verbose = TRUE, CI = 0.95, ...) {
   rep <- x
   if (!inherits(rep, "spictcls")) stop("x must be a fitted SPiCT object (class 'spictcls').")
   if (!isTRUE(rep$inp$reportall)) message("inp$reportall = FALSE: showing compact layout.")
