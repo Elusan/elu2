@@ -357,8 +357,8 @@ All_scenarios_Tables_Grouped_WAIC_MAPE <- function(
       col.names = c(
         "\\textbf{Scenario}", "\\textbf{Parameter}",
         "SDM", "GLM", "SDM", "GLM", "SDM", "GLM"
-      ),
-      caption = this_caption
+      ) #,
+      #caption = this_caption
     )
     kbl_out <- kableExtra::add_header_above(
       kbl_out,

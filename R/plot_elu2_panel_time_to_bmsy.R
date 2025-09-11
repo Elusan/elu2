@@ -12,22 +12,11 @@
 #' @param CI Confidence level (0,1) for parameter extraction. Default `0.95`.
 #'
 #' @return Invisibly returns the `ggplot` object after drawing it.
-#'
-#' @examples
-#' \dontrun{
-#'   rep <- fit.spict(inp)
-#'   plot_elu2_panel_plotspict.tc_gg(rep)
-#' }
-#'
-#' @import ggplot2
-#' @importFrom grid unit
-#' @importFrom grDevices adjustcolor
-#' @importFrom spict get.par calc.gamma get.version
 #' @export
 plot_elu2_panel_time_to_bmsy <- function(rep,
-                                            main  = "Time to Bmsy",
-                                            stamp = get.version(),
-                                            CI    = 0.95) {
+                                         main  = "Time to Bmsy",
+                                         stamp = get.version(),
+                                         CI    = 0.95) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 is required for plotspict.tc_gg(). Please install it.")
   }
@@ -55,16 +44,19 @@ plot_elu2_panel_time_to_bmsy <- function(rep,
 
   if (is.na(Bmsy[2])) return(invisible(NULL))
 
+  # --- same 'do.flag' logic as plotspict.tc() ---
   do.flag <- TRUE
   if (B0cur < Bmsy[2])  do.flag <- (B0cur / Bmsy[2]) <= 0.95
   if (B0cur > Bmsy[2])  do.flag <- (Bmsy[2] / B0cur) <= 0.95
   if (!do.flag) return(invisible(NULL))
 
+  # scenarios and colors
   if (B0cur < Bmsy[2]) facvec <- c(0, 0.75, 0.95, 1) else facvec <- c(2, 1.25, 1.05, 1)
   cols   <- c('green3', 'blue', 'red', 'orange', 5:8)
   Fvec   <- round(facvec * Fmsy[2], 4)
   nFvec  <- length(Fvec)
 
+  # forward simulation (Euler)
   gstep <- function(F, K, m, n, sdb, B0, dt) {
     exp(log(B0) + (gamma * m / K - gamma * m / K * (B0 / K)^(n - 1) - F - 0.5 * sdb^2) * dt)
   }
@@ -81,6 +73,7 @@ plot_elu2_panel_time_to_bmsy <- function(rep,
   }
   Bsim <- Bsim / Bmsy[2]
 
+  # axes limits and pads (same logic as your version)
   frac <- 0.95
   if (B0cur < Bmsy[2]) inds <- which(Bsim[nFvec, ] < 0.99) else inds <- which(Bsim[nFvec, ] > (1 / 0.99))
   if (!length(inds)) return(invisible(NULL))
@@ -98,6 +91,7 @@ plot_elu2_panel_time_to_bmsy <- function(rep,
   }
   if (xlim[1] >= 0) xlim[1] <- 0 - xpad
 
+  # vertical "time to 95%" lines
   vt <- numeric(nFvec)
   if (B0cur < Bmsy[2]) {
     for (i in 1:nFvec) vt[i] <- time[i, max(which(Bsim[i, ] < frac))]
@@ -111,20 +105,22 @@ plot_elu2_panel_time_to_bmsy <- function(rep,
   }))
   vt_df <- data.frame(scenario = lab_vec, vt = vt, y0 = ylim[1])
 
+  # --- EXACT legend-corner behaviour from plotspict.tc() ---
+  # below Bmsy -> bottom-right; above Bmsy -> top-right
   lg_pos <- if (B0cur > Bmsy[2]) c(0.98, 0.98) else c(0.98, 0.02)
-  lg_jst <- if (B0cur > Bmsy[2]) c(1, 1) else c(1, 0)
+  lg_jst <- if (B0cur > Bmsy[2]) c(1, 1)       else c(1, 0)
 
   col_map <- setNames(cols[seq_len(nFvec)], lab_vec)
   hvals <- c(frac, 1/frac); hvals <- hvals[hvals >= ylim[1] & hvals <= ylim[2]]
 
-  # file-local theme used here (plain helper, not roxygen)
+  # helper theme (unchanged)
   .spict_theme_minimal_compact22 <- function(base_size = 10, base_family = "") {
     ggplot2::theme_minimal(base_size = base_size, base_family = base_family) +
       ggplot2::theme(
         plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 12),
         axis.title = ggplot2::element_text(face = "bold", size = 12),
         axis.text  = ggplot2::element_text(size = 10, face = "bold"),
-        legend.position = "none",
+        legend.position = "none",  # will be overridden later
         panel.grid = ggplot2::element_blank(),
         panel.border = ggplot2::element_rect(fill = NA, colour = "grey35", linewidth = 2),
         axis.ticks = ggplot2::element_line(linewidth = 0.5, color = "grey35"),
@@ -159,28 +155,22 @@ plot_elu2_panel_time_to_bmsy <- function(rep,
     ggplot2::labs(title = main, x = "Years to Bmsy", y = "Proportion of Bmsy") +
     ggplot2::scale_colour_manual(values = col_map, breaks = names(col_map), labels = names(col_map)) +
     ggplot2::theme_light(base_size = 11) +
-    ggplot2::theme(
-      legend.title         = ggplot2::element_blank(),
-      legend.position      = lg_pos,
-      legend.justification = lg_jst,
-      panel.border         = ggplot2::element_rect(colour = "grey35", fill = NA, linewidth = 2),
-      plot.title           = ggplot2::element_text(hjust = 0.5)
-    ) +
     ggplot2::coord_cartesian(xlim = xlim, ylim = ylim, expand = FALSE, clip = "on") +
-    ggplot2::annotate("text", x = Inf, y = -Inf, label = stamp, hjust = 1.02, vjust = -0.8, size = 3) +
+    ggplot2::annotate("text", x = Inf, y = -Inf, label = "", hjust = 1.02, vjust = -0.8, size = 3) +
     .spict_theme_minimal_compact22() +
-    ggplot2::theme(
-      legend.position      = c(0.98, 0.98),
-      legend.justification = c(1, 1),
-      legend.title         = ggplot2::element_blank(),
-      legend.background    = ggplot2::element_rect(
-        fill   = grDevices::adjustcolor("white", alpha.f = 0.90),
-        colour = "grey35", linewidth = 0.5
-      ),
-      legend.key           = ggplot2::element_rect(fill = NA, colour = NA),
-      legend.key.size      = grid::unit(10, "pt"),
-      legend.text          = ggplot2::element_text(size = 9, face = "bold")
-    ) +
+    # ----- FINAL THEME: dynamic legend corner (no hard-coding) -----
+  ggplot2::theme(
+    legend.position      = lg_pos,     # <- use computed corner
+    legend.justification = lg_jst,     # <- use computed justification
+    legend.title         = ggplot2::element_blank(),
+    legend.background    = ggplot2::element_rect(
+      fill   = grDevices::adjustcolor("white", alpha.f = 0.90),
+      colour = "grey35", linewidth = 0.5
+    ),
+    legend.key           = ggplot2::element_rect(fill = NA, colour = NA),
+    legend.key.size      = grid::unit(10, "pt"),
+    legend.text          = ggplot2::element_text(size = 9, face = "bold")
+  ) +
     ggplot2::guides(
       colour = ggplot2::guide_legend(
         override.aes = list(linewidth = 1.1),

@@ -55,7 +55,7 @@ plot_retro_grid.G4_B_et_F <- function(
     scenario_name = "Scenario 1",
     peel_colors = NULL,
     palette = "JABBA",
-    width = 16, height = 10, dpi = 400,
+    width = 20, height = 8, dpi = 400,
     output_dir = NULL, filename = NULL
 ) {
   require(patchwork)
@@ -64,9 +64,44 @@ plot_retro_grid.G4_B_et_F <- function(
   require(dplyr)
   require(grid)
 
+  # Safe theme accessor: uses your custom theme if available, otherwise a built-in fallback
+  .apply_theme <- local({
+    if (exists("theme_minimal_compact", mode = "function")) {
+      theme_minimal_compact
+    } else {
+      function(base_size = 8, base_family = "") {
+        ggplot2::theme_minimal(base_size = base_size, base_family = base_family) +
+          ggplot2::theme(
+            plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 10),
+            axis.title = ggplot2::element_text(face = "bold", size = 6),
+            axis.text = ggplot2::element_text(size = 6, face = "bold"),
+            legend.position = "bottom",
+            legend.title = ggplot2::element_blank(),
+            legend.text = ggplot2::element_text(size = 10, face = "bold"),
+            legend.key.size = grid::unit(0.6, "lines"),
+            legend.spacing.y = grid::unit(0, "pt"),
+            legend.spacing.x = grid::unit(0, "pt"),
+            legend.margin = ggplot2::margin(0, 0, 0, 0),
+            legend.box.margin = ggplot2::margin(0, 0, 0, 0),
+            panel.grid.major = ggplot2::element_blank(),
+            panel.grid.minor = ggplot2::element_blank(),
+            panel.background = ggplot2::element_blank(),
+            panel.border = ggplot2::element_rect(fill = NA, colour = "grey45", linewidth = 1.5),
+            axis.ticks = ggplot2::element_line(linewidth = 0.5, color = "grey45"),
+            axis.ticks.length = grid::unit(3, "pt"),
+            strip.background = ggplot2::element_rect(fill = "grey45", color = "grey45", linewidth = 0.5),
+            strip.text = ggplot2::element_text(face = "bold", size = ggplot2::rel(1)),
+            text = ggplot2::element_text(face = "bold", size = 10),
+            plot.margin = ggplot2::margin(2, 2, 2, 2)
+          )
+      }
+    }
+  })
+
   # Color logic
   mycols <- if (is.null(peel_colors)) cols() else peel_colors
   model_order <- names(models)
+
 
   # =========== Panel builder function ===========
   get_retro_panels <- function(model_fit, model_nm, peel_colors) {
@@ -135,14 +170,14 @@ plot_retro_grid.G4_B_et_F <- function(
     make_panel <- function(df, ylab, rho_text = NULL) {
       ggplot(df, aes(time, estimate, group = peel)) +
         geom_ribbon(aes(ymin = lower, ymax = upper), fill = ci_gray, alpha = 0.25) +
-        geom_line(aes(color = peel), size = 0.7) +
+        geom_line(aes(color = peel), size = 0.5) +
         labs(x = NULL, y = ylab) +
-        theme_minimal_compact() +
+        .apply_theme() +
         scale_color_manual(values = peel_colors, guide = "none") +
         theme(
           axis.title.y = element_text(
             margin = margin(r = 0),
-            face = "bold", size = 11
+            face = "bold", size = 8
           )
         ) +
         {if (!is.null(rho_text)) annotate("text", x = Inf, y = Inf, label = rho_text, parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3) else NULL}
@@ -169,10 +204,10 @@ plot_retro_grid.G4_B_et_F <- function(
         "text",
         x = 0.5, y = 0.5,
         label = model_code,
-        size = 6, fontface = "bold",
+        size = 5, fontface = "bold",
         hjust = 0.5, vjust = 0.5
       ) +
-      theme(plot.margin = margin(0, 0, 0, 0, "pt"))
+      theme(plot.margin = margin(2.5, 0, 0, 0, "pt"))
   }
   patchwork_cols <- list()
   for (j in seq_along(model_order)) {

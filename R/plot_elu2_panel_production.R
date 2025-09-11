@@ -78,7 +78,7 @@ plot_elu2_panel_production <- function(rep, n.plotyears = 40,
         axis.text  = ggplot2::element_text(size = 10, face = "bold"),
         legend.position = "none",
         panel.grid = ggplot2::element_blank(),
-        panel.border = ggplot2::element_rect(fill = NA, colour = "grey35", linewidth = 2),
+        panel.border = ggplot2::element_rect(fill = NA, colour = "grey35", linewidth = 1),
         axis.ticks = ggplot2::element_line(linewidth = 0.5, color = "grey35"),
         axis.ticks.length = grid::unit(3, "pt"),
         strip.background = ggplot2::element_rect(fill = "grey35", color = "grey35", linewidth = 0.5),
@@ -219,7 +219,7 @@ plot_elu2_panel_production <- function(rep, n.plotyears = 40,
     ggplot2::theme_classic(base_size = 11) +
     ggplot2::theme(
       plot.title   = ggplot2::element_text(hjust = 0.5),
-      panel.border = ggplot2::element_rect(color = "grey35", fill = NA, linewidth = 2)
+      panel.border = ggplot2::element_rect(color = "grey35", fill = NA, linewidth = 1)
     ) +
     ggplot2::coord_cartesian(clip = "off")
 
@@ -248,7 +248,7 @@ plot_elu2_panel_production <- function(rep, n.plotyears = 40,
       legend.key           = ggplot2::element_rect(fill = NA, colour = NA),
       legend.key.size      = grid::unit(10, "pt"),
       legend.text          = ggplot2::element_text(size = 9, face = "bold"),
-      panel.border         = ggplot2::element_rect(color = "grey35", fill = NA, linewidth = 2),
+      panel.border         = ggplot2::element_rect(color = "grey35", fill = NA, linewidth = 1),
       plot.title           = ggplot2::element_text(hjust = 0.5)
     )
 

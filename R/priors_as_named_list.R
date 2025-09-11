@@ -175,8 +175,7 @@ priors_as_named_list <- function(rep, model_id = NULL, do.plot = NULL,
         ) +
         theme_minimal_compact() +
         ggplot2::theme(
-          legend.position.inside = c(0.98, 0.98),
-          #legend.position = c(0.98, 0.98),
+          legend.position = c(0.98, 0.98),
           legend.justification = c("right", "top"),
           legend.background = ggplot2::element_rect(fill = "white", color = NA, linewidth = 0),
           legend.box.background = ggplot2::element_rect(color = "grey60", linewidth = 0),

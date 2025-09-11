@@ -9,8 +9,8 @@ plot_retro_grid.G4_B_et_F(
   scenario_name = "Scenario 1",
   peel_colors = NULL,
   palette = "JABBA",
-  width = 16,
-  height = 10,
+  width = 20,
+  height = 8,
   dpi = 400,
   output_dir = NULL,
   filename = NULL

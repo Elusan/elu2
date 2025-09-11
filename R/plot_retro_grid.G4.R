@@ -1,3 +1,31 @@
+library(ggplot2)
+library(grid)  # for unit()
+theme_minimal_compact <- function(base_size = 8, base_family = "") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+      axis.title = element_text(face = "bold", size = 8),
+      axis.text = element_text(size = 8, face = "bold"),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      legend.text = element_text(size = 10, face = "bold"),
+      legend.key.size = unit(0.6, "lines"),
+      legend.spacing.y = unit(0, "pt"),
+      legend.spacing.x = unit(0, "pt"),
+      legend.margin = margin(0, 0, 0, 0),
+      legend.box.margin = margin(0, 0, 0, 0),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      panel.border = element_rect(fill = NA, colour = "grey45", linewidth = 1.5),
+      axis.ticks = element_line(linewidth = 0.5, color = "grey45"),
+      axis.ticks.length = unit(3, "pt"),
+      strip.background = element_rect(fill = "grey45", color = "grey45", linewidth = 0.5),
+      strip.text = element_text(face = "bold", size = rel(1)),
+      text = element_text(face = "bold", size = 10),
+      plot.margin = margin(2, 2, 2, 2)
+    )
+}
 #' Plot retrospective diagnostics grid for multiple SPiCT models
 #'
 #' Generates a grid of retrospective plots (B, F, B/Bmsy, F/Fmsy) for each model

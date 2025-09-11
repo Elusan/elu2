@@ -29,10 +29,3 @@ Simulates biomass trajectories under several multiples of \eqn{F_{MSY}}
 and plots the time it would take for biomass to reach (or return to)
 B\eqn{_{MSY}} from the current biomass level.
 }
-\examples{
-\dontrun{
-  rep <- fit.spict(inp)
-  plot_elu2_panel_plotspict.tc_gg(rep)
-}
-
-}

@@ -15,12 +15,39 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
                                                extract_catch_data = NULL,
                                                scenario_colors = NULL,
                                                return_patchwork = TRUE,
-                                               lindwd = 0.8,
+                                               lindwd = 1,
                                                show_CIs = TRUE) {
   library(ggplot2)
   library(dplyr)
   library(patchwork)
   library(grid)
+
+  # --- hardening: dependencies & sandbox global theme/options ------------------
+  if (!is.list(models) || length(models) == 0) {
+    stop("`models` must be a non-empty named list of SPiCT fits.")
+  }
+  if (is.null(names(models)) || any(!nzchar(names(models)))) {
+    stop("`models` must be a named list; all elements need non-empty names.")
+  }
+  if (!exists("get.par", mode = "function")) {
+    stop("`get.par()` not found. Please load SPiCT (or your wrapper) before calling.")
+  }
+  # Avoid surprises from user-level theme_set()/options(): restore afterwards
+  old_theme <- ggplot2::theme_get()
+  on.exit(ggplot2::theme_set(old_theme), add = TRUE)
+  ggplot2::theme_set(ggplot2::theme_gray())
+
+  # Silence harmless dplyr informs (does not change results)
+  old_opt <- options(dplyr.summarise.inform = FALSE)
+  on.exit(options(old_opt), add = TRUE)
+
+  # Lock dplyr verbs to avoid masked versions from other packages
+  bind_rows  <- dplyr::bind_rows
+  filter     <- dplyr::filter
+  slice_max  <- dplyr::slice_max
+  group_by   <- dplyr::group_by
+  ungroup    <- dplyr::ungroup
+  `%>%`      <- dplyr::`%>%`
 
   model_names <- names(models)
 
@@ -28,7 +55,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
   CI_FILL_ALPHA  <- 0.12   # ribbon opacity (fill)
   CI_EDGE_ALPHA  <- 0.25   # band-border opacity (lwr/upr lines)
   CI_EDGE_WIDTH  <- 0.6    # band-border line width
-  EST_LINE_WIDTH <- 0.9    # main estimate line width
+  EST_LINE_WIDTH <- 1    # main estimate line width
   VLINE_COL      <- "grey50"
   VLINE_SIZE     <- 0.2
 
@@ -38,7 +65,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
       theme(
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
         axis.title = element_text(face = "bold", size = 12),
-        axis.text  = element_text(size = 10, face = "bold"),
+        axis.text  = element_text(size = 12, face = "bold"),
         legend.position = c(0.75, 0.98),
         legend.justification = c("left", "top"),
         legend.background = element_blank(),
@@ -47,7 +74,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
         legend.text  = element_text(size = 10),
         legend.key.size = unit(1, "lines"),
         panel.grid = element_blank(),
-        panel.border = element_rect(fill = NA, colour = "grey45", linewidth = 2.2),
+        panel.border = element_rect(fill = NA, colour = "grey45", linewidth = 2.5),
         axis.ticks = element_line(linewidth = 0.5, color = "grey45"),
         axis.ticks.length = unit(3, "pt"),
         strip.background = element_rect(fill = "grey45", color = "grey45", linewidth = 0.5),
@@ -80,6 +107,15 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
     }
   } else {
     model_colors <- scenario_colors[model_names]
+    # --- hardening: ensure no missing/NA colors when a custom vector is supplied
+    if (any(is.na(model_colors))) {
+      bad <- model_names[is.na(model_colors)]
+      stop("`scenario_colors` is missing named entries for: ", paste(bad, collapse = ", "))
+    }
+    # Validate all supplied colors are valid
+    tryCatch(vapply(model_colors, grDevices::col2rgb, integer(3L)), error = function(e) {
+      stop("`scenario_colors` contains an invalid color name or code: ", conditionMessage(e))
+    })
   }
 
   # Helper: alpha blend for a named color vector
@@ -119,7 +155,11 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
   get_series <- function(parname) {
     do.call(rbind, lapply(model_names, function(mod) {
       par <- get.par(parname, models[[mod]], exp = TRUE)
+      if (is.null(par)) stop("`get.par()` returned NULL for '", parname, "' in model '", mod, "'.")
       df <- as.data.frame(par)
+      if (!all(c("ll","est","ul") %in% colnames(df))) {
+        stop("`get.par('", parname, ")` must return columns ll, est, ul for model '", mod, "'.")
+      }
       df$time <- as.numeric(rownames(par))
       colnames(df)[colnames(df) == "ll"] <- "lwr"
       colnames(df)[colnames(df) == "ul"] <- "upr"
@@ -158,12 +198,12 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
     first_model <- models[[1]]
     qest <- get.par("logq", first_model, exp = TRUE)
     inp  <- first_model$inp
-    if (length(inp$timeI) >= 1) {
+    if (!is.null(inp$timeI) && length(inp$timeI) >= 1) {
       obs1 <- data.frame(time = inp$timeI[[1]], obs = inp$obsI[[1]] / qest[inp$mapq[1], 2])
       p <- p + geom_point(data = obs1, aes(x = time, y = obs),
                           color = dot_blue, shape = 16, size = 2, inherit.aes = FALSE)
     }
-    if (length(inp$timeI) >= 2) {
+    if (!is.null(inp$timeI) && length(inp$timeI) >= 2) {
       obs2 <- data.frame(time = inp$timeI[[2]], obs = inp$obsI[[2]] / qest[inp$mapq[2], 2])
       p <- p + geom_point(data = obs2, aes(x = time, y = obs),
                           shape = 22, color = "black", fill = "green",
@@ -197,12 +237,12 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
     Bmsy  <- get.par("logBmsy", first_model, exp = TRUE)
     Bmsy2 <- if (is.null(nrow(Bmsy))) Bmsy[2] else Bmsy[1, 2]
     inp   <- first_model$inp
-    if (length(inp$timeI) >= 1) {
+    if (!is.null(inp$timeI) && length(inp$timeI) >= 1) {
       obs1_rel <- data.frame(time = inp$timeI[[1]], obs = (inp$obsI[[1]] / qest[inp$mapq[1], 2]) / Bmsy2)
       p <- p + geom_point(data = obs1_rel, aes(x = time, y = obs),
                           color = dot_blue, shape = 16, size = 2, inherit.aes = FALSE)
     }
-    if (length(inp$timeI) >= 2) {
+    if (!is.null(inp$timeI) && length(inp$timeI) >= 2) {
       obs2_rel <- data.frame(time = inp$timeI[[2]], obs = (inp$obsI[[2]] / qest[inp$mapq[2], 2]) / Bmsy2)
       p <- p + geom_point(data = obs2_rel, aes(x = time, y = obs),
                           shape = 22, color = "black", fill = "green",
@@ -243,9 +283,22 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
 
   # ---- Catch panel -------------------------------------------------------------
   if (!is.null(extract_catch_data)) {
+    # --- hardening: check that the user supplied a function
+    if (!is.function(extract_catch_data)) {
+      stop("`extract_catch_data` must be a function that returns a data.frame.")
+    }
     catch_all <- bind_rows(lapply(model_names, function(mod) {
       extract_catch_data(models[[mod]], scenario_name = mod)
     }))
+    # --- hardening: columns contract
+    req_cols <- c("time","lwr","upr","catch","catch_type","scenario")
+    missing_cols <- setdiff(req_cols, names(catch_all))
+    if (length(missing_cols)) {
+      stop("`extract_catch_data()` must return columns: ",
+           paste(req_cols, collapse = ", "), ". Missing: ",
+           paste(missing_cols, collapse = ", "))
+    }
+
     catch_all$scenario <- as.character(catch_all$scenario)
     predicted <- catch_all %>% filter(catch_type == "Predicted")
     observed  <- catch_all %>% filter(catch_type == "Observed")
@@ -279,9 +332,21 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
 
   # ---- Production (unchanged by the CI style; no end-of-obs line) -------------
   if (!is.null(production_fun)) {
+    if (!is.function(production_fun)) {
+      stop("`production_fun` must be a function that returns a data.frame.")
+    }
     prod_df <- bind_rows(lapply(model_names, function(mod) {
       production_fun(models[[mod]], model_name = mod)
     }))
+    # --- hardening: columns contract for production curve
+    reqp <- c("B_K","Production","Model")
+    missp <- setdiff(reqp, names(prod_df))
+    if (length(missp)) {
+      stop("`production_fun()` must return columns: ",
+           paste(reqp, collapse = ", "), ". Missing: ",
+           paste(missp, collapse = ", "))
+    }
+
     prod_df$Model <- factor(prod_df$Model, levels = model_names)
     max_pts <- prod_df %>% group_by(Model) %>% slice_max(Production, n = 1) %>% ungroup()
     plots$production <- ggplot(prod_df, aes(x = B_K, y = Production, color = Model)) +
