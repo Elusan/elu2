@@ -3030,8 +3030,7 @@ plotspict.data <- function(inpin, MSY=NULL, one.index=NULL, qlegend=TRUE, stamp=
 #'
 #' Plots the estimated time-varying growth trajectory from a fitted ELU/SPiCT-style model.
 #'
-#' @param rep A fitted result object as returned by [fit.elu2()] (or
-#'   \code{spict::fit.spict()} upstream).
+#' @param rep A fitted result object as returned by [fit.elu2()]
 #' @param logax Logical; plot the y-axis on a log scale? Default \code{FALSE}.
 #' @param main Character plot title. Default \code{"Time-varying growth"}.
 #' @param ylim,xlim Numeric length-2 axis limits. Default \code{NULL}.

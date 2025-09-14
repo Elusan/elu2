@@ -17,8 +17,7 @@ plotspict.growth(
 )
 }
 \arguments{
-\item{rep}{A fitted result object as returned by \code{\link[=fit.elu2]{fit.elu2()}} (or
-\code{spict::fit.spict()} upstream).}
+\item{rep}{A fitted result object as returned by \code{\link[=fit.elu2]{fit.elu2()}}}
 
 \item{logax}{Logical; plot the y-axis on a log scale? Default \code{FALSE}.}
 

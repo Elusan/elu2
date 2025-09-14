@@ -6,7 +6,7 @@ Authors@R:
     c(
       person(given = "Elhadji", family = "Ndiaye", email = "elusan2022@gmail.com",
              role = c("aut", "cre")),
-      person(given = "Martin W.", family = "Pedersen", role = "cph"),   # SPiCT authors as cph
+      person(given = "Martin W.", family = "Pedersen", role = "cph"),
       person(given = "Anders", family = "Nielsen", role = "cph")
     )
 Description: Tools for spatio-temporal modelling, visualization, and shrimp stock assessment,
@@ -14,8 +14,10 @@ Description: Tools for spatio-temporal modelling, visualization, and shrimp stoc
     adapts/derives from SPiCT (GPL-3); see 'inst/COPYRIGHTS'.
 License: GPL-3
 Encoding: UTF-8
-LazyData: false
-Roxygen: list(markdown = TRUE, roclets = c("rd","namespace","collate"))
+LazyData: true
+LazyDataCompression: xz
+ByteCompile: true
+Roxygen: list(markdown = TRUE, roclets = c("rd", "namespace", "collate"))
 RoxygenNote: 7.3.3
 Depends:
     R (>= 4.0)
