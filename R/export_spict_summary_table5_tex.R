@@ -24,7 +24,7 @@ export_spict_summary_table5_tex <- function(df_summary, scenario_name = "1", out
   group3 <- c("$B_{2022}$", "$F_{2022}$", "$B_{2022}/B_{\\mathrm{MSY}}$", "$F_{2022}/F_{\\mathrm{MSY}}$")
   group4 <- c("$B_{2024}$", "$F_{2024}$", "$B_{2024}/B_{\\mathrm{MSY}}$", "$F_{2024}/F_{\\mathrm{MSY}}$")
 
-  clean_param <- function(x) gsub("^\\\textbf\\{(.+)\\}$", "\\1", x)
+  clean_param <- function(x) gsub("^\\\\textbf\\{(.+)\\}$", "\\1", x)
   plain_parameters <- vapply(df_summary$Parameters, clean_param, character(1))
 
   group_sequence <- list(group1, group2, group3, group4)
@@ -60,7 +60,7 @@ export_spict_summary_table5_tex <- function(df_summary, scenario_name = "1", out
     df_print,
     format = "latex",
     escape = FALSE,
-    linesep = "",
+    linesep = "\\addlinespace",
     booktabs = TRUE,
     col.names = c(
       "\\textbf{Scenario}", "\\textbf{Parameters}",
@@ -86,12 +86,11 @@ export_spict_summary_table5_tex <- function(df_summary, scenario_name = "1", out
       escape = FALSE
     )
 
-  # --- Manual LaTeX modification to insert \hline after every row ---
-  # --- Manual LaTeX modification to insert \hline after every row ---
+  # --- Manual LaTeX modification to insert \\hline after every row ---
   latex_lines <- as.character(kbl_out)
   lines_split <- strsplit(latex_lines, "\n")[[1]]
 
-  # Correctly escape \begin and \end for matching in R strings
+  # Correctly escape \\begin and \\end for matching in R strings
   start_line <- which(grepl("^\\\\begin\\{tabular", lines_split))
   end_line   <- which(grepl("^\\\\end\\{tabular", lines_split))
 
@@ -102,14 +101,13 @@ export_spict_summary_table5_tex <- function(df_summary, scenario_name = "1", out
   for (i in seq((start_line + 1), (end_line - 1))) {
     line <- lines_split[i]
 
-    # Only process LaTeX lines with content
     if (nzchar(trimws(line))) {
-      # Always add the row with \hline
-      new_body <- c(new_body, paste0(line, " \\\\ \\hline"))
+      # Append row content with line break and hline
+      new_body <- c(new_body, paste0(line, " \\\\ \\\\hline"))
 
-      # Safely add linespace if defined and within bounds
+      # Optionally add linespace after specific rows
       if (!is.na(df_summary$add_linespace[row_idx]) && df_summary$add_linespace[row_idx]) {
-        new_body <- c(new_body, "\\addlinespace")
+        new_body <- c(new_body, "\\\\addlinespace")
       }
 
       row_idx <- row_idx + 1
@@ -117,7 +115,6 @@ export_spict_summary_table5_tex <- function(df_summary, scenario_name = "1", out
       new_body <- c(new_body, line)
     }
   }
-
 
   final_lines <- c(
     lines_split[1:start_line],

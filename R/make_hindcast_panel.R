@@ -7,14 +7,14 @@
 #' placeholder panel carrying the error note. The label is nudged slightly
 #' inward from the top-left border to avoid overlap with the panel frame.
 #'
-#' @param fit Fitted SPiCT/elu2 model (no hindcast attached yet).
+#' @param fit Fitted ELU/SPiCT-style model (no hindcast attached yet).
 #' @param panel_label Character to draw at top-left inside the panel (e.g., `"S1P.SDM"`).
-#' @param npeels,peel.dtc,mc.cores Hindcast controls (passed to [spict::hindcast()]).
+#' @param npeels,peel.dtc,mc.cores Hindcast controls; forwarded to [hindcast()].
 #' @param CI,verbose,add.mase Passed to [plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()].
 #' @param show_legend Logical; keep legend (`TRUE`) or hide (`FALSE`).
 #'
 #' @return A [ggplot2::ggplot] object.
-#'
+#' @seealso [hindcast()], [plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()]
 #' @export
 #' @import ggplot2
 make_hindcast_panel <- function(
@@ -49,6 +49,8 @@ make_hindcast_panel <- function(
   }
 
   out <- try({
+    # If you want to be explicit (and avoid clashes), call elu2::hindcast():
+    # rep_hc <- elu2::hindcast(fit, npeels = npeels, peel.dtc = peel.dtc, mc.cores = mc.cores)
     rep_hc <- hindcast(fit, npeels = npeels, peel.dtc = peel.dtc, mc.cores = mc.cores)
     p <- plotspict.hindcast_elu2_gg_exact_FOR_GRIDS(
       rep_hc, add.mase = add.mase, CI = CI, verbose = verbose

@@ -272,7 +272,7 @@ compare_all_scenarios_SDM_GLM_longtable <- function(
     booktabs  = TRUE,
     longtable = TRUE,
     escape    = FALSE,
-    linesep   = "",
+    linesep = "\addlinespace",
     align     = "llllllll",   # 8 columns
     col.names = c("\\textbf{Para.}","\\textbf{Scena.}","SDM","GLM","SDM","GLM","SDM","GLM"),
     caption   = caption

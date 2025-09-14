@@ -71,5 +71,5 @@ at \code{timeCpred} (SPiCT convention).
 
 }
 \seealso{
-\code{\link[spict:manage]{spict::manage()}}
+\code{\link[=manage]{manage()}}, \code{\link[=get.manlimits]{get.manlimits()}}, \code{\link[=add.manlines]{add.manlines()}}
 }

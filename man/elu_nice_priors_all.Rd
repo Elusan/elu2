@@ -2,7 +2,7 @@
 % Please edit documentation in R/elu_nice_priors_all.R
 \name{elu_nice_priors_all}
 \alias{elu_nice_priors_all}
-\title{Save Prior vs Posterior Plots for All Scenarios and Models}
+\title{Save Prior–Posterior Plots for All Scenarios and Models}
 \usage{
 elu_nice_priors_all(
   models_all,
@@ -14,21 +14,35 @@ elu_nice_priors_all(
 )
 }
 \arguments{
-\item{models_all}{A nested list: models_all[\link{scenario}][\link{model}] = list(result = ..., error = ...)}
+\item{models_all}{A nested named list of the form
+\code{models_all[[scenario]][[model_tag]]}, where each leaf is either
+(a) a fitted ELU/SPiCT-like object, or
+(b) a list with elements \code{result} (the fitted object) and optional
+\code{error}. If \code{error} is non-\code{NULL}, that model is skipped.}
 
-\item{priors_fun}{Function to generate prior vs posterior plots. Default: priors.elu6}
+\item{priors_fun}{Function that returns a ggplot/patchwork object for a given
+fitted model. Default: \code{priors.elu6}. If \code{priors_fun} has a formal
+argument named \code{model_id}, it will be supplied automatically.}
 
-\item{outdir}{Directory to save figures. Default: "FIG"}
+\item{outdir}{Base output directory. One subfolder per scenario is created
+inside this directory. Default: \code{"FIG/Priors"}.}
 
-\item{width}{Width in inches. Default: 8}
+\item{width, height}{Numeric; size in inches for the saved PNGs. Defaults: 8, 6.}
 
-\item{height}{Height in inches. Default: 4}
-
-\item{dpi}{Image resolution. Default: 300}
+\item{dpi}{Numeric; dots per inch for the saved PNGs. Default: 300.}
 }
 \value{
-Invisibly returns NULL
+(Invisibly) a character vector of file paths that were successfully saved.
 }
 \description{
-Handles nested structure from \code{models_all} and saves PNGs of prior-posterior plots for each fitted model.
+Iterates over a nested \code{models_all} object and saves one PNG per fitted
+model using a user-supplied plotting function (defaults to \code{priors.elu6}).
+This is designed for objects produced by your scenario runs, where each model
+entry may be either a direct fitted object or a small list like
+\code{list(result = <fit>, error = <condition_or_NULL>)}.
+}
+\examples{
+\dontrun{
+  paths <- elu_nice_priors_all(models_all)
+}
 }

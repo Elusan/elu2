@@ -34,7 +34,7 @@ plot_hindcast_grid_scenario <- function(
   if (!scenario %in% names(all_models)) {
     stop("Scenario '", scenario, "' not found in all_models.")
   }
-  mods <- all_models[[scenario]]
+  mods <- all_models[`scenario`]
 
   # expected keys by design (columns = P,S,F ; rows = SDM, GLM)
   keys <- c(

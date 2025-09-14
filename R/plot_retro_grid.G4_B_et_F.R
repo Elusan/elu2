@@ -1,3 +1,34 @@
+library(ggplot2)
+library(grid)  # for unit()
+
+# Compact theme (kept as-is)
+theme_minimal_compact <- function(base_size = 8, base_family = "") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+      axis.title = element_text(face = "bold", size = 8),
+      axis.text  = element_text(size = 8, face = "bold"),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      legend.text = element_text(size = 10, face = "bold"),
+      legend.key.size = unit(0.6, "lines"),
+      legend.spacing.y = unit(0, "pt"),
+      legend.spacing.x = unit(0, "pt"),
+      legend.margin = margin(0, 0, 0, 0),
+      legend.box.margin = margin(0, 0, 0, 0),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      panel.border = element_rect(fill = NA, colour = "grey45", linewidth = 1.5),
+      axis.ticks = element_line(linewidth = 0.5, color = "grey45"),
+      axis.ticks.length = unit(3, "pt"),
+      strip.background = element_rect(fill = "grey45", color = "grey45", linewidth = 0.5),
+      strip.text = element_text(face = "bold", size = rel(1)),
+      text = element_text(face = "bold", size = 10),
+      plot.margin = margin(2, 2, 2, 2)
+    )
+}
+
 #' Plot retrospective diagnostics grid for multiple SPiCT models
 #'
 #' Generates a grid of retrospective plots (B, F, B/Bmsy, F/Fmsy) for each model
@@ -40,13 +71,14 @@
 #' @importFrom purrr imap_dfr
 #' @importFrom ggtext element_markdown
 #' @importFrom grid unit
+#' @importFrom tibble tibble
 #'
 #' @seealso \code{\link{retro}}, \code{\link{mohns_rho}}, \code{\link{plot_retro_grid.ELU5}}
 #'
 #' @examples
 #' \dontrun{
 #' models <- list(S1F = model_fox, S1P = model_pella, S1S = model_schaefer)
-#' plot_retro_grid.ELU4(models, scenario_name = "Scenario 1", output_dir = "FIG")
+#' plot_retro_grid.G4_B_et_F(models, scenario_name = "Scenario 1", output_dir = "FIG")
 #' }
 #'
 #' @export
@@ -64,7 +96,7 @@ plot_retro_grid.G4_B_et_F <- function(
   require(dplyr)
   require(grid)
 
-  # Safe theme accessor: uses your custom theme if available, otherwise a built-in fallback
+  # Safe theme accessor
   .apply_theme <- local({
     if (exists("theme_minimal_compact", mode = "function")) {
       theme_minimal_compact
@@ -98,18 +130,19 @@ plot_retro_grid.G4_B_et_F <- function(
     }
   })
 
-  # Color logic
+  # Color logic (expects your own cols()/jabba_colors helpers in namespace)
   mycols <- if (is.null(peel_colors)) cols() else peel_colors
   model_order <- names(models)
 
-
-  # =========== Panel builder function ===========
+  # =========== Panel builder ===========
   get_retro_panels <- function(model_fit, model_nm, peel_colors) {
     runs <- model_fit$retro
     if (is.null(runs)) stop("Model '", model_nm, "' is missing retro.")
     names(runs)[1] <- "All"
+
     n_peels <- length(runs)
     peel_names <- names(runs)
+
     if (is.null(peel_colors)) {
       if (toupper(palette) == "JABBA") {
         peel_colors <- rep(jabba_colors, length.out = n_peels)
@@ -123,34 +156,41 @@ plot_retro_grid.G4_B_et_F <- function(
     }
     names(peel_colors) <- peel_names
 
-    # --- Mohn's rho (add B and F; keep everything else the same) ---
-    rho <- tryCatch(
-      mohns_rho(model_fit, what = c("FFmsy","BBmsy","B","F")) %>% round(3),
+    # --- Mohn's rho (B, F, BBmsy, FFmsy) ---
+    rho_vec <- tryCatch(
+      round(mohns_rho(model_fit, what = c("FFmsy","BBmsy","B","F")), 3),
       error = function(e) setNames(rep(NA_real_, 4), c("FFmsy","BBmsy","B","F"))
     )
-    lab_BB <- paste0("Mohn*\"'s\"~rho[B/B[MSY]]==", rho["BBmsy"])
-    lab_FF <- paste0("Mohn*\"'s\"~rho[F/F[MSY]]==", rho["FFmsy"])
-    lab_B  <- paste0("Mohn*\"'s\"~rho[B]==",        rho["B"])
-    lab_F  <- paste0("Mohn*\"'s\"~rho[F]==",        rho["F"])
+    # Plotmath strings (NO \emph — use italic(MSY))
+    val_BB <- if (is.na(rho_vec["BBmsy"])) "NA" else sprintf("%.3f", rho_vec["BBmsy"])
+    val_FF <- if (is.na(rho_vec["FFmsy"])) "NA" else sprintf("%.3f", rho_vec["FFmsy"])
+    val_B  <- if (is.na(rho_vec["B"]))      "NA" else sprintf("%.3f", rho_vec["B"])
+    val_F  <- if (is.na(rho_vec["F"]))      "NA" else sprintf("%.3f", rho_vec["F"])
 
-    # Extract
+    lab_BB <- paste0("Mohn*\"'s\"~rho[B/B[italic(MSY)]]==", val_BB)
+    lab_FF <- paste0("Mohn*\"'s\"~rho[F/F[italic(MSY)]]==", val_FF)
+    lab_B  <- paste0("Mohn*\"'s\"~rho[B]==",                 val_B)
+    lab_F  <- paste0("Mohn*\"'s\"~rho[F]==",                 val_F)
+
+    # Extract helper
     extract_df <- function(fit, peel, par_name) {
       idx  <- fit$inp$indest
       pars <- get.par(par_name, fit, exp = TRUE, CI = 0.95)[idx, 1:3]
-      tibble(
+      tibble::tibble(
         peel     = peel,
         time     = fit$inp$time[idx],
-        estimate = pars[,2],
-        lower    = pars[,1],
-        upper    = pars[,3]
+        estimate = pars[, 2],
+        lower    = pars[, 1],
+        upper    = pars[, 3]
       )
     }
-    df_B    <- imap_dfr(runs, ~ extract_df(.x, .y, "logB"))
-    df_F    <- imap_dfr(runs, ~ extract_df(.x, .y, "logFnotS"))
-    df_Bmsy <- imap_dfr(runs, ~ extract_df(.x, .y, "logBBmsy"))
-    df_Fmsy <- imap_dfr(runs, ~ extract_df(.x, .y, "logFFmsynotS"))
 
-    # Peel order
+    df_B    <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logB"))
+    df_F    <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logFnotS"))
+    df_Bmsy <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logBBmsy"))
+    df_Fmsy <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logFFmsynotS"))
+
+    # Peel ordering: All -> numeric (desc) -> others
     peel_names <- names(runs)
     all_present <- "All" %in% peel_names
     other_peels <- setdiff(peel_names, "All")
@@ -160,10 +200,11 @@ plot_retro_grid.G4_B_et_F <- function(
     ordered_numeric_peels <- valid_peels[order(as.integer(valid_peels), decreasing = TRUE)]
     plot_peel_levels <- c(if (all_present) "All", ordered_numeric_peels, invalid_peels)
 
-    df_B$peel    <- factor(df_B$peel, levels = plot_peel_levels)
-    df_F$peel    <- factor(df_F$peel, levels = plot_peel_levels)
+    df_B$peel    <- factor(df_B$peel,    levels = plot_peel_levels)
+    df_F$peel    <- factor(df_F$peel,    levels = plot_peel_levels)
     df_Bmsy$peel <- factor(df_Bmsy$peel, levels = plot_peel_levels)
     df_Fmsy$peel <- factor(df_Fmsy$peel, levels = plot_peel_levels)
+
     ci_gray <- "#B0B0B0"
 
     # Panel builder
@@ -180,23 +221,27 @@ plot_retro_grid.G4_B_et_F <- function(
             face = "bold", size = 8
           )
         ) +
-        {if (!is.null(rho_text)) annotate("text", x = Inf, y = Inf, label = rho_text, parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3) else NULL}
+        {
+          if (!is.null(rho_text))
+            annotate("text", x = Inf, y = Inf, label = rho_text,
+                     parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3)
+          else NULL
+        }
     }
 
-    # --- Add rho labels to B and F panels (new) ---
     list(
-      B     = make_panel(df_B,    expression(bold(B[t])),        rho_text = lab_B),
-      F     = make_panel(df_F,    expression(bold(F[t])),        rho_text = lab_F),
-      BBmsy = make_panel(df_Bmsy, expression(bold(B[t]/B[MSY])), rho_text = lab_BB),
-      FFmsy = make_panel(df_Fmsy, expression(bold(F[t]/F[MSY])), rho_text = lab_FF)
+      B     = make_panel(df_B,    expression(bold(B[t])),                        rho_text = lab_B),
+      F     = make_panel(df_F,    expression(bold(F[t])),                        rho_text = lab_F),
+      BBmsy = make_panel(df_Bmsy, expression(bold(B[t]/B[italic(MSY)])),         rho_text = lab_BB),
+      FFmsy = make_panel(df_Fmsy, expression(bold(F[t]/F[italic(MSY)])),         rho_text = lab_FF)
     )
   }
 
+  # Build columns
   all_panels <- lapply(model_order, function(nm) {
     get_retro_panels(models[[nm]], nm, mycols)
   })
 
-  # Header
   make_model_header_plot <- function(model_code) {
     ggplot() +
       theme_void() +
@@ -209,6 +254,7 @@ plot_retro_grid.G4_B_et_F <- function(
       ) +
       theme(plot.margin = margin(2.5, 0, 0, 0, "pt"))
   }
+
   patchwork_cols <- list()
   for (j in seq_along(model_order)) {
     model_code  <- model_order[j]
@@ -224,12 +270,13 @@ plot_retro_grid.G4_B_et_F <- function(
       heights = c(0.16, 1, 1, 1, 1)
     )
   }
+
   p_grid <- patchwork_cols[[1]]
   for (j in 2:length(patchwork_cols)) {
     p_grid <- p_grid | patchwork_cols[[j]]
   }
 
-  # ---- Subtitle (peel dots) - use peels/colors from first model ----
+  # Subtitle (peel dots) from first model
   first_fit <- models[[model_order[1]]]
   runs <- first_fit$retro
   names(runs)[1] <- "All"
@@ -237,12 +284,12 @@ plot_retro_grid.G4_B_et_F <- function(
   peel_colors_used <- rep(mycols, length.out = length(peel_names))
   subtitle_peels <- make_peel_subtitle(peel_names, peel_colors_used)
 
-  # ---- Compose main plot with scenario title and subtitle ----
+  # Compose main plot
   final <- p_grid +
     plot_layout(guides = "collect") &
     theme(
-      plot.title = ggtext::element_markdown(hjust = 0.5, face = "bold", size = 17, margin=margin(b=25)),
-      plot.subtitle = ggtext::element_markdown(hjust = 0.5, size = 17, face = "bold", margin=margin(b=25)),
+      plot.title = ggtext::element_markdown(hjust = 0.5, face = "bold", size = 17, margin = margin(b = 25)),
+      plot.subtitle = ggtext::element_markdown(hjust = 0.5, size = 17, face = "bold", margin = margin(b = 25)),
       plot.background = element_rect(fill = "white", color = NA)
     ) &
     plot_annotation(
@@ -261,5 +308,6 @@ plot_retro_grid.G4_B_et_F <- function(
     ggsave(outpath, plot = final, width = width, height = height, dpi = dpi)
     message("Saved to: ", outpath)
   }
+
   return(final)
 }

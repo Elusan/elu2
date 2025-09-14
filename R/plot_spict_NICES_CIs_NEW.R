@@ -227,7 +227,7 @@ plot_spict_NICES_CIs_NEW <- function(models,
       geom_hline(yintercept = 1, linetype = "dashed", color = "black", linewidth = 0.8) +
       scale_color_manual(values = model_colors) +
       scale_fill_manual(values = fill_cols, guide = "none") +
-      labs(x = "Year", y = expression(bold(B/B[MSY]))) +
+      labs(x = "Year", y = expression(bold(B/B[italic(MSY)]))) +
       theme_minimal_compact2_good() +
       guides(color = guide_legend(override.aes = list(linewidth = 1.8)))
 
@@ -277,7 +277,7 @@ plot_spict_NICES_CIs_NEW <- function(models,
   plots <- list(
     biomass = make_biomass_plot(get_series("logB")),
     bbmsy   = make_bbmsy_plot(get_series("logBBmsy")),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 

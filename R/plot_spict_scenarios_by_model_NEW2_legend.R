@@ -37,23 +37,12 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
   }
 
   # Assign model colors based on number of models
-  # Assign model colors based on number of models
   if (is.null(scenario_colors)) {
     if (length(models) == 3) {
       # Fixed colors for 3 canonical models: Pella, Fox, Schaefer
       model_colors <- setNames(c("#D7191C", "#2B83BA", "#1A9641"), model_names)
     } else {
-      # Use your predefined full scenario color set
-      # default_scenario_colors <- c(
-      #   "S1P" = "#1b9e77", "S1S" = "#d95f02", "S1F" = "#7570b3",
-      #   "S2P" = "#e7298a", "S2S" = "#66a61e", "S2F" = "#e6ab02",
-      #   "S3P" = "#666666", "S3S" = "#1f78b4", "S3F" = "#b2df8a",
-      #   "S4P" = "#a6761d", "S4S" = "#fb9a99", "S4F" = "#8dd3c7",
-      #   "S5P" = "#66c2a5", "S5S" = "#fc8d62", "S5F" = "#8da0cb",
-      #   "S6P" = "#e78ac3", "S6S" = "#a6d854", "S6F" = "#ffd92f",
-      #   "S7P" = "#e5c494", "S7S" = "#b3b3b3", "S7F" = "#1b7837",
-      #   "S8P" = "#762a83", "S8S" = "#af8dc3", "S8F" = "#7fbf7b"
-      # )
+      # Your predefined per-family palettes
       default_sdm_model_colors <- c(
         "S1P.SDM" = "#0072B2",  # Okabe-Ito blue
         "S1S.SDM" = "#D55E00",  # Okabe-Ito vermillion
@@ -89,38 +78,41 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
       )
 
       default_glm_model_colors <- c(
-        "S1P.GLM" = "#0072B2",  # Okabe-Ito blue
-        "S1S.GLM" = "#D55E00",  # Okabe-Ito vermillion
-        "S1F.GLM" = "#009E73",  # Okabe-Ito bluish green
+        "S1P.GLM" = "#0072B2",
+        "S1S.GLM" = "#D55E00",
+        "S1F.GLM" = "#009E73",
 
-        "S2P.GLM" = "#CC79A7",  # Okabe-Ito purple
-        "S2S.GLM" = "#E69F00",  # Okabe-Ito orange
-        "S2F.GLM" = "#56B4E9",  # Okabe-Ito sky blue
+        "S2P.GLM" = "#CC79A7",
+        "S2S.GLM" = "#E69F00",
+        "S2F.GLM" = "#56B4E9",
 
-        "S3P.GLM" = "#F0E442",  # Okabe-Ito yellow
-        "S3S.GLM" = "#7F3C8D",  # Nature dark violet
-        "S3F.GLM" = "#BCBD22",  # Tableau olive
+        "S3P.GLM" = "#F0E442",
+        "S3S.GLM" = "#7F3C8D",
+        "S3F.GLM" = "#BCBD22",
 
-        "S4P.GLM" = "#FF7F0E",  # Tableau orange
-        "S4S.GLM" = "#1F77B4",  # Tableau blue
-        "S4F.GLM" = "#2CA02C",  # Tableau green
+        "S4P.GLM" = "#FF7F0E",
+        "S4S.GLM" = "#1F77B4",
+        "S4F.GLM" = "#2CA02C",
 
-        "S5P.GLM" = "#A6CEE3",  # Brewer Set2 blue
-        "S5S.GLM" = "#FB9A99",  # Brewer Set2 pink
-        "S5F.GLM" = "#B15928",  # Brewer Set2 brown
+        "S5P.GLM" = "#A6CEE3",
+        "S5S.GLM" = "#FB9A99",
+        "S5F.GLM" = "#B15928",
 
-        "S6P.GLM" = "#E31A1C",  # Brewer Set2 red
-        "S6S.GLM" = "#6A3D9A",  # Brewer Set2 purple
-        "S6F.GLM" = "#B2DF8A",  # Brewer Set2 green
+        "S6P.GLM" = "#E31A1C",
+        "S6S.GLM" = "#6A3D9A",
+        "S6F.GLM" = "#B2DF8A",
 
-        "S7P.GLM" = "#17BECF",  # Tableau cyan
-        "S7S.GLM" = "#FF9896",  # Tableau pink
-        "S7F.GLM" = "#9467BD",  # Tableau purple
+        "S7P.GLM" = "#17BECF",
+        "S7S.GLM" = "#FF9896",
+        "S7F.GLM" = "#9467BD",
 
-        "S8P.GLM" = "#C49C94",  # Tableau brown
-        "S8S.GLM" = "#8C564B",  # Tableau dark brown
-        "S8F.GLM" = "#C7C7C7"   # Tableau light grey
+        "S8P.GLM" = "#C49C94",
+        "S8S.GLM" = "#8C564B",
+        "S8F.GLM" = "#C7C7C7"
       )
+
+      # Keep your downstream logic intact by creating a combined lookup:
+      default_scenario_colors <- c(default_sdm_model_colors, default_glm_model_colors)
 
       # Ensure that model names are present in the palette
       missing_colors <- setdiff(model_names, names(default_scenario_colors))
@@ -142,14 +134,12 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
         axis.title = element_text(face = "bold", size = 12),
         axis.text = element_text(size = 10, face = "bold"),
-        #legend.position = c(0.98, 0.98),
-        #legend.justification = c("right", "top"),
-
+        # legend.position = c(0.98, 0.98),
+        # legend.justification = c("right", "top"),
         legend.position = "right",
         legend.justification = "center",
         legend.box = "vertical",
         legend.box.just = "left",
-
         legend.background = element_blank(),
         legend.box.background = element_blank(),
         legend.title = element_blank(),
@@ -187,8 +177,6 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
       { if (show_CIs) geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.1, color = NA, show.legend = FALSE) } +
       geom_line(linewidth = 0.6) +
       scale_color_manual(values = model_colors) +
-      #scale_color_manual(values = default_sdm_model_colors)+
-      #scale_color_manual(values = default_sdm_model_colors)+
       scale_fill_manual(values = model_colors) +
       labs(x = "Year", y = ylab_expr) +
       theme_minimal_compact2() +
@@ -201,8 +189,8 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
 
   plots <- list(
     biomass = make_plot(get_series("logB"), "Biomass (tons)"),
-    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[MSY])), hline = 1),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[italic(MSY)])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 
@@ -254,9 +242,6 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
     layout <- (plots$biomass | plots$bbmsy | plots$catch) /
       patchwork::plot_spacer() /
       (plots$f | plots$ffmsy | plots$production)
-    # return(layout +
-    #          plot_layout(heights = c(1, 0.05, 1)) &
-    #          theme(plot.margin = margin(4, 4, 4, 4)))
     return(layout +
              plot_layout(heights = c(1, 0.05, 1), guides = "collect") &
              theme(
@@ -268,11 +253,8 @@ plot_spict_scenarios_by_model_NEW2_legend <- function(models,
                legend.title = element_blank(),
                legend.text = element_text(size = 10, face = "bold"),
                legend.key.size = unit(0.9, "lines")
-               #legend.key.width = unit(0.1, "lines"),
-               #legend.key.height = unit(0.2, "lines"),
              ) &
              guides(color = guide_legend(ncol = 2)))
-
   } else {
     return(plots)
   }

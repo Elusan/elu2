@@ -50,7 +50,7 @@ export_prior_table_tex <- function(S_Fox, S_Schaefer, S_Pella,
     format = "latex",
     booktabs = FALSE,
     escape = FALSE,
-    linesep = "\\hline",
+    linesep = "\addlinespace",
     col.names = c("\\textbf{Parameter}", "\\textbf{Prior}", "\\textbf{Model}")
   )
 

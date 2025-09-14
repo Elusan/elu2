@@ -13,24 +13,34 @@ retro.rho.ndiaye2(
 )
 }
 \arguments{
-\item{rep}{A fitted model object containing a \code{$retro} element (as produced by \code{retro()}).}
+\item{rep}{A fitted model object containing a \code{$retro} element
+(as produced by \code{retro()}).}
 
-\item{add_mohn}{Logical; whether to add Mohn's rho statistics to B/Bmsy and F/Fmsy panels. Default: \code{TRUE}.}
+\item{add_mohn}{Logical; whether to add Mohn's rho statistics to B/Bmsy and
+F/Fmsy panels. Default: \code{TRUE}.}
 
 \item{CI}{Confidence interval width (default 0.95).}
 
-\item{peel_colors}{Optional vector of color codes for each peel. If \code{NULL}, uses the JABBA color set or MetBrewer palettes.}
+\item{peel_colors}{Optional vector of color codes for each peel. If
+\code{NULL}, uses the JABBA color set or MetBrewer/RColorBrewer palettes.}
 
-\item{palette}{String; color palette to use ("JABBA" for default, or any valid \code{MetBrewer} or \code{RColorBrewer} palette name).}
+\item{palette}{String; color palette to use ("JABBA" for default, or any
+valid \code{MetBrewer} or \code{RColorBrewer} palette name).}
 }
 \value{
-A \code{patchwork} composite ggplot2 object, suitable for display or saving with \code{ggsave()}.
+A \code{patchwork} composite ggplot2 object, suitable for display or
+saving with \code{ggsave()}.
 }
 \description{
-Plots results of retrospective analysis ("peel" plots) for a fitted model, displaying time series of biomass, fishing mortality, and their ratios to reference points, with optional display of Mohn's rho values.
+Plots results of retrospective analysis ("peel" plots) for a fitted model,
+displaying time series of biomass, fishing mortality, and their ratios to
+reference points, with optional display of Mohn's rho values.
 }
 \details{
-The function extracts time series from all model peels, aligns them for comparison, and plots them using consistent coloring and ordering. It annotates panels with Mohn's rho statistics if requested. Subtitles show colored peel names using \code{ggtext::element_markdown()} for clarity.
+The function extracts time series from all model peels, aligns them for
+comparison, and plots them using consistent coloring and ordering. It annotates
+panels with Mohn's rho statistics if requested. Subtitles show colored peel
+names using \code{ggtext::element_markdown()} for clarity.
 }
 \examples{
 \dontrun{

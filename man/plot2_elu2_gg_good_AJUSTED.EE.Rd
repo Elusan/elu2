@@ -72,11 +72,11 @@ with size 14×8 inches at 300 dpi.
   library(spict)
   # fit <- fit.spict(inp)
   # rep <- manage(fit)
-  # p <- plot2_elu2_gg_good_AJUSTED88(rep)
+  # p <- plot2_elu2_gg_good_AJUSTED.EE(rep)
   # p
 }
 
 }
 \seealso{
-\code{\link[spict:manage]{spict::manage()}}
+\code{\link[=manage]{manage()}}, \code{\link[=get.manlimits]{get.manlimits()}}, \code{\link[=add.manlines]{add.manlines()}}
 }

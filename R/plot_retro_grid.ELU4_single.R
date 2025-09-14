@@ -1,5 +1,6 @@
 library(ggplot2)
 library(grid)  # for unit()
+
 theme_minimal_compact <- function(base_size = 8, base_family = "") {
   theme_minimal(base_size = base_size, base_family = base_family) +
     theme(
@@ -30,7 +31,7 @@ theme_minimal_compact <- function(base_size = 8, base_family = "") {
 #' Plot individual retrospective grids for each SPiCT model in 2x2 layout
 #'
 #' For each model in the list, generates and optionally saves a 2x2 retrospective grid:
-#' Top-left: B[t], Bottom-left: B[t]/B[MSY], Top-right: F[t], Bottom-right: F[t]/F[MSY]
+#' Top-left: B[t], Bottom-left: B[t]/B\\emph{MSY}, Top-right: F[t], Bottom-right: F[t]/F\\emph{MSY}
 #'
 #' @param models A named list of SPiCT model fits (each with $retro)
 #' @param width, height, dpi Figure size and resolution
@@ -80,14 +81,16 @@ plot_retro_grid.ELU4_single <- function(
 
     # Compute Mohn's rho
     rho <- tryCatch(mohns_rho(model, what = c("FFmsy", "BBmsy")) %>% round(3), error = function(e) rep(NA, 2))
-    lab_BB <- paste0("Mohn*\"'s\"~rho[B/B[MSY]]==", rho["BBmsy"])
-    lab_FF <- paste0("Mohn*\"'s\"~rho[F/F[MSY]]==", rho["FFmsy"])
+
+    # Build plotmath strings safely (no backslashes in R strings)
+    lab_BB <- sprintf('Mohn*"\\"s"~rho[B/B[MSY]]==%s', rho["BBmsy"])
+    lab_FF <- sprintf('Mohn*"\\"s"~rho[F/F[MSY]]==%s',   rho["FFmsy"])
 
     # Extract time series with uncertainty
     extract_df <- function(fit, peel, par_name) {
       idx  <- fit$inp$indest
       pars <- get.par(par_name, fit, exp = TRUE, CI = 0.95)[idx, 1:3]
-      tibble(
+      tibble::tibble(
         peel     = peel,
         time     = fit$inp$time[idx],
         estimate = pars[, 2],
@@ -128,7 +131,7 @@ plot_retro_grid.ELU4_single <- function(
                                           parse = TRUE, hjust = 1.1, vjust = 1.5, size = 3.5)}
     }
 
-    # Create the 2x2 panel grid
+    # Create the 2x2 panel grid (fixed labels without \emph)
     p_B    <- make_panel(df_B,    expression(bold(B[t])))
     p_F    <- make_panel(df_F,    expression(bold(F[t])))
     p_Bmsy <- make_panel(df_Bmsy, expression(bold(B[t]/B[MSY])), lab_BB)
@@ -142,8 +145,8 @@ plot_retro_grid.ELU4_single <- function(
         title = model_name,
         subtitle = make_peel_subtitle(peel_names, peel_colors_used),
         theme = theme(
-          plot.title = element_markdown(hjust = 0.5, size = 17, face = "bold"),
-          plot.subtitle = element_markdown(hjust = 0.5, size = 15, face = "bold", margin = margin(b = 15))
+          plot.title = ggtext::element_markdown(hjust = 0.5, size = 17, face = "bold"),
+          plot.subtitle = ggtext::element_markdown(hjust = 0.5, size = 15, face = "bold", margin = margin(b = 15))
         )
       )
 

@@ -39,7 +39,7 @@ plot_elu2_panel_f <- function(model,
     Fmsy_band <- data.frame(time = repmax$inp$time, ymin = Fmsyvec$ll, ymax = Fmsyvec$ul)
     Fmsy_line <- data.frame(time = repmax$inp$time, y = Fmsyvec$msy)
     fmsy_mult <- matrix(rep(Fmsyvec$msy, each = 3), ncol = 3, byrow = TRUE)
-    sec_axis_obj <- ggplot2::waiver()  # rel axis off when tvgflag
+    sec_axis_obj <- ggplot2::waiver()  # relative axis off when tvgflag
   } else {
     Fmsy_all <- get.par("logFmsy", repmax, exp = TRUE, CI = CI)
     if (any(is.na(Fmsy_all))) Fmsy_all <- get.par("logFmsyd", repmax, exp = TRUE, CI = CI)
@@ -52,6 +52,7 @@ plot_elu2_panel_f <- function(model,
     Fmsy_band <- data.frame(time = repmax$inp$time, ymin = Fmsyvec$ll, ymax = Fmsyvec$ul)
     Fmsy_line <- data.frame(time = repmax$inp$time, y = Fmsyvec$msy)
     fmsy_mult <- Fmsy_est
+    # FIX: use plotmath bracket syntax, not LaTeX \emph{}
     sec_axis_obj <- ggplot2::sec_axis(~ . / Fmsy_est, name = expression(F[t]/F[MSY]))
   }
 

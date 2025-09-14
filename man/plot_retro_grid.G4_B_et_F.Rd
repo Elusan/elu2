@@ -64,7 +64,7 @@ across multiple production model fits (e.g., Fox, Schaefer, Pella).
 \examples{
 \dontrun{
 models <- list(S1F = model_fox, S1P = model_pella, S1S = model_schaefer)
-plot_retro_grid.ELU4(models, scenario_name = "Scenario 1", output_dir = "FIG")
+plot_retro_grid.G4_B_et_F(models, scenario_name = "Scenario 1", output_dir = "FIG")
 }
 
 }

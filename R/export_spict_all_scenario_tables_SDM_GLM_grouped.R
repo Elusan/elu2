@@ -3,13 +3,14 @@
 #' @description
 #' Automatically summarizes all models, creates wide summary tables, and exports
 #' a fully formatted LaTeX table for each scenario, with left-aligned columns and
-#' group separation (\addlinespace and \hline) after desired parameter groups.
+#' group separation (\verb{\\addlinespace} and \verb{\\hline}) after desired parameter groups.
 #'
 #' @param model_list Named list of SPiCT model fits for all scenarios (names like S1F.SDM).
 #' @param output_dir Directory for .tex files.
 #' @param scenarios Character vector of scenario names (default S1–S8).
 #' @param param_groups Optional: parameter grouping for group separation.
 #' @param verbose Print progress?
+#' @param caption Optional caption string (or named list by scenario).
 #' @return Invisibly, a named list of kableExtra objects.
 #' @export
 export_spict_all_scenario_tables_SDM_GLM_grouped <- function(
@@ -72,10 +73,10 @@ export_spict_all_scenario_tables_SDM_GLM_grouped <- function(
       est_str <- ""
       ci_str  <- ""
     } else {
-      est_str <- sprintf("\\textbf{%.3f}", as.numeric(est))
-      ci_str  <- sprintf("\\scriptsize(%.1f--%.1f)", as.numeric(low), as.numeric(up))
+      est_str <- sprintf("\\\\textbf{%.3f}", as.numeric(est))
+      ci_str  <- sprintf("\\\\scriptsize(%.1f--%.1f)", as.numeric(low), as.numeric(up))
     }
-    paste0("\\begin{tabular}[t]{@{}l@{}}", est_str, " \\\\ ", ci_str, "\\end{tabular}")
+    paste0("\\\\begin{tabular}[t]{@{}l@{}}", est_str, " \\\\ ", ci_str, "\\\\end{tabular}")
   }
 
   table_list <- list()
@@ -155,9 +156,9 @@ export_spict_all_scenario_tables_SDM_GLM_grouped <- function(
 
     # Choose caption for this scenario/table
     this_caption <- paste0(
-      "\\captionsetup{width=\\textwidth}Parameter estimates and 95\\% confidence intervals for Fox, Schaefer, and Pella-Tomlinson models (SDM and GLM) for scenario ", scen, "."
+      "\\\\captionsetup{width=\\\\textwidth}Parameter estimates and 95\\\\% confidence intervals for Fox, Schaefer, and Pella-Tomlinson models (SDM and GLM) for scenario ", scen, "."
     )
-
+    # If you prefer a simple caption without captiosetup:
     # this_caption <- if (!is.null(caption)) {
     #   if (length(caption) == 1) caption else caption[[scen]]
     # } else {
@@ -167,14 +168,14 @@ export_spict_all_scenario_tables_SDM_GLM_grouped <- function(
     # -- Table output, ALL left-aligned --
     out_file <- file.path(output_dir, paste0("table_scenario", scen, "_SDM_GLM.tex"))
     kbl_out <- kableExtra::kbl(
-      df_out[,1:8],
+      df_out[, 1:8],
       format = "latex",
       escape = FALSE,
-      linesep = "\\hline",
+      linesep = "\\\\addlinespace",  # <-- doubled backslash
       booktabs = TRUE,
       align = "llllllll",  # all left-aligned
       col.names = c(
-        "\\textbf{Scenario}", "\\textbf{Parameter}",
+        "\\\\textbf{Scenario}", "\\\\textbf{Parameter}",
         "SDM", "GLM", "SDM", "GLM", "SDM", "GLM"
       ),
       caption = this_caption
@@ -189,10 +190,10 @@ export_spict_all_scenario_tables_SDM_GLM_grouped <- function(
     for (i in seq_len(nrow(df_out))) {
       extra_code <- ""
       if (df_out$add_hline_row[i]) {
-        extra_code <- paste0(extra_code, "\\hline\n")
+        extra_code <- paste0(extra_code, "\\\\hline\n")         # <-- doubled backslash
       }
       if (df_out$add_linespace[i]) {
-        extra_code <- paste0(extra_code, "\\addlinespace\n")
+        extra_code <- paste0(extra_code, "\\\\addlinespace\n")  # <-- doubled backslash
       }
       kbl_out <- kableExtra::row_spec(kbl_out, row = i, extra_latex_after = extra_code)
     }

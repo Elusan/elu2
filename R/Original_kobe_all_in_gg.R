@@ -53,8 +53,7 @@
 #' @param CI Numeric in `(0,1)`; confidence level used when extracting
 #'   parameters and constructing intervals (e.g., `0.95`). Default `0.95`.
 #'
-#' @return
-#' (Invisibly) returns the `ggplot` object, and prints it as a side effect.
+#' @return (Invisibly) returns the `ggplot` object, and prints it as a side effect.
 #'
 #' @section Secondary axes:
 #' When `rel.axes = FALSE` and `ext = TRUE`, duplicated axes are added on the
@@ -67,45 +66,25 @@
 #' covariance ellipse. Uses \code{stats::qnorm} and \code{scales::pretty_breaks}
 #' (referenced with explicit namespaces).
 #'
-#' @seealso
-#' \code{elu2::fit.elu2()} for model fitting; \code{spict::plotspict()} for base plots.
-#'
-#' @examples
-#' \dontrun{
-#' # (Pseudo-code) Fit a SPiCT model, then:
-#' # rep <- elu2::fit.elu2(inp)
-#'
-#' # Default: absolute axes
-#' kobe_all_in_one_gg(rep)
-#'
-#' # Relative axes (B/Bmsy vs F/Fmsy) with log scaling
-#' kobe_all_in_one_gg(rep, rel.axes = TRUE, logax = TRUE)
-#'
-#' # Show management overlays but hide their legend, add a stamp
-#' kobe_all_in_one_gg(rep, man.legend = FALSE, stamp = "Analysis v1.0")
-#' }
-#'
-#' @author
-#' Elhadji Ndiaye & Contributors
+#' @seealso \code{elu2::fit.elu2()} for model fitting; \code{spict::plotspict()} for base plots.
 #'
 #' @encoding UTF-8
-#'
 #' @importFrom stats qnorm
 #' @import ggplot2
 #' @export
 Original_kobe_all_in_gg <- function(rep,
-                               logax = FALSE,
-                               plot.legend = TRUE,
-                               man.legend = TRUE,
-                               ext = TRUE,
-                               rel.axes = FALSE,
-                               xlim = NULL,
-                               ylim = NULL,
-                               labpos = c(1, 1),
-                               xlabel = NULL,
-                               stamp = NULL,
-                               verbose = TRUE,
-                               CI = 0.95) {
+                                    logax = FALSE,
+                                    plot.legend = TRUE,
+                                    man.legend = TRUE,
+                                    ext = TRUE,
+                                    rel.axes = FALSE,
+                                    xlim = NULL,
+                                    ylim = NULL,
+                                    labpos = c(1, 1),
+                                    xlabel = NULL,
+                                    stamp = NULL,
+                                    verbose = TRUE,
+                                    CI = 0.95) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required.")
   }
@@ -113,7 +92,7 @@ Original_kobe_all_in_gg <- function(rep,
   ## ----------------------- Local helpers ---------------------- ##
   check_rep <- function(rep, reportmode0 = TRUE) {
     if (!inherits(rep, "spictcls") || !"opt" %in% names(rep)) {
-      stop("The argument 'rep' must be a fitted spict object (fit.spict()).")
+      stop("The argument 'rep' must be a fitted SPiCT-like object.")
     } else if (reportmode0 && rep$inp$reportmode != 0) {
       stop("All states must be reported! Set 'inp$reportmode <- 0' and refit.")
     }
@@ -122,7 +101,7 @@ Original_kobe_all_in_gg <- function(rep,
 
   get_par <- function(parname, rep, exp = FALSE, CI = 0.95) {
     if (CI <= 0 || CI >= 1) stop("CI must be in (0,1).")
-    z <- qnorm(CI + (1 - CI) / 2)
+    z <- stats::qnorm(CI + (1 - CI) / 2)
 
     ind_ran <- which(names(rep$par.random) == parname)
     ind_fix <- which(names(rep$par.fixed)  == parname)
@@ -197,32 +176,38 @@ Original_kobe_all_in_gg <- function(rep,
 
   add_catchunit <- function(lab, cu) {
     cu <- as.character(cu)
-    if (nzchar(cu)) eval(bquote(.(lab[[1]]) * ',' ~ .(cu))) else lab
+    if (nzchar(cu)) eval(bquote(.(lab[[1]]) * ", " ~ .(cu))) else lab
   }
 
   make_rp_ellipse <- function(rep) {
-    inds <- c(max(which(names(rep$value) == "logBmsy")),
-              max(which(names(rep$value) == "logFmsy")))
-    sds  <- rep$sd[inds]
-    s_sum <- rep$sd[which(names(rep$value) == "logBmsyPluslogFmsy")]
-    cova <- (s_sum^2 - sds[1]^2 - sds[2]^2) / 2
-    covBF <- matrix(c(sds[1]^2, cova, cova, sds[2]^2), 2, 2, byrow = TRUE)
-    parBF <- rep$value[inds]
-
-    if (requireNamespace("ellipse", quietly = TRUE)) {
-      ellipse::ellipse(cov2cor(covBF)[1, 2],
-                       scale = sqrt(diag(covBF)),
-                       centre = parBF, npoints = 300)
-    } else {
-      matrix(c(parBF[1], parBF[2]), ncol = 2,
-             dimnames = list(NULL, c("x", "y")))
+    # robust 2×2 covariance for (logBmsy, logFmsy)
+    idxB <- tail(which(names(rep$value) == "logBmsy"), 1L)
+    idxF <- tail(which(names(rep$value) == "logFmsy"), 1L)
+    if (!length(idxB) || !length(idxF)) {
+      return(matrix(c(log(tail(get_par("logBmsy", rep, exp = TRUE)[, 2], 1)),
+                      log(tail(get_par("logFmsy", rep, exp = TRUE)[, 2], 1))),
+                    ncol = 2, dimnames = list(NULL, c("x", "y"))))
     }
+    covmat <- if (!is.null(rep$cov.fixed)) rep$cov.fixed else rep$cov
+    mu <- c(rep$value[idxB], rep$value[idxF])
+
+    if (!is.null(covmat)) {
+      Sigma <- covmat[c(idxB, idxF), c(idxB, idxF), drop = FALSE]
+      if (requireNamespace("ellipse", quietly = TRUE)) {
+        rho <- cov2cor(Sigma)[1, 2]
+        scl <- sqrt(diag(Sigma))
+        pts <- ellipse::ellipse(rho, scale = scl, centre = mu,
+                                level = CI, npoints = 300)
+        return(as.matrix(pts))
+      }
+    }
+    matrix(mu, ncol = 2, dimnames = list(NULL, c("x", "y")))
   }
 
   annual_avg <- function(intime, vec, type = "mean") {
     fun <- match.fun(type)
-    anntime   <- unique(floor(intime))
     floortime <- floor(intime)
+    anntime   <- unique(floortime)
     nstepvec  <- vapply(anntime, function(a) sum(a == floortime), numeric(1))
     anntime   <- anntime[which(nstepvec == max(nstepvec))]
     annvec    <- vapply(anntime, function(a) fun(vec[which(a == floortime)]), numeric(1))
@@ -231,9 +216,9 @@ Original_kobe_all_in_gg <- function(rep,
 
   calc_EBinf <- function(K, n, Fl, Fmsy, sdb2) {
     base <- 1 - (n - 1) / n * (Fl / Fmsy)
-    base <- max(0, base)
-    corr <- 1 - n / 2 / (1 - (1 - n * Fmsy + (n - 1) * Fl))
-    EB  <- K * (base)^(1 / (n - 1)) * (1 - corr * sdb2)
+    base <- pmax(0, base)
+    # simple damping with process variance (robust)
+    EB  <- K * (base)^(1 / (n - 1)) * (1 - sdb2)
     max(0, EB)
   }
 
@@ -265,32 +250,18 @@ Original_kobe_all_in_gg <- function(rep,
     ifelse(is.finite(x), formatC(x, format = "f", digits = 1), NA_character_)
   }
 
-  ## Secondary-axis helpers
-  lab_rel_1 <- function(vals) {
-    # Use your fmt1() (1 decimal) but rewrite exactly-1 to "1"
+  lab_rel_1 <- function(vals) {  # exact “1” printed as "1"
     out <- fmt1(vals)
-    is_one <- abs(vals - 1) < 1e-9
-    out[is_one] <- "1"
+    out[abs(vals - 1) < 1e-9] <- "1"
     out
   }
-  rel_breaks_fun_x <- function(primary_lims) {
-    # Convert pretty primary ticks to relative units, add 1, ensure unique & sorted
-    pr <- scales::pretty_breaks(n = 6)(primary_lims)
-    sort(unique(c(pr / (Bmsy[2] / 1), 1)))
-  }
-  rel_breaks_fun_y <- function(primary_lims) {
-    pr <- scales::pretty_breaks(n = 6)(primary_lims)
-    sort(unique(c(pr / (Fmsy[2] / 1), 1)))
-  }
-
-
 
   clamp <- function(val, lo, hi) pmin(pmax(val, lo), hi)
 
   ## ------------------ Validate & derive quantities --------------- ##
   check_rep(rep)
 
-  tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
+  tvgflag <- isTRUE(rep$inp$timevaryinggrowth) | isTRUE(rep$inp$logmcovflag)
   if (tvgflag) rel.axes <- TRUE
 
   Bmsy_all <- get_par("logBmsy", rep, exp = TRUE, CI = CI)
@@ -324,7 +295,8 @@ Original_kobe_all_in_gg <- function(rep,
 
   cl <- try(make_rp_ellipse(rep), silent = TRUE)
   if (inherits(cl, "try-error")) {
-    cl <- matrix(c(log(Bmsy[2]), log(Fmsy[2])), ncol = 2)
+    cl <- matrix(c(log(Bmsy[2]), log(Fmsy[2])), ncol = 2,
+                 dimnames = list(NULL, c("x", "y")))
   }
 
   if (min(rep$inp$dtc) < 1) {
@@ -343,69 +315,61 @@ Original_kobe_all_in_gg <- function(rep,
   Bl <- tail(unname(bbb), 1)
   EBinf <- get_EBinf(rep) / bscal
 
+  ## --------- Limits (with small padding, log safe) ---------
+  logminval <- 1e-4
+
   if (is.null(xlim)) {
     xlim <- range(c(exp(cl[, 1]), Best[, 2], EBinf) / bscal, na.rm = TRUE)
     if (min(rep$inp$dtc) < 1)
       xlim <- range(c(exp(alb$annvec), exp(cl[, 1]), EBinf) / bscal, na.rm = TRUE)
-    xlim[2] <- min(c(xlim[2], 8 * Bmsy[2] / bscal), 2.2 * max(bbb), na.rm = TRUE)
+    xlim[2] <- min(c(xlim[2], 8 * Bmsy[2] / bscal, 2.2 * max(bbb, na.rm = TRUE)), na.rm = TRUE)
     xlim[2] <- max(c(xlim[2], Bmsy[2] / bscal), na.rm = TRUE)
   }
   if (is.null(ylim)) {
     ylim <- range(c(exp(cl[, 2]), Fest[, 2]) / fscal, na.rm = TRUE)
     if (min(rep$inp$dtc) < 1)
       ylim <- range(c(exp(logFest[, 2]) / fscal, exp(cl[, 2]) / fscal), na.rm = TRUE)
-    ylim[2] <- min(c(ylim[2], 8 * Fmsy[2] / fscal), 2.2 * max(fff), na.rm = TRUE)
+    ylim[2] <- min(c(ylim[2], 8 * Fmsy[2] / fscal, 2.2 * max(fff, na.rm = TRUE)), na.rm = TRUE)
     ylim[2] <- max(c(ylim[2], Fmsy[2] / fscal), na.rm = TRUE)
     if ("man" %in% names(rep)) ylim <- range(ylim, 0)
   }
-  logminval <- 1e-4
   if (isTRUE(logax)) {
     if (xlim[1] < logminval) xlim[1] <- logminval
     if (ylim[1] < logminval) ylim[1] <- logminval
   }
 
-  ## ---- Slight padding of hard limits (keeps fills to the frame) ----
   pad_frac <- 0.02
   xpad <- pad_frac * diff(xlim)
   ypad <- pad_frac * diff(ylim)
-
-  xlim <- c(
-    max(if (isTRUE(logax)) logminval else 0, xlim[1] - xpad),
-    xlim[2] + xpad
-  )
-  ylim <- c(
-    max(if (isTRUE(logax)) logminval else 0, ylim[1] - ypad),
-    ylim[2] + ypad
-  )
+  xlim <- c(max(if (isTRUE(logax)) logminval else 0, xlim[1] - xpad), xlim[2] + xpad)
+  ylim <- c(max(if (isTRUE(logax)) logminval else 0, ylim[1] - ypad), ylim[2] + ypad)
 
   ## ------------------------- Data frames for ggplot ------------------------- ##
-  # Full-panel bounds
   xminq <- xlim[1]; xmaxq <- xlim[2]
   yminq <- ylim[1]; ymaxq <- ylim[2]
 
-  # Split lines, clamped to panel to avoid "removed rows" warnings
   bx <- if (rel.axes) 1 else Bmsy[2] / bscal
   bx <- clamp(bx, xminq, xmaxq)
   fy <- if (rel.axes) 1 else Fmsy[2] / fscal
   fy <- clamp(fy, yminq, ymaxq)
 
-  # Quadrant rectangles (fill everything, no gaps)
-  # Quadrant rectangles — tile panel to borders using -Inf / Inf
+  # Quadrant rectangles — tile the panel
   df_green_rect   <- data.frame(xmin = bx,   xmax =  Inf, ymin = -Inf, ymax =  fy)  # lower-right
   df_yellowL_rect <- data.frame(xmin = -Inf, xmax =  bx,  ymin = -Inf, ymax =  fy)  # lower-left
   df_yellowT_rect <- data.frame(xmin = bx,   xmax =  Inf, ymin =  fy,  ymax =  Inf) # upper-right
   df_red_rect     <- data.frame(xmin = -Inf, xmax =  bx,  ymin =  fy,  ymax =  Inf) # upper-left
 
-
-  df_ellipse <- if (ncol(as.matrix(cl)) == 2 && nrow(as.matrix(cl)) > 1) {
-    data.frame(x = exp(cl[, 1]) / (if (rel.axes) Bmsy[2] else bscal),
-               y = exp(cl[, 2]) / (if (rel.axes) Fmsy[2] else fscal))
+  # Ellipse / point
+  clm <- as.matrix(cl)
+  df_ellipse <- if (ncol(clm) == 2 && nrow(clm) > 1) {
+    data.frame(x = exp(clm[, 1]) / (if (rel.axes) Bmsy[2] else bscal),
+               y = exp(clm[, 2]) / (if (rel.axes) Fmsy[2] else fscal))
   } else {
-    data.frame(x = exp(cl[1]) / (if (rel.axes) Bmsy[2] else bscal),
-               y = exp(cl[2]) / (if (rel.axes) Fmsy[2] else fscal))
+    data.frame(x = exp(clm[1]) / (if (rel.axes) Bmsy[2] else bscal),
+               y = exp(clm[2]) / (if (rel.axes) Fmsy[2] else fscal))
   }
 
-  # Clamp trajectory just inside the frame so it never touches borders
+  # Clamp trajectory just inside the frame
   epsx <- 0.005 * diff(xlim)
   epsy <- 0.005 * diff(ylim)
   clamp_in <- function(v, lo, hi, eps) pmin(pmax(v, lo + eps), hi - eps)
@@ -429,21 +393,27 @@ Original_kobe_all_in_gg <- function(rep,
   }
 
   df_first <- data.frame(x = bbb[1], y = fff[1], lab = round(fbtime[1], 2))
-  df_last  <- data.frame(x = tail(bbb,1), y = tail(fff,1), lab = round(tail(fbtime, 1), 2))
+  df_last  <- data.frame(x = tail(bbb, 1), y = tail(fff, 1), lab = round(tail(fbtime, 1), 2))
 
   nr <- length(rep$inp$ini$logr)
   df_msy_prev <- df_msy_curr <- NULL
   if (nr > 1) {
-    df_msy_prev <- data.frame(x = Bmsy_all[1:(nr-1), 2] / (if (rel.axes) Bmsy[2] else bscal),
-                              y = Fmsy_all[1:(nr-1), 2] / (if (rel.axes) Fmsy[2] else fscal))
-    df_msy_curr <- data.frame(x = Bmsy_all[nr, 2] / (if (rel.axes) Bmsy[2] else bscal),
-                              y = Fmsy_all[nr, 2] / (if (rel.axes) Fmsy[2] else fscal))
+    df_msy_prev <- data.frame(
+      x = Bmsy_all[1:(nr - 1), 2] / (if (rel.axes) Bmsy[2] else bscal),
+      y = Fmsy_all[1:(nr - 1), 2] / (if (rel.axes) Fmsy[2] else fscal)
+    )
+    df_msy_curr <- data.frame(
+      x = Bmsy_all[nr, 2] / (if (rel.axes) Bmsy[2] else bscal),
+      y = Fmsy_all[nr, 2] / (if (rel.axes) Fmsy[2] else fscal)
+    )
   }
 
   df_true <- NULL
   if ("true" %in% names(rep$inp)) {
-    df_true <- data.frame(x = rep$inp$true$Bmsy / (if (rel.axes) Bmsy[2] else bscal),
-                          y = rep$inp$true$Fmsy / (if (rel.axes) Fmsy[2] else fscal))
+    df_true <- data.frame(
+      x = rep$inp$true$Bmsy / (if (rel.axes) Bmsy[2] else bscal),
+      y = rep$inp$true$Fmsy / (if (rel.axes) Fmsy[2] else fscal)
+    )
   }
 
   df_man <- df_man_int <- NULL
@@ -454,8 +424,7 @@ Original_kobe_all_in_gg <- function(rep,
     if (is.null(leg_man) || !length(leg_man)) leg_man <- paste0("Scenario ", seq_len(nman))
     df_list <- vector("list", nman)
     df_int_list <- vector("list", nman)
-    i <- 1L
-    while (i <= nman) {
+    for (i in seq_len(nman)) {
       rp <- rep$man[[i]]
       estF <- get_par("logF", rp, exp = TRUE)[, 2]
       estB <- get_par("logB", rp, exp = TRUE)[, 2]
@@ -464,22 +433,25 @@ Original_kobe_all_in_gg <- function(rep,
       indmanstart <- which(time >= manint[1])
       if (length(indmanstart)) {
         maninds <- indmanstart[1]:tail(indmanstart, 1)
-        df_list[[i]] <- data.frame(x = estB[maninds] / (if (rel.axes) Bmsy[2] else bscal),
-                                   y = estF[maninds] / (if (rel.axes) Fmsy[2] else fscal),
-                                   scenario = leg_man[i])
+        df_list[[i]] <- data.frame(
+          x = estB[maninds] / (if (rel.axes) Bmsy[2] else bscal),
+          y = estF[maninds] / (if (rel.axes) Fmsy[2] else fscal),
+          scenario = leg_man[i]
+        )
       } else {
         df_list[[i]] <- data.frame(x = numeric(0), y = numeric(0), scenario = character(0))
       }
       lastobs <- rp$inp$timerangeObs[2]
       ind <- which(time >= lastobs & time < manint[1])
       if (length(ind)) {
-        df_int_list[[i]] <- data.frame(x = estB[ind] / (if (rel.axes) Bmsy[2] else bscal),
-                                       y = estF[ind] / (if (rel.axes) Fmsy[2] else fscal),
-                                       scenario = leg_man[i])
+        df_int_list[[i]] <- data.frame(
+          x = estB[ind] / (if (rel.axes) Bmsy[2] else bscal),
+          y = estF[ind] / (if (rel.axes) Fmsy[2] else fscal),
+          scenario = leg_man[i]
+        )
       } else {
         df_int_list[[i]] <- data.frame(x = numeric(0), y = numeric(0), scenario = character(0))
       }
-      i <- i + 1L
     }
     df_man <- do.call(rbind, df_list)
     df_man_int <- do.call(rbind, df_int_list)
@@ -488,7 +460,7 @@ Original_kobe_all_in_gg <- function(rep,
   ## --------------------------- Build ggplot ------------------------------ ##
   p <- ggplot2::ggplot()
 
-  # Quadrants (fill entire panel; no gaps)
+  # Quadrants
   p <- p + ggplot2::geom_rect(data = df_green_rect,
                               ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
                               fill = grDevices::adjustcolor("darkseagreen3", alpha.f = 1), color = NA)
@@ -502,7 +474,7 @@ Original_kobe_all_in_gg <- function(rep,
                               ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
                               fill = grDevices::adjustcolor("indianred1", alpha.f = 1), color = NA)
 
-  # Ellipse (banana CI) — transparent gray
+  # Ellipse (banana) or point
   if (nrow(df_ellipse) > 1) {
     p <- p + ggplot2::geom_polygon(data = df_ellipse, ggplot2::aes(x = x, y = y),
                                    fill = grDevices::adjustcolor("gray80", alpha.f = 0.8),
@@ -512,11 +484,11 @@ Original_kobe_all_in_gg <- function(rep,
                                  color = "gray40", size = 2)
   }
 
-  # Historical trajectory (thinner and safely inside the frame)
+  # Historical trajectory
   p <- p + ggplot2::geom_path(data = df_traj, ggplot2::aes(x = x, y = y),
                               linewidth = 0.4, color = grDevices::adjustcolor("blue", alpha.f = 0.8))
 
-  # One-step prediction
+  # One-step prediction & EB∞
   if (!is.null(df_pred)) {
     p <- p + ggplot2::geom_path(data = df_pred, ggplot2::aes(x = x, y = y),
                                 linetype = "11", color = grDevices::adjustcolor("blue", alpha.f = 0.8))
@@ -567,111 +539,56 @@ Original_kobe_all_in_gg <- function(rep,
   p <- p + ggplot2::geom_text(data = df_last, ggplot2::aes(x = x, y = y, label = lab),
                               vjust = -0.8, size = 3)
 
-  # Reference vline at 0 only if inside limits
+  # Reference vline at 0 if within panel (non-log)
   if (!isTRUE(logax) && (0 >= xlim[1]) && (0 <= xlim[2])) {
     p <- p + ggplot2::geom_vline(xintercept = 0, color = "darkred", linetype = 2)
   }
-
-  ## Label function for secondary axes: force exact 1 → "1" (no decimal)
-  lab_rel_1 <- function(vals) {
-    out <- fmt1(vals)                 # your existing formatter (1 decimal)
-    out[abs(vals - 1) < 1e-9] <- "1"  # but print 1 as "1"
-    out
-  }
-
-  ## (Optional but recommended) Small padding of limits to avoid overlap with frame
-  pad_frac <- 0.02
-  xpad <- pad_frac * diff(xlim)
-  ypad <- pad_frac * diff(ylim)
-  xlim <- c(max(if (isTRUE(logax)) logminval else 0, xlim[1] - xpad), xlim[2] + xpad)
-  ylim <- c(max(if (isTRUE(logax)) logminval else 0, ylim[1] - ypad), ylim[2] + ypad)
-
 
   # Labels & scales
   xlab_final <- if (is.null(xlabel)) xlab_expr else xlabel
   ylab_final <- ylab_expr
 
-  if (!rel.axes && isTRUE(ext)) {
-    sec_x <- ggplot2::dup_axis(name = expression(B[t]/B[MSY]),
-                               labels = function(x) fmt1(x / (Bmsy[2] / 1)))
-    sec_y <- ggplot2::dup_axis(name = expression(F[t]/F[MSY]),
-                               labels = function(y) fmt1(y / (Fmsy[2] / 1)))
-  } else {
-    sec_x <- ggplot2::waiver()
-    sec_y <- ggplot2::waiver()
-  }
-
   if (isTRUE(logax)) {
     p <- p + ggplot2::scale_x_log10(
-      limits = xlim,
-      name   = xlab_final,
-      labels = function(x) formatC(x, format = "f", digits = 0),
+      limits = xlim, name = xlab_final, labels = function(x) formatC(x, format = "f", digits = 0),
       expand = c(0, 0),
       sec.axis = if (!rel.axes && isTRUE(ext)) ggplot2::sec_axis(
-        trans  = ~ . / (Bmsy[2] / 1),                           # absolute → relative
-        name   = expression(B[t]/B[MSY]),
-        breaks = function(lims) {
-          br <- scales::pretty_breaks(n = 6)(lims)
-          sort(unique(c(br, 1)))
-        },
+        trans = ~ . / (Bmsy[2] / 1), name = expression(B[t]/B[MSY]),
+        breaks = function(lims) sort(unique(c(scales::pretty_breaks(n = 6)(lims), 1))),
         labels = lab_rel_1
       ) else ggplot2::waiver()
     )
-
     p <- p + ggplot2::scale_y_log10(
-      limits = ylim,
-      name   = ylab_final,
-      labels = fmt1,
+      limits = ylim, name = ylab_final, labels = fmt1,
       expand = c(0, 0),
       sec.axis = if (!rel.axes && isTRUE(ext)) ggplot2::sec_axis(
-        trans  = ~ . / (Fmsy[2] / 1),
-        name   = expression(F[t]/F[MSY]),
-        breaks = function(lims) {
-          br <- scales::pretty_breaks(n = 6)(lims)
-          sort(unique(c(br, 1)))
-        },
+        trans = ~ . / (Fmsy[2] / 1), name = expression(F[t]/F[MSY]),
+        breaks = function(lims) sort(unique(c(scales::pretty_breaks(n = 6)(lims), 1))),
         labels = lab_rel_1
       ) else ggplot2::waiver()
     )
-
   } else {
-
     p <- p + ggplot2::scale_x_continuous(
-      limits = xlim,
-      name   = xlab_final,
-      labels = function(x) formatC(x, format = "f", digits = 0),
+      limits = xlim, name = xlab_final, labels = function(x) formatC(x, format = "f", digits = 0),
       expand = c(0, 0),
       sec.axis = if (!rel.axes && isTRUE(ext)) ggplot2::sec_axis(
-        trans  = ~ . / (Bmsy[2] / 1),
-        name   = expression(B[t]/B[MSY]),
-        breaks = function(lims) {
-          br <- scales::pretty_breaks(n = 6)(lims)
-          sort(unique(c(br, 1)))
-        },
+        trans = ~ . / (Bmsy[2] / 1), name = expression(B[t]/B[MSY]),
+        breaks = function(lims) sort(unique(c(scales::pretty_breaks(n = 6)(lims), 1))),
         labels = lab_rel_1
       ) else ggplot2::waiver()
     )
-
     p <- p + ggplot2::scale_y_continuous(
-      limits = ylim,
-      name   = ylab_final,
-      labels = fmt1,
+      limits = ylim, name = ylab_final, labels = fmt1,
       expand = c(0, 0),
       sec.axis = if (!rel.axes && isTRUE(ext)) ggplot2::sec_axis(
-        trans  = ~ . / (Fmsy[2] / 1),
-        name   = expression(F[t]/F[MSY]),
-        breaks = function(lims) {
-          br <- scales::pretty_breaks(n = 6)(lims)
-          sort(unique(c(br, 1)))
-        },
+        trans = ~ . / (Fmsy[2] / 1), name = expression(F[t]/F[MSY]),
+        breaks = function(lims) sort(unique(c(scales::pretty_breaks(n = 6)(lims), 1))),
         labels = lab_rel_1
       ) else ggplot2::waiver()
     )
   }
 
-
-
-
+  # Colors for scenarios (if shown)
   if (!is.null(df_man) && nrow(df_man) && man.legend) {
     uniq_sc <- unique(df_man$scenario)
     n_sc <- length(uniq_sc)
@@ -689,29 +606,27 @@ Original_kobe_all_in_gg <- function(rep,
       legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor("white", alpha.f = 0.8), color = NA),
       legend.position = if (man.legend) "top" else "none",
       legend.direction = "horizontal",
-      axis.text.x  = element_text(size = 10, face = "bold", color = "gray25"),
-      axis.text.y  = element_text(size = 10, face = "bold", color = "gray25"),
-      axis.title.x = element_text(size = 14, face = "bold", color = "gray25"),
-      axis.title.y = element_text(size = 14, face = "bold", color = "gray25"),
-      plot.margin = margin(4, 4, 4, 4)
-
-
+      axis.text.x  = ggplot2::element_text(size = 10, face = "bold", color = "gray25"),
+      axis.text.y  = ggplot2::element_text(size = 10, face = "bold", color = "gray25"),
+      axis.title.x = ggplot2::element_text(size = 14, face = "bold", color = "gray25"),
+      axis.title.y = ggplot2::element_text(size = 14, face = "bold", color = "gray25"),
+      plot.margin = ggplot2::margin(4, 4, 4, 4)
     )
 
-  # Top-right mini-legend for E(B∞): smaller diamond, more gap, math label bigger
+  # Top-right mini-legend for E(B∞)
   if (plot.legend && !(min(rep$inp$dtc) < 1)) {
     px <- xlim[2] - 0.02 * diff(xlim)
     py <- ylim[2] - 0.04 * diff(ylim)
-    gap <- 0.12 * diff(xlim)   # more horizontal spacing
+    gap <- 0.12 * diff(xlim)
     p <- p + ggplot2::annotate("point", x = px - gap, y = py,
                                shape = 23, size = 2.5, fill = "gold", color = "black", stroke = 0.6)
     p <- p + ggplot2::annotate("text", x = px, y = py,
-                               label = expression(bold(E(B[infinity]))), parse = TRUE,
+                               label = "bold(E(B[infinity]))", parse = TRUE,
                                hjust = 1, vjust = 0.5, size = 4)
   }
 
-  # Non-convergence warning mark
-  if (rep$opt$convergence != 0) {
+  # Non-convergence flag
+  if (!is.null(rep$opt$convergence) && rep$opt$convergence != 0) {
     p <- p + ggplot2::annotate("text",
                                x = xlim[1] + 0.01 * diff(xlim),
                                y = ylim[2] + 0.02 * diff(ylim),

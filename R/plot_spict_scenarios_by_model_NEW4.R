@@ -319,8 +319,8 @@ plot_spict_scenarios_by_model_NEW4 <- function(models,
 
   plots <- list(
     biomass = make_biomass_plot(get_series("logB")),
-    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[MSY])), hline = 1),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[italic(MSY)])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 

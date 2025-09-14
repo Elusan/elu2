@@ -125,6 +125,7 @@ plot_param_panels_by_model <- function(model_list,
     FFmsy_year = sprintf("$F_{%d}/F_{\\mathrm{MSY}}$", y), F_year = sprintf("$F_{%d}$", y),
     Fmsy = "$F_{\\mathrm{MSY}}$", MSY = "$\\mathrm{MSY}$", r = "$r$"
   )
+  # Map TeX facet labels -> plotmath strings (for label_parsed)
   .plotmath_string_map <- function(y) {
     tex <- .tex_label_map(y)
     stats::setNames(

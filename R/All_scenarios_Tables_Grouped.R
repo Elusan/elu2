@@ -177,7 +177,7 @@ All_scenarios_Tables_Grouped <- function(
       df_out[,1:8],
       format = "latex",
       escape = FALSE,
-      linesep = "\\hline",
+      linesep = "\addlinespace",
       booktabs = TRUE,
       align = "llllllll",  # all left-aligned
       col.names = c(

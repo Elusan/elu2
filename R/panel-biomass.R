@@ -104,4 +104,4 @@ plot_elu2_panel_biomass <- function(model,
 
   p
 
-  }  # (body unchanged)
+}  # (body unchanged). Update and give the final version

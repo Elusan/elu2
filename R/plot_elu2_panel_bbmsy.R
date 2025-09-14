@@ -43,6 +43,7 @@ plot_elu2_panel_bbmsy <- function(model,
   p <- p +
     geom_hline(yintercept = 1, linetype = "solid", color = "black", linewidth = 0.8) +
     labs(title = "Relative biomass", x = "Year", y = expression(bold(B/B[MSY]))) +
+
     .spict_theme_minimal_compact2()
 
   p

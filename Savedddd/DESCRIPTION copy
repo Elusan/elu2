@@ -1,0 +1,40 @@
+Package: elu2
+Type: Package
+Title: Spatio-Temporal Stock Assessment Tools
+Version: 0.1.0
+Authors@R: 
+    person(
+      given = "Elhadji",
+      family = "Ndiaye",
+      email = "elusan2022@gmail.com",
+      role = c("aut", "cre")
+    )
+Description: Provides tools for spatio-temporal modeling, visualization, and
+    shrimp stock assessment using customized delta models and SPiCT integration.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE, roclets = c("rd","namespace","collate"))
+RoxygenNote: 7.3.3
+Depends: 
+    R (>= 3.5)
+Imports:
+    TMB,
+    knitr,
+    kableExtra,
+    dplyr,
+    purrr,
+    ggplot2,
+    grid,
+    grDevices,
+    stats,
+    patchwork
+Suggests: 
+    rmarkdown,
+    testthat (>= 3.0.0)
+LinkingTo:
+    TMB
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/Elusan/elu2
+BugReports: https://github.com/Elusan/elu2/issues

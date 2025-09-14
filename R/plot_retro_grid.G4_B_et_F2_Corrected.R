@@ -64,26 +64,20 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
   require(dplyr)
   require(grid)
 
-  # ---- Local deterministic fallbacks (used ONLY if your globals are absent) ----
   .safe_exists_fun <- function(name) exists(name, mode = "function", inherits = TRUE)
   .safe_get_fun   <- function(name) get(name, inherits = TRUE)
 
-  # Stable JABBA-like fixed hex colors (fallback). Your 'jabba_colors' wins if present.
   .JABBA_FIXED <- c(
-    "#000000", # black (often "All")
-    "#1B9E77", "#D95F02", "#7570B3", "#E7298A",
+    "#000000", "#1B9E77", "#D95F02", "#7570B3", "#E7298A",
     "#66A61E", "#E6AB02", "#A6761D", "#666666", "#1F78B4"
   )
 
-  # Fallback for cols(): return a stable named vector when peels are known later.
   .cols_fallback <- function(nms) {
-    # map peels by order to fixed palette, recycle if needed
     cols <- rep(.JABBA_FIXED, length.out = length(nms))
     names(cols) <- nms
     cols
   }
 
-  # Prefer user's theme if present; otherwise minimal, stable fallback.
   .apply_theme <- local({
     if (.safe_exists_fun("theme_minimal_compact")) {
       .safe_get_fun("theme_minimal_compact")
@@ -117,7 +111,6 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     }
   })
 
-  # prefer your get.par(); else spict::get.par(); else fail informatively
   .get_par <- function(...) {
     if (.safe_exists_fun("get.par")) {
       .safe_get_fun("get.par")(...)
@@ -128,17 +121,14 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     }
   }
 
-  # prefer your mohns_rho(); else fallback returning NAs with stable names
   .mohns_rho <- function(...) {
     if (.safe_exists_fun("mohns_rho")) {
       .safe_get_fun("mohns_rho")(...)
     } else {
-      out <- c(FFmsy = NA_real_, BBmsy = NA_real_, B = NA_real_, F = NA_real_)
-      out
+      c(FFmsy = NA_real_, BBmsy = NA_real_, B = NA_real_, F = NA_real_)
     }
   }
 
-  # prefer your make_peel_subtitle(); else deterministic HTML dots subtitle
   .make_peel_subtitle <- local({
     if (.safe_exists_fun("make_peel_subtitle")) {
       .safe_get_fun("make_peel_subtitle")
@@ -154,34 +144,21 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     }
   })
 
-  # Color logic (do NOT override your settings if they exist)
-  # If user supplied 'peel_colors', keep exactly as provided.
   mycols <- if (is.null(peel_colors)) {
-    # If user defines cols(), use it exactly; otherwise delay to peel discovery
     if (.safe_exists_fun("cols")) .safe_get_fun("cols") else NULL
   } else peel_colors
 
   model_order <- names(models)
 
-  # =========== Panel builder function ===========
   get_retro_panels <- function(model_fit, model_nm, peel_colors_input) {
     runs <- model_fit$retro
     if (is.null(runs)) stop("Model '", model_nm, "' is missing retro.")
-
-    # ensure first is named "All" for consistency (keeps your structure otherwise)
     names(runs)[1] <- "All"
 
-    # peel names (before ordering) for deterministic color binding
     peel_names_raw <- names(runs)
     n_peels <- length(runs)
 
-    # Resolve peel color vector deterministically with precedence:
-    # 1) explicit peel_colors_input if provided
-    # 2) your global 'jabba_colors' if palette == "JABBA"
-    # 3) MetBrewer if available and palette given
-    # 4) stable fixed fallback / scales::hue_pal() last
     peel_colors_final <- NULL
-
     if (!is.null(peel_colors_input)) {
       peel_colors_final <- rep(peel_colors_input, length.out = n_peels)
     } else if (toupper(palette) == "JABBA" && exists("jabba_colors", inherits = TRUE)) {
@@ -189,30 +166,31 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     } else if (toupper(palette) == "JABBA") {
       peel_colors_final <- rep(.JABBA_FIXED, length.out = n_peels)
     } else if (!is.null(mycols)) {
-      # user had cols(); if it returns a vector, recycle deterministically
       peel_colors_final <- rep(mycols, length.out = n_peels)
     } else if (!is.null(palette) &&
                isTRUE(palette %in% tryCatch(MetBrewer::list_met_palettes(), error = function(e) character()))) {
       peel_colors_final <- MetBrewer::met.brewer(palette, n_peels)
     } else {
-      # keep as last resort but deterministic given n
       peel_colors_final <- scales::hue_pal()(n_peels)
     }
     names(peel_colors_final) <- peel_names_raw
 
-    # --- Mohn's rho (add B and F) ---
     rho_vals <- tryCatch(
-      .mohns_rho(model_fit, what = c("FFmsy","BBmsy","B","F")),
+      round(.mohns_rho(model_fit, what = c("FFmsy","BBmsy","B","F")), 3),
       error = function(e) c(FFmsy = NA_real_, BBmsy = NA_real_, B = NA_real_, F = NA_real_)
     )
-    rho_vals <- round(rho_vals, 3)
 
-    lab_BB <- paste0("Mohn*\"'s\"~rho[B/B[MSY]]==", rho_vals["BBmsy"])
-    lab_FF <- paste0("Mohn*\"'s\"~rho[F/F[MSY]]==", rho_vals["FFmsy"])
-    lab_B  <- paste0("Mohn*\"'s\"~rho[B]==",        rho_vals["B"])
-    lab_F  <- paste0("Mohn*\"'s\"~rho[F]==",        rho_vals["F"])
+    # *** FIXED: use italic(MSY) instead of \emph{MSY} ***
+    val_BB <- if (is.na(rho_vals["BBmsy"])) "NA" else sprintf("%.3f", rho_vals["BBmsy"])
+    val_FF <- if (is.na(rho_vals["FFmsy"])) "NA" else sprintf("%.3f", rho_vals["FFmsy"])
+    val_B  <- if (is.na(rho_vals["B"]))      "NA" else sprintf("%.3f", rho_vals["B"])
+    val_F  <- if (is.na(rho_vals["F"]))      "NA" else sprintf("%.3f", rho_vals["F"])
 
-    # Extract helper: fully namespaced; no pipes; deterministic
+    lab_BB <- paste0("Mohn*\"'s\"~rho[B/B[italic(MSY)]]==", val_BB)
+    lab_FF <- paste0("Mohn*\"'s\"~rho[F/F[italic(MSY)]]==", val_FF)
+    lab_B  <- paste0("Mohn*\"'s\"~rho[B]==",                 val_B)
+    lab_F  <- paste0("Mohn*\"'s\"~rho[F]==",                 val_F)
+
     extract_df <- function(fit, peel, par_name) {
       idx  <- fit$inp$indest
       pars <- .get_par(par_name, fit, exp = TRUE, CI = 0.95)[idx, 1:3]
@@ -225,13 +203,11 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
       )
     }
 
-    # Data frames for each quantity
     df_B    <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logB"))
     df_F    <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logFnotS"))
     df_Bmsy <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logBBmsy"))
     df_Fmsy <- purrr::imap_dfr(runs, ~ extract_df(.x, .y, "logFFmsynotS"))
 
-    # Deterministic peel order: "All" → numeric (DESC) → non-numeric (original order)
     peel_names <- unique(df_B$peel)
     all_present <- "All" %in% peel_names
     other_peels <- setdiff(peel_names, "All")
@@ -246,16 +222,13 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     df_Bmsy$peel <- factor(df_Bmsy$peel, levels = plot_peel_levels)
     df_Fmsy$peel <- factor(df_Fmsy$peel, levels = plot_peel_levels)
 
-    # Bind colors to *final factor levels* deterministically
-    # If any peels missing in names(peel_colors_final), extend/recycle via fallback
     if (!all(plot_peel_levels %in% names(peel_colors_final))) {
-      # build a stable vector for the exact levels order
       peel_colors_final <- .cols_fallback(plot_peel_levels)
     } else {
       peel_colors_final <- peel_colors_final[plot_peel_levels]
     }
 
-    ci_gray <- "#B0B0B0"  # stable CI band color
+    ci_gray <- "#B0B0B0"
 
     make_panel <- function(df, ylab, rho_text = NULL) {
       ggplot2::ggplot(df, ggplot2::aes(time, estimate, group = peel)) +
@@ -281,14 +254,13 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     }
 
     list(
-      B     = make_panel(df_B,    expression(bold(B[t])),        rho_text = lab_B),
-      F     = make_panel(df_F,    expression(bold(F[t])),        rho_text = lab_F),
-      BBmsy = make_panel(df_Bmsy, expression(bold(B[t]/B[MSY])), rho_text = lab_BB),
-      FFmsy = make_panel(df_Fmsy, expression(bold(F[t]/F[MSY])), rho_text = lab_FF)
+      B     = make_panel(df_B,    expression(bold(B[t])),                        rho_text = lab_B),
+      F     = make_panel(df_F,    expression(bold(F[t])),                        rho_text = lab_F),
+      BBmsy = make_panel(df_Bmsy, expression(bold(B[t]/B[italic(MSY)])),         rho_text = lab_BB),
+      FFmsy = make_panel(df_Fmsy, expression(bold(F[t]/F[italic(MSY)])),         rho_text = lab_FF)
     )
   }
 
-  # Build all columns (each model = header + 4 panels)
   all_panels <- lapply(model_order, function(nm) {
     get_retro_panels(models[[nm]], nm, mycols)
   })
@@ -329,13 +301,11 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
     }
   }
 
-  # ---- Subtitle (peel dots) - use peels/colors from first model deterministically ----
   first_fit <- models[[model_order[1]]]
   runs <- first_fit$retro
   names(runs)[1] <- "All"
   peel_names_first <- names(runs)
 
-  # Recompute a deterministic color vector matching first model's peels
   if (is.null(peel_colors)) {
     if (.safe_exists_fun("cols")) {
       base_cols <- .safe_get_fun("cols")
@@ -357,7 +327,6 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
 
   subtitle_peels <- .make_peel_subtitle(peel_names_first, peel_colors_used)
 
-  # ---- Compose main plot with scenario title and subtitle ----
   final <- p_grid +
     patchwork::plot_layout(guides = "collect") &
     ggplot2::theme(
@@ -370,7 +339,6 @@ plot_retro_grid.G4_B_et_F2_Corrected <- function(
       subtitle = subtitle_peels
     )
 
-  # Save if requested
   if (!is.null(output_dir)) {
     if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
     if (is.null(filename)) {

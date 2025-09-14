@@ -193,7 +193,7 @@ export_spict_compare_across_scenarios_SDM_GLM_007 <- function(
                                         latex_gap_space = "0.25em")
     }
     # optional: thin rule between blocks
-    kbl_out <- kableExtra::row_spec(kbl_out, row = 0, extra_latex_after = "\\addlinespace")
+    kbl_out <- kableExtra::row_spec(kbl_out, row = 0, extra_latex_after = "\\\addlinespace")
   }
 
   kbl_out <- kableExtra::kable_styling(

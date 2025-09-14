@@ -24,9 +24,8 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
   group3 <- c("$B_{2022}$", "$F_{2022}$", "$B_{2022}/B_{\\mathrm{MSY}}$", "$F_{2022}/F_{\\mathrm{MSY}}$")
   group4 <- c("$B_{2024}$", "$F_{2024}$", "$B_{2024}/B_{\\mathrm{MSY}}$", "$F_{2024}/F_{\\mathrm{MSY}}$")
 
-  # Strip \textbf{} from Parameters to compare
+  # Strip \\textbf{} from Parameters to compare
   clean_param <- function(x) gsub("^\\\\textbf\\{(.+)\\}$", "\\1", x)
-
 
   # Combine into a full sequence
   group_sequence <- list(group1, group2, group3, group4)
@@ -38,31 +37,18 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
     df_summary$group[plain_parameters %in% group_sequence[[i]]] <- i
   }
 
-  # Add \hline to every row and \addlinespace only *after group transition*
+  # Add \\hline to every row and \\addlinespace only *after group transition*
   df_summary$add_linespace <- c(
     diff(df_summary$group) == 1,  # TRUE when group changes
     FALSE  # last row no space
   )
 
-  # # Define grouped parameter labels (must match LaTeX-formatted names from param_labels)
-  # group1 <- c("$\\alpha_{1}$", "$\\alpha_{2}$", "$\\beta$", "$r$", "$m$", "$K$",
-  #             "$q_{1}$", "$q_{2}$", "$n$", "$\\sigma_B$", "$\\sigma_F$",
-  #             "$\\sigma_{I_{1}}$", "$\\sigma_{I_{2}}$", "$\\sigma_C$")
-  # group2 <- c("$B_{\\mathrm{MSY}}$", "$F_{\\mathrm{MSY}}$", "$\\mathrm{MSY}$")
-  # group3 <- c("$B_{2022}$", "$F_{2022}$", "$B_{2022}/B_{\\mathrm{MSY}}$", "$F_{2022}/F_{\\mathrm{MSY}}$")
-  # group4 <- c("$B_{2024}$", "$F_{2024}$", "$B_{2024}/B_{\\mathrm{MSY}}$", "$F_{2024}/F_{\\mathrm{MSY}}$")
-  # special_addspace <- "$\\sigma_C$"  # assuming this label appears exactly as such
-
-
-
   # Define grouped parameter labels (must match LaTeX-formatted names from param_labels)
-  # group1 <- c("$\\alpha_{1}$", "$\\alpha_{2}$", "$\\beta$", "$r$", "$m$", "$K$",
-  #             "$q_{1}$", "$q_{2}$", "$n$", "$\\sigma_B$", "$\\sigma_F$",
-  #             "$\\sigma_{I_{1}}$", "$\\sigma_{I_{2}}$", "$\\sigma_C$")
-  # group2 <- c("$B_{\\mathrm{MSY}}$", "$F_{\\mathrm{MSY}}$", "$\\mathrm{MSY}$")
-  # group3 <- c("$B_{2022}$", "$F_{2022}$", "$B_{2022}/B_{\\mathrm{MSY}}$", "$F_{2022}/F_{\\mathrm{MSY}}$")
-  # group4 <- c("$B_{2024}$", "$F_{2024}$", "$B_{2024}/B_{\\mathrm{MSY}}$", "$F_{2024}/F_{\\mathrm{MSY}}$")
-
+  # (kept as comments from your original)
+  # group1 <- ...
+  # group2 <- ...
+  # group3 <- ...
+  # group4 <- ...
 
   df_summary$Parameters <- kableExtra::cell_spec(df_summary$Parameters, format = "latex", bold = TRUE, escape = FALSE)
 
@@ -78,30 +64,12 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
     }
   }
 
-  # Strip bold tags for logic comparisons (remove \textbf{})
-  # Strip bold from latex labels
-  #clean_param <- function(x) gsub("^\\\\textbf\\{(.+?)\\}$", "\\1", x)
-  #plain_parameters <- vapply(df_summary$Parameters, clean_param, character(1))
-
   # Identify rows to add spacing (only at the end of groups 1–3)
   df_summary$add_linespace <- plain_parameters %in% c(
     tail(group1, 1),  # "$\\sigma_C$"
     tail(group2, 1),  # "$\\mathrm{MSY}$"
     tail(group3, 1)   # "$F_{2022}/F_{\\mathrm{MSY}}$"
   )
-
-
-  #df_summary$group_hline <- rep(TRUE, length(plain_parameters))  # force \hline for all rows
-
-
-  # Specify where to add spacing and horizontal lines
-  # df_summary$add_linespace <- plain_parameters %in% c(
-  #   "$C$", "$F_{\\mathrm{MSY}}$", "$F_{2022}/F_{\\mathrm{MSY}}$"
-  # )
-  #
-  # df_summary$group_hline <- plain_parameters %in% c(
-  #   "$\\sigma_C$", "$\\mathrm{MSY}$", "$F_{2022}/F_{\\mathrm{MSY}}$"
-  # )
 
   out_file <- file.path(output_dir, paste0("table_scenario", scenario_name, "_estimates.tex"))
 
@@ -110,13 +78,11 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
                              "Schaefer_estimate", "Schaefer_low", "Schaefer_up",
                              "Pella_estimate", "Pella_low", "Pella_up")]
 
-
-
   kbl_out <- kableExtra::kbl(
     df_print,
     format = "latex",
     escape = FALSE,
-    linesep = "\\hline",
+    linesep = "\\addlinespace",
     booktabs = TRUE,
     col.names = c(
       "\\textbf{Scenario}", "\\textbf{Parameters}",
@@ -137,7 +103,6 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
     escape = FALSE
   )
 
-
   kbl_out <- kableExtra::kable_styling(
     kbl_out,
     latex_options = c("hold_position"),
@@ -157,18 +122,17 @@ export_spict_summary_table4_tex <- function(df_summary, scenario_name = "1", out
   for (i in seq_len(nrow(df_summary))) {
     extra_code <- ""
 
-    # Add \addlinespace only *between groups*
+    # Add \\addlinespace only *between groups*
     if (df_summary$add_linespace[i]) {
       extra_code <- paste0(extra_code, "\\addlinespace\n")
     }
 
-    # Always add \hline
+    # Always add \\hline
     extra_code <- paste0(extra_code, "\\hline\n")
 
     # Apply formatting
     kbl_out <- kableExtra::row_spec(kbl_out, row = i, extra_latex_after = extra_code)
   }
-
 
   writeLines(as.character(kbl_out), out_file)
 

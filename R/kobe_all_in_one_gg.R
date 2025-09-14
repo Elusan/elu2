@@ -694,8 +694,6 @@ kobe_all_in_one_gg <- function(rep,
       axis.title.x = element_text(size = 14, face = "bold"),
       axis.title.y = element_text(size = 14, face = "bold"),
       plot.margin = margin(4, 4, 4, 4)
-
-
     )
 
   # Top-right mini-legend for E(B∞): smaller diamond, more gap, math label bigger

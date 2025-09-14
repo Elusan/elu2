@@ -24,5 +24,5 @@ Invisibly returns a list of patchwork plots
 }
 \description{
 For each model in the list, generates and optionally saves a 2x2 retrospective grid:
-Top-left: B\link{t}, Bottom-left: B\link{t}/B\link{MSY}, Top-right: F\link{t}, Bottom-right: F\link{t}/F\link{MSY}
+Top-left: B\link{t}, Bottom-left: B\link{t}/B\\emph{MSY}, Top-right: F\link{t}, Bottom-right: F\link{t}/F\\emph{MSY}
 }

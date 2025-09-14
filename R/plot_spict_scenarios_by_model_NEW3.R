@@ -186,19 +186,19 @@ plot_spict_scenarios_by_model_NEW3 <- function(models,
 
   plots <- list(
     biomass = make_biomass_plot(get_series("logB")),
-    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[MSY])), hline = 1),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[italic(MSY)])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 
   if (!is.null(extract_catch_data)) {
-    catch_all <- bind_rows(lapply(model_names, function(mod) {
+    catch_all <- dplyr::bind_rows(lapply(model_names, function(mod) {
       extract_catch_data(models[[mod]], scenario_name = mod)
     }))
     catch_all$scenario <- as.character(catch_all$scenario)
 
-    predicted <- catch_all %>% filter(catch_type == "Predicted")
-    observed  <- catch_all %>% filter(catch_type == "Observed")
+    predicted <- dplyr::filter(catch_all, catch_type == "Predicted")
+    observed  <- dplyr::filter(catch_all, catch_type == "Observed")
 
     predicted$model <- factor(predicted$scenario, levels = model_names)
     observed$model  <- factor(observed$scenario,  levels = model_names)
@@ -216,11 +216,11 @@ plot_spict_scenarios_by_model_NEW3 <- function(models,
   }
 
   if (!is.null(production_fun)) {
-    prod_df <- bind_rows(lapply(model_names, function(mod) {
+    prod_df <- dplyr::bind_rows(lapply(model_names, function(mod) {
       production_fun(models[[mod]], model_name = mod)
     }))
     prod_df$Model <- factor(prod_df$Model, levels = model_names)
-    max_pts <- prod_df %>% group_by(Model) %>% slice_max(Production, n = 1) %>% ungroup()
+    max_pts <- prod_df %>% dplyr::group_by(Model) %>% dplyr::slice_max(Production, n = 1) %>% dplyr::ungroup()
     plots$production <- ggplot(prod_df, aes(x = B_K, y = Production, color = Model)) +
       geom_line(size = lindwd, linetype = "dashed") +
       geom_point(data = max_pts, aes(shape = Model), size = 3) +

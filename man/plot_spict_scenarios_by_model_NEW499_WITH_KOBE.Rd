@@ -101,5 +101,5 @@ using the last \strong{integer} time (\code{dtc < 1}) if seasonal.
 
 }
 \seealso{
-\code{\link[=kobe_all_in_one_gg.EE]{kobe_all_in_one_gg.EE()}}, \code{\link[=.add_kobe_original_mini_legend]{.add_kobe_original_mini_legend()}}
+\code{\link[=kobe_all_in_one_gg]{kobe_all_in_one_gg()}}, \code{.add_kobe_original_mini_legend()}
 }

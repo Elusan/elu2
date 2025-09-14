@@ -11,7 +11,8 @@ A character vector of 8 hexadecimal color codes.
 jabba_colors
 }
 \description{
-Predefined color palette inspired by the JABBA package, suitable for use in retrospective "peel" plots or any situation requiring distinct colors.
+Predefined color palette inspired by the JABBA package, suitable for use in
+retrospective "peel" plots or any situation requiring distinct colors.
 }
 \details{
 The colors are: red, blue, green, purple, orange, brown, pink, and grey.

@@ -104,25 +104,6 @@ covariance ellipse. Uses \code{stats::qnorm} and \code{scales::pretty_breaks}
 (referenced with explicit namespaces).
 }
 
-\examples{
-\dontrun{
-# (Pseudo-code) Fit a SPiCT model, then:
-# rep <- elu2::fit.elu2(inp)
-
-# Default: absolute axes
-kobe_all_in_one_gg(rep)
-
-# Relative axes (B/Bmsy vs F/Fmsy) with log scaling
-kobe_all_in_one_gg(rep, rel.axes = TRUE, logax = TRUE)
-
-# Show management overlays but hide their legend, add a stamp
-kobe_all_in_one_gg(rep, man.legend = FALSE, stamp = "Analysis v1.0")
-}
-
-}
 \seealso{
 \code{elu2::fit.elu2()} for model fitting; \code{spict::plotspict()} for base plots.
-}
-\author{
-Elhadji Ndiaye & Contributors
 }

@@ -21,9 +21,9 @@
 #' @return Nothing
 #' @export
 get.mfrow <- function(n){
-    ncol <- floor(sqrt(n))
-    nrow <- ceiling(n/ncol)
-    return(c(nrow, ncol))
+  ncol <- floor(sqrt(n))
+  nrow <- ceiling(n/ncol)
+  return(c(nrow, ncol))
 }
 
 #' @name add.manlines
@@ -39,100 +39,100 @@ get.mfrow <- function(n){
 #' @export
 add.manlines <- function(rep, par, par2=NULL, index.shift=0, plot.legend=TRUE,
                          verbose = TRUE, ...){
-    scenarios <- 1:length(rep$man)
-    nman <- length(scenarios)
-    errflag <- rep(FALSE,nman)
-    for (i in 1:nman){
-        rp <- rep$man[[scenarios[i]]]
-        ip <- rp$inp
-        manint <- ip$maninterval
-        mandiff <- diff(manint)
-        est <- get.par(par, rp, exp=TRUE)[,2]
-        dtcp <- ip$dtcp
-        if(par == 'logCpred'){
-            time <- rp$inp$timeCpred
-            lastobs <- ip$lastCatchObs
-            indlastobs <- which(time == lastobs)
-        }else{
-            time <- rp$inp$time
-            lastobs <- ip$timerangeObs[2]
-            indlastobs <- which(time == lastobs)
-        }
-        indmanstart <- which(time >= manint[1])
-        ## manperiod
-        if(par == 'logCpred'){
-            if(mandiff < 1){
-                errflag[i] <- TRUE
-                mantime <- NULL
-                manc <- NULL
-            }else if(mandiff > 1){
-                mantime <- seq(manint[1], manint[2], 1)
-                mantime <- mantime[-length(mantime)]
-                manc <- rep(est[indmanstart] / mandiff, length(mantime))
-            }else{
-                mantime <- manint[1]
-                manc <- est[indmanstart]
-            }
-            ## aggregate seasonal catches in man
-            if(any(dtcp[indmanstart] < 1)){
-                alo <- annual(time[indmanstart], est[indmanstart]/dtcp[indmanstart], mean)
-                mantime <- alo$anntime
-                manc <- alo$annvec
-            }
-            ind <- which(time < manint[1])
-            preind <- tail(which(dtcp[ind] == 1),1)
-            ## aggregate seasonal catches before man
-            if(any(dtcp[ind] < 1)){
-                alo <- annual(time[ind], est[ind]/dtcp[ind], mean)
-                time <- alo$anntime
-                est <- alo$annvec
-                ind <- which(time < manint[1])
-                dtcp <- diff(unique(c(time,manint[1])))
-                preind <- which.max(time[which(dtcp >= 1)])
-            }
-            premantime <- time[preind]
-            premanc <- est[preind]
-            x <- c(premantime,mantime)
-            y <- c(premanc,manc)
-        }else{
-            maninds <- (indmanstart[1] - index.shift):tail(indmanstart,1)
-            if (is.null(par2)){
-                x <- time[maninds]
-            } else {
-                x <- get.par(par2, rp, exp=TRUE)[maninds, 2]
-            }
-            y <- est[maninds]
-        }
-        lines(x, y, col=man.cols()[i], lwd=1.5, ...)
-        ## intermediate period
-        intdiff <- manint[1] - lastobs
-        if(intdiff > 0 && (par != 'logCpred' || (par == 'logCpred' && intdiff %% 1 == 0))){
-            ind <- which(time >= lastobs & time < manint[1])
-            if(par == 'logCpred'){
-                if(intdiff %% 1 == 0){
-                    intinds <- (ind[1] - index.shift):preind
-                }
-            }else{
-                intinds <- (ind[1] - index.shift):maninds[1]
-            }
-            if (is.null(par2)){
-                x <- time[intinds]
-            } else {
-                x <- get.par(par2, rp, exp=TRUE)[intinds, 2]
-            }
-            y <- est[intinds]
-            lines(x, y, col=man.cols()[i], lwd=1.5, lty=3)
-        }
+  scenarios <- 1:length(rep$man)
+  nman <- length(scenarios)
+  errflag <- rep(FALSE,nman)
+  for (i in 1:nman){
+    rp <- rep$man[[scenarios[i]]]
+    ip <- rp$inp
+    manint <- ip$maninterval
+    mandiff <- diff(manint)
+    est <- get.par(par, rp, exp=TRUE)[,2]
+    dtcp <- ip$dtcp
+    if(par == 'logCpred'){
+      time <- rp$inp$timeCpred
+      lastobs <- ip$lastCatchObs
+      indlastobs <- which(time == lastobs)
+    }else{
+      time <- rp$inp$time
+      lastobs <- ip$timerangeObs[2]
+      indlastobs <- which(time == lastobs)
     }
-    ## legend
-    nouse <- capture.output(nms <- rownames(sumspict.manage(rep, include.unc=FALSE, verbose=FALSE)$est))
-    if (plot.legend){
-        legend('topleft', legend=nms, lty=1, col=man.cols()[1:nman], bg='transparent', cex=0.8)
+    indmanstart <- which(time >= manint[1])
+    ## manperiod
+    if(par == 'logCpred'){
+      if(mandiff < 1){
+        errflag[i] <- TRUE
+        mantime <- NULL
+        manc <- NULL
+      }else if(mandiff > 1){
+        mantime <- seq(manint[1], manint[2], 1)
+        mantime <- mantime[-length(mantime)]
+        manc <- rep(est[indmanstart] / mandiff, length(mantime))
+      }else{
+        mantime <- manint[1]
+        manc <- est[indmanstart]
+      }
+      ## aggregate seasonal catches in man
+      if(any(dtcp[indmanstart] < 1)){
+        alo <- annual(time[indmanstart], est[indmanstart]/dtcp[indmanstart], mean)
+        mantime <- alo$anntime
+        manc <- alo$annvec
+      }
+      ind <- which(time < manint[1])
+      preind <- tail(which(dtcp[ind] == 1),1)
+      ## aggregate seasonal catches before man
+      if(any(dtcp[ind] < 1)){
+        alo <- annual(time[ind], est[ind]/dtcp[ind], mean)
+        time <- alo$anntime
+        est <- alo$annvec
+        ind <- which(time < manint[1])
+        dtcp <- diff(unique(c(time,manint[1])))
+        preind <- which.max(time[which(dtcp >= 1)])
+      }
+      premantime <- time[preind]
+      premanc <- est[preind]
+      x <- c(premantime,mantime)
+      y <- c(premanc,manc)
+    }else{
+      maninds <- (indmanstart[1] - index.shift):tail(indmanstart,1)
+      if (is.null(par2)){
+        x <- time[maninds]
+      } else {
+        x <- get.par(par2, rp, exp=TRUE)[maninds, 2]
+      }
+      y <- est[maninds]
     }
-    ## Note
-    if (any(errflag) && verbose) cat(paste0("The management period of scenario(s): ",
-                                            paste0(names(rep$man)[errflag],collapse=", "),
-                                            " is shorter than 1 year. Thus, the catch cannot be displayed correctly in the annual catch plot.\n"))
+    lines(x, y, col=man.cols()[i], lwd=1.5, ...)
+    ## intermediate period
+    intdiff <- manint[1] - lastobs
+    if(intdiff > 0 && (par != 'logCpred' || (par == 'logCpred' && intdiff %% 1 == 0))){
+      ind <- which(time >= lastobs & time < manint[1])
+      if(par == 'logCpred'){
+        if(intdiff %% 1 == 0){
+          intinds <- (ind[1] - index.shift):preind
+        }
+      }else{
+        intinds <- (ind[1] - index.shift):maninds[1]
+      }
+      if (is.null(par2)){
+        x <- time[intinds]
+      } else {
+        x <- get.par(par2, rp, exp=TRUE)[intinds, 2]
+      }
+      y <- est[intinds]
+      lines(x, y, col=man.cols()[i], lwd=1.5, lty=3)
+    }
+  }
+  ## legend
+  nouse <- capture.output(nms <- rownames(sumspict.manage(rep, include.unc=FALSE, verbose=FALSE)$est))
+  if (plot.legend){
+    legend('topleft', legend=nms, lty=1, col=man.cols()[1:nman], bg='transparent', cex=0.8)
+  }
+  ## Note
+  if (any(errflag) && verbose) cat(paste0("The management period of scenario(s): ",
+                                          paste0(names(rep$man)[errflag],collapse=", "),
+                                          " is shorter than 1 year. Thus, the catch cannot be displayed correctly in the annual catch plot.\n"))
 }
 
 
@@ -145,22 +145,22 @@ add.manlines <- function(rep, par, par2=NULL, index.shift=0, plot.legend=TRUE,
 #'     intervals are estimated.
 #' @return plotting limits for all reps in rep$man
 get.manlimits <- function(rep, par, CI = 0.95){
-    scenarios <- 1:length(rep$man)
-    nman <- length(scenarios)
-    lims <- vector("list",nman)
-    for (i in 1:nman){
-        rp <- rep$man[[ scenarios[i] ]]
-        if (par == 'time'){
-            lims[[i]] <- range(c(rp$inp$time, tail(rp$inp$time, 1) + 0.5))
-        }else{
-            lims[[i]] <- get.par(par, rp, exp=TRUE)[, 2]
-            if(par == "logCpred"){
-                lims[[i]] <- lims[[i]] / c(diff(rp$inp$timeCpred), rp$inp$dtpredc)
-            }
+  scenarios <- 1:length(rep$man)
+  nman <- length(scenarios)
+  lims <- vector("list",nman)
+  for (i in 1:nman){
+    rp <- rep$man[[ scenarios[i] ]]
+    if (par == 'time'){
+      lims[[i]] <- range(c(rp$inp$time, tail(rp$inp$time, 1) + 0.5))
+    }else{
+      lims[[i]] <- get.par(par, rp, exp=TRUE)[, 2]
+      if(par == "logCpred"){
+        lims[[i]] <- lims[[i]] / c(diff(rp$inp$timeCpred), rp$inp$dtpredc)
+      }
 
-        }
     }
-    return(range(unlist(lims)))
+  }
+  return(range(unlist(lims)))
 }
 
 #' @name get.manmax
@@ -168,15 +168,15 @@ get.manlimits <- function(rep, par, CI = 0.95){
 #' @param rep A result report as generated by running fit.spict.
 #' @return rep in rep$man which hast the longest time series
 get.manmax <- function(rep){
-    scenarios <- 1:length(rep$man)
-    nman <- length(scenarios)
-    maxs <- vector("list",nman)
-    for (i in 1:nman){
-        ip <- rep$man[[ scenarios[i] ]]$inp
-        maxs <- max(ip$ns)
-    }
-    repout <- rep$man[[which.max(maxs)[1]]]
-    return(repout)
+  scenarios <- 1:length(rep$man)
+  nman <- length(scenarios)
+  maxs <- vector("list",nman)
+  for (i in 1:nman){
+    ip <- rep$man[[ scenarios[i] ]]$inp
+    maxs <- max(ip$ns)
+  }
+  repout <- rep$man[[which.max(maxs)[1]]]
+  return(repout)
 }
 
 
@@ -188,36 +188,36 @@ get.manmax <- function(rep){
 #' @return Nothing
 #' @export
 txt.stamp <- function(string = get.version(), cex=0.5, do.flag=NULL) {
-    #if (string == 'undef'){
-    #    string <- get.version()
-    #}
-    if (is.null(do.flag)){
-        if (mean(par()$mfrow) > 1){
-            do.flag <- FALSE
-        } else {
-            do.flag <- TRUE
-        }
+  #if (string == 'undef'){
+  #    string <- get.version()
+  #}
+  if (is.null(do.flag)){
+    if (mean(par()$mfrow) > 1){
+      do.flag <- FALSE
+    } else {
+      do.flag <- TRUE
     }
-    if (!is.null(string)){
-        if (string != '' & !is.na(string) & do.flag){
-            opar <- par(new = "TRUE", plt = c(0, 1, 0, 1), mfrow=c(1, 1), xpd=FALSE)
-            on.exit(par(opar))
-            plot(1, typ='n', xaxt='n', yaxt='n', xlab='', ylab='', bty='n') # Empty plot
-            #opar <- par(yaxt = "s", xaxt = "s")
-            on.exit(par(opar))
-            plt <- par("plt")
-            usr <- par("usr")
-            xcoord <- usr[2] + (usr[2] - usr[1])/(plt[2] - plt[1]) * (1 - plt[2]) - 0.4 * strwidth("m")
-            ycoord <- usr[3] - diff(usr[3:4])/diff(plt[3:4]) * (plt[3]) + 0.4 * strheight("m")
-            if (par("xlog")){
-                xcoord <- 10^(xcoord)
-            }
-            if (par("ylog")){
-                ycoord <- 10^(ycoord)
-            }
-            text(xcoord, ycoord, string, adj = 1, cex=cex)
-        }
+  }
+  if (!is.null(string)){
+    if (string != '' & !is.na(string) & do.flag){
+      opar <- par(new = "TRUE", plt = c(0, 1, 0, 1), mfrow=c(1, 1), xpd=FALSE)
+      on.exit(par(opar))
+      plot(1, typ='n', xaxt='n', yaxt='n', xlab='', ylab='', bty='n') # Empty plot
+      #opar <- par(yaxt = "s", xaxt = "s")
+      on.exit(par(opar))
+      plt <- par("plt")
+      usr <- par("usr")
+      xcoord <- usr[2] + (usr[2] - usr[1])/(plt[2] - plt[1]) * (1 - plt[2]) - 0.4 * strwidth("m")
+      ycoord <- usr[3] - diff(usr[3:4])/diff(plt[3:4]) * (plt[3]) + 0.4 * strheight("m")
+      if (par("xlog")){
+        xcoord <- 10^(xcoord)
+      }
+      if (par("ylog")){
+        ycoord <- 10^(ycoord)
+      }
+      text(xcoord, ycoord, string, adj = 1, cex=cex)
     }
+  }
 }
 
 
@@ -225,19 +225,19 @@ txt.stamp <- function(string = get.version(), cex=0.5, do.flag=NULL) {
 #' @title Add warning sign to plot
 #' @return Nothing
 warning.stamp <- function(){
-    opar <- par(yaxt = "s", xaxt = "s", xpd = NA)
-    on.exit(par(opar))
-    usr <- par("usr")
-    xcoord <- usr[1]
-    ycoord <- usr[4] + 0.035/diff(par()$fig[3:4]) * diff(usr[3:4])
-    if (par("xlog")){
-        xcoord <- 10^(xcoord)
-    }
-    if (par("ylog")){
-        ycoord <- 10^(ycoord)
-    }
-    points(xcoord, ycoord, pch=24, bg='yellow', col='black', cex=2, lwd=1.5)
-    text(xcoord, ycoord, '!', cex=0.8)
+  opar <- par(yaxt = "s", xaxt = "s", xpd = NA)
+  on.exit(par(opar))
+  usr <- par("usr")
+  xcoord <- usr[1]
+  ycoord <- usr[4] + 0.035/diff(par()$fig[3:4]) * diff(usr[3:4])
+  if (par("xlog")){
+    xcoord <- 10^(xcoord)
+  }
+  if (par("ylog")){
+    ycoord <- 10^(ycoord)
+  }
+  points(xcoord, ycoord, pch=24, bg='yellow', col='black', cex=2, lwd=1.5)
+  text(xcoord, ycoord, '!', cex=0.8)
 }
 
 
@@ -247,13 +247,13 @@ warning.stamp <- function(){
 #' @param cu Catch unit as a character string
 #' @return Label with added catch unit
 add.catchunit <- function(lab, cu){
-    cu <- as.character(cu)
-    if (cu != ''){
-        out <- eval(bquote(.(lab[[1]]) *',' ~ .(cu)))
-    } else {
-        out <- lab
-    }
-    return(out)
+  cu <- as.character(cu)
+  if (cu != ''){
+    out <- eval(bquote(.(lab[[1]]) *',' ~ .(cu)))
+  } else {
+    out <- lab
+  }
+  return(out)
 }
 
 
@@ -271,10 +271,10 @@ add.catchunit <- function(lab, cu){
 #' @param ... See documentation for arrows.
 #' @return Nothing, but an arrow line is added to the current plot.
 arrow.line <- function(x, y, length = 0.25, angle = 30, code = 2, col = par("fg"), lty = par("lty"), lwd = par("lwd"), ...){
-    n <- length(x)
-    for (i in 2:n){
-        arrows(x[i-1], y[i-1], x[i], y[i], length, angle, code, col, lty, lwd, ...)
-    }
+  n <- length(x)
+  for (i in 2:n){
+    arrows(x[i-1], y[i-1], x[i], y[i], length, angle, code, col, lty, lwd, ...)
+  }
 }
 
 
@@ -286,24 +286,24 @@ arrow.line <- function(x, y, length = 0.25, angle = 30, code = 2, col = par("fg"
 #' @return A list containing the annual means \code{$annvec} and a corresponding time vector \code{$anntime}.
 #' @export
 annual <- function(intime, vec, type = 'mean') {
-    fun <- match.fun(type)
-    anntime <- unique(floor(intime))
-    nanntime <- length(anntime)
-    nstepvec <- rep(0, nanntime)
-    floortime <- floor(intime)
-    for (i in seq(nanntime)) {
-        nstepvec[i] <- sum(anntime[i] == floortime)
-    }
-    nsteps <- max(nstepvec)
-    # Remove years that are not full
-    anntime <- anntime[which(nstepvec == max(nstepvec))]
-    nanntime <- length(anntime)
-    annvec <- rep(0, nanntime)
-    for (i in seq(nanntime)) {
-        inds <- which(anntime[i] == floortime)
-        annvec[i] <- fun(vec[inds])
-    }
-    return(list(anntime = anntime, annvec = annvec))
+  fun <- match.fun(type)
+  anntime <- unique(floor(intime))
+  nanntime <- length(anntime)
+  nstepvec <- rep(0, nanntime)
+  floortime <- floor(intime)
+  for (i in seq(nanntime)) {
+    nstepvec[i] <- sum(anntime[i] == floortime)
+  }
+  nsteps <- max(nstepvec)
+  # Remove years that are not full
+  anntime <- anntime[which(nstepvec == max(nstepvec))]
+  nanntime <- length(anntime)
+  annvec <- rep(0, nanntime)
+  for (i in seq(nanntime)) {
+    inds <- which(anntime[i] == floortime)
+    annvec[i] <- fun(vec[inds])
+  }
+  return(list(anntime = anntime, annvec = annvec))
 }
 
 
@@ -315,10 +315,10 @@ annual <- function(intime, vec, type = 'mean') {
 #' @param cicol Colour of polygon
 #' @return Spline design matrix.
 refpointci <- function(t, ll, ul, cicol='ivory2'){
-    tplus <- c(t[1]*0.8, t, tail(t, 1)*1.2)
-    llplus <- c(ll[1], ll, tail(ll, 1))
-    ulplus <- c(ul[1], ul, tail(ul, 1))
-    polygon(c(tplus, rev(tplus)), c(llplus, rev(ulplus)), col=cicol, border=cicol)
+  tplus <- c(t[1]*0.8, t, tail(t, 1)*1.2)
+  llplus <- c(ll[1], ll, tail(ll, 1))
+  ulplus <- c(ul[1], ul, tail(ul, 1))
+  polygon(c(tplus, rev(tplus)), c(llplus, rev(ulplus)), col=cicol, border=cicol)
 }
 
 #' @name make.rpellipse
@@ -328,13 +328,13 @@ refpointci <- function(t, ll, ul, cicol='ivory2'){
 #' @return A matrix with two columns containing the x and y coordinates of the ellipsis.
 #' @importFrom ellipse ellipse
 make.rpellipse <- function(rep){
-    inds <- c(max(which(names(rep$value)=='logBmsy')), max(which(names(rep$value)=='logFmsy')))
-    sds <- rep$sd[inds]
-    cova <- ( rep$sd[ which(names(rep$value)=='logBmsyPluslogFmsy') ]^2 - sds[1]^2 - sds[2]^2 )/2
-    covBF <- matrix( c( sds[1]^2, cova, cova, sds[2]^2 ),2,2,byrow=TRUE)
-    corBF <- cov2cor(covBF)
-    parBF <- rep$value[inds]
-    return(ellipse::ellipse(corBF[1,2], scale=sqrt(diag(covBF)), centre=parBF, npoints=300))
+  inds <- c(max(which(names(rep$value)=='logBmsy')), max(which(names(rep$value)=='logFmsy')))
+  sds <- rep$sd[inds]
+  cova <- ( rep$sd[ which(names(rep$value)=='logBmsyPluslogFmsy') ]^2 - sds[1]^2 - sds[2]^2 )/2
+  covBF <- matrix( c( sds[1]^2, cova, cova, sds[2]^2 ),2,2,byrow=TRUE)
+  corBF <- cov2cor(covBF)
+  parBF <- rep$value[inds]
+  return(ellipse::ellipse(corBF[1,2], scale=sqrt(diag(covBF)), centre=parBF, npoints=300))
 }
 
 
@@ -343,16 +343,16 @@ make.rpellipse <- function(rep){
 #' @param modin Time vector modulo 1.
 #' @return Vector containing season colors.
 season.cols <- function(modin){
-    # Make colors
-    seasons <- colorRamp(c('blue', 'green', 'gold', 'red', 'blue'))
-    ncols <- 13
-    cols <- seasons(seq(0, 1, length=ncols))
-    rgbcols <- rgb(cols[, 1]/255, cols[, 2]/255, cols[, 3]/255) # Color no 13 = color no 1, only use 1:12
-    # Find colors corresponding to modin
-    breaks <- seq(0, 1, length=ncols) # Monthly breaks
-    ind <- cut(modin, breaks, right=FALSE, labels=FALSE)
-    ind[is.na(ind)] <- 1
-    return(rgbcols[ind])
+  # Make colors
+  seasons <- colorRamp(c('blue', 'green', 'gold', 'red', 'blue'))
+  ncols <- 13
+  cols <- seasons(seq(0, 1, length=ncols))
+  rgbcols <- rgb(cols[, 1]/255, cols[, 2]/255, cols[, 3]/255) # Color no 13 = color no 1, only use 1:12
+  # Find colors corresponding to modin
+  breaks <- seq(0, 1, length=ncols) # Monthly breaks
+  ind <- cut(modin, breaks, right=FALSE, labels=FALSE)
+  ind[is.na(ind)] <- 1
+  return(rgbcols[ind])
 }
 
 
@@ -366,10 +366,10 @@ true.col <- function() rgb(1, 165/255, 0, alpha=0.7) # 'orange'
 #' @title Load color of management scenarios.
 #' @return Color vector
 man.cols <- function(){
-    colvec <- c('darkmagenta','cyan3','darkgreen','coral1','black',
-                'magenta','gold','green','cadetblue3',
-                'chocolate3', 'darkolivegreen3','cyan','darkred')
-    return(rep(colvec, 3))
+  colvec <- c('darkmagenta','cyan3','darkgreen','coral1','black',
+              'magenta','gold','green','cadetblue3',
+              'chocolate3', 'darkolivegreen3','cyan','darkred')
+  return(rep(colvec, 3))
 }
 
 
@@ -388,48 +388,48 @@ man.cols <- function(){
 #' @return Nothing.
 plot.col <- function(time, obs, obsx=NULL, pch=1, add=FALSE, typ='p', do.line=TRUE,
                      add.legend=FALSE, add.vline.at=NULL, ...){
-    if (is.null(obsx)){
-        x <- time
+  if (is.null(obsx)){
+    x <- time
+  } else {
+    x <- obsx
+  }
+  nobs <- length(obs)
+  mods <- time%%1
+  cols <- season.cols(mods)
+  if (!add){
+    plot(x, obs, typ='n', ...)
+  }
+  if (!is.null(add.vline.at)){
+    abline(v=add.vline.at, lty=3, col='gray')
+  }
+  if (typ=='p' & do.line){
+    lines(x, obs, col='lightgray')
+  }
+  if (typ=='p'){
+    pchs <- rep_len(1:5,pch)
+    points(x, obs, col=1, pch=20+pchs[pch], bg=cols)
+  }
+  if (typ=='l'){
+    qs <- unique(mods)
+    qcols <- season.cols(qs)
+    nintv <- length(qs)
+    if (nintv <= 4){
+      for (i in 1:nintv){
+        inds <- which(qs[i] == mods)
+        lines(x[inds], obs[inds], col=qcols[i], lty=1)
+      }
     } else {
-        x <- obsx
+      lines(x, obs, col='lightgray')
+      warning('More than four observed sub-annual time points (', nintv,
+              '), plotting only one line.')
     }
-    nobs <- length(obs)
-    mods <- time%%1
-    cols <- season.cols(mods)
-    if (!add){
-        plot(x, obs, typ='n', ...)
-    }
-    if (!is.null(add.vline.at)){
-        abline(v=add.vline.at, lty=3, col='gray')
-    }
-    if (typ=='p' & do.line){
-        lines(x, obs, col='lightgray')
-    }
-    if (typ=='p'){
-        pchs <- rep_len(1:5,pch)
-        points(x, obs, col=1, pch=20+pchs[pch], bg=cols)
-    }
-    if (typ=='l'){
-        qs <- unique(mods)
-        qcols <- season.cols(qs)
-        nintv <- length(qs)
-        if (nintv <= 4){
-            for (i in 1:nintv){
-                inds <- which(qs[i] == mods)
-                lines(x[inds], obs[inds], col=qcols[i], lty=1)
-            }
-        } else {
-            lines(x, obs, col='lightgray')
-            warning('More than four observed sub-annual time points (', nintv,
-                    '), plotting only one line.')
-        }
-    }
-    if (add.legend){
-        add.col.legend()
-    }
-    if (!add){
-        box(lwd=1.5)
-    }
+  }
+  if (add.legend){
+    add.col.legend()
+  }
+  if (!add){
+    box(lwd=1.5)
+  }
 }
 
 
@@ -437,25 +437,25 @@ plot.col <- function(time, obs, obsx=NULL, pch=1, add=FALSE, typ='p', do.line=TR
 #' @title Add a legend explaining colors of points (horizontal orientation)
 #' @return Nothing.
 add.col.legend.hor <- function(){
-    pusr <- par('usr')
-    mods <- seq(0, 1, length=13)
-    rgbcols <- season.cols(mods)
-    nbar <- length(rgbcols)-1
-    barwidth <- diff(pusr[1:2])
-    dbw <- barwidth/nbar
-    pxmax <- pusr[2]
-    pymax <- pusr[4]
-    barheight <- 0.05*diff(pusr[3:4])
-    barx <- pxmax-barwidth
-    bary <- pymax-barheight
-    for (i in 1:nbar){
-        xst <- barx+(i-1)*dbw
-        rect(xst,bary,xst+dbw,pymax,col=rgbcols[i],lty=0)
-    }
-    rect(barx,bary,pxmax,pymax)
-    labx <- seq(barx, barx+barwidth, length=5)
-    laby <- pusr[4]-barheight
-    text(labx[1:4]+dbw/2, laby, c('Jan', 'Apr', 'Jul', 'Oct'), pos=1)
+  pusr <- par('usr')
+  mods <- seq(0, 1, length=13)
+  rgbcols <- season.cols(mods)
+  nbar <- length(rgbcols)-1
+  barwidth <- diff(pusr[1:2])
+  dbw <- barwidth/nbar
+  pxmax <- pusr[2]
+  pymax <- pusr[4]
+  barheight <- 0.05*diff(pusr[3:4])
+  barx <- pxmax-barwidth
+  bary <- pymax-barheight
+  for (i in 1:nbar){
+    xst <- barx+(i-1)*dbw
+    rect(xst,bary,xst+dbw,pymax,col=rgbcols[i],lty=0)
+  }
+  rect(barx,bary,pxmax,pymax)
+  labx <- seq(barx, barx+barwidth, length=5)
+  laby <- pusr[4]-barheight
+  text(labx[1:4]+dbw/2, laby, c('Jan', 'Apr', 'Jul', 'Oct'), pos=1)
 }
 
 
@@ -463,30 +463,30 @@ add.col.legend.hor <- function(){
 #' @title Add a legend explaining colors of points (vertical orientation)
 #' @return Nothing.
 add.col.legend <- function(){
-    rel <- (par()$fin/par()$pin)[2]
-    yfac <- 3*rel - 3
-    opar <- par(xpd=TRUE)
-    on.exit(par(opar))
-    pusr <- par('usr')
-    mods <- seq(0, 1, length=13)
-    rgbcols <- season.cols(mods)
-    nbar <- length(rgbcols)-1
-    barwidth <- 0.05*diff(pusr[1:2])
-    barheight <- 0.1*yfac*diff(pusr[3:4])
-    dbh <- barheight/nbar
-    pxmax <- pusr[2]
-    pymax <- pusr[4]
-    barx <- pxmax-barwidth
-    bary <- pymax+barheight
-    for (i in 1:nbar){
-        #xst <- barx+(i-1)*dbw
-        yst <- bary - (i-1)*dbh
-        rect(barx, yst, pxmax, yst+dbh, col=rgbcols[i], lty=0)
-    }
-    #rect(barx, bary, pxmax, pymax)
-    laby <- seq(bary, pymax, length=5)
-    labx <- pxmax
-    text(labx, laby[1:4], c('Jan', 'Apr', 'Jul', 'Oct'), pos=4, cex=0.8)
+  rel <- (par()$fin/par()$pin)[2]
+  yfac <- 3*rel - 3
+  opar <- par(xpd=TRUE)
+  on.exit(par(opar))
+  pusr <- par('usr')
+  mods <- seq(0, 1, length=13)
+  rgbcols <- season.cols(mods)
+  nbar <- length(rgbcols)-1
+  barwidth <- 0.05*diff(pusr[1:2])
+  barheight <- 0.1*yfac*diff(pusr[3:4])
+  dbh <- barheight/nbar
+  pxmax <- pusr[2]
+  pymax <- pusr[4]
+  barx <- pxmax-barwidth
+  bary <- pymax+barheight
+  for (i in 1:nbar){
+    #xst <- barx+(i-1)*dbw
+    yst <- bary - (i-1)*dbh
+    rect(barx, yst, pxmax, yst+dbh, col=rgbcols[i], lty=0)
+  }
+  #rect(barx, bary, pxmax, pymax)
+  laby <- seq(bary, pymax, length=5)
+  labx <- pxmax
+  text(labx, laby[1:4], c('Jan', 'Apr', 'Jul', 'Oct'), pos=4, cex=0.8)
 }
 
 
@@ -532,158 +532,158 @@ plotspict.biomass <- function(rep, logax=FALSE, main='Absolute biomass', ylim=NU
                               plot.obs=TRUE, qlegend=TRUE, xlab='Time', ylab=NULL,
                               rel.axes=TRUE, rel.ci=TRUE, stamp=get.version(),
                               verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        manflag <- any(names(rep) == "man")
-        ylabflag <- is.null(ylab)
-        ylimflag <- !is.null(ylim)
-        mar <- c(5.1, 4.3, 4.1, 4.1)
-        if (dev.cur()==1){ # If plot is not open
-            opar <- par(mar=mar)
-            on.exit(par(opar))
-        }
-        if (dev.cur() == 2){ # If plot is open, check if it is a 1x1 plot
-            if (all(par()$mfrow == c(1, 1))){
-                opar <- par(mar=mar)
-                on.exit(par(opar))
-            }
-        }
-        log <- ifelse(logax, 'y', '')
-        inp <- rep$inp
-
-        indest <- inp$indest
-        if(manflag){
-            repmax <- get.manmax(rep)
-            indest <- indest[-length(indest)]
-            indxmax <- which(inp$time == inp$timerange[2])
-        }else{
-            repmax <- rep
-            indxmax <- which(inp$time ==  max(inp$time))
-        }
-
-        # Biomass plot
-        Best <- get.par('logB', rep, exp=TRUE, CI = CI)[(1:indxmax),]
-        ns <- dim(Best)[1]
-        Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
-        Bmsy <- get.par('logBmsy', repmax, exp=TRUE, CI = CI)
-        Bmsyvec <- get.msyvec(repmax$inp, Bmsy)[(1:indxmax)]
-        qest <- get.par('logq', rep, exp=TRUE, CI = CI)
-        BB <- get.par('logBBmsy', rep, exp=TRUE, CI = CI)[(1:indxmax),]
-        Bp <- get.par('logBp', rep, exp=TRUE, CI = CI)
-        if(!is.null(nrow(Bmsy))) Bmsy <- Bmsy[1,] ## time-varying m leads to several (identical) Bmsy values, drop them
-        scal <- 1
-        cicol <- 'lightgray'
-        if (inp$nindex == 0){
-            nindexseq <- numeric(0)
-            obsI <- NULL
-        } else {
-            nindexseq <- 1:inp$nindex
-            obsI <- list()
-        }
-        for (i in nindexseq){
-            obsI[[i]] <- inp$obsI[[i]]/qest[inp$mapq[i], 2]
-        }
-        cvCheck <- ifelse(any(Best[,5] <= 5),5,min(Best[,5]))
-        fininds <- which(Best[, 5] <= cvCheck) # Use CV to check for large uncertainties
-        BBfininds <- unname(which(is.finite(BB[, 1]) & is.finite(BB[, 3]))) # Use CV to check for large uncertainties
-        if (!ylimflag){
-            if (length(ylim)!=2){
-                ylim <- range(BB[BBfininds, 1:3]/scal*Bmsy[2], Best[fininds, 1:3], Bp[2],
-                              unlist(obsI), 0.95*Bmsy[1], 1.05*Bmsy[3], na.rm=TRUE)/scal
-            }
-            ylim[2] <- min(c(ylim[2], 3*max(Best[fininds, 2], unlist(obsI)))) # Limit upper limit
-        }
-        xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
-        if(manflag) xlim <- get.manlimits(rep,"time")
-        #if (main==-1) main <- 'Absolute biomass'
-        if (ylabflag){
-            ylab <- expression(B[t])
-            ylab <- add.catchunit(ylab, inp$catchunit)
-        }
-        plot(inp$time[1:indxmax], Best[,2]/scal, typ='n', xlab=xlab, ylab=ylab, main=main, ylim=ylim,
-             xlim=xlim, log=log)
-        if (rel.axes){
-            axis(4, labels=pretty(ylim/Bmsy[2]), at=pretty(ylim/Bmsy[2])*Bmsy[2])
-            mtext(expression(B[t]/B[MSY]), side=4, las=0, line=2.2, cex=par('cex'))
-        }
-        if (all(is.finite(unlist(Bmsyvec)))){
-            polygon(c(repmax$inp$time, rev(repmax$inp$time)), c(Bmsyvec$ll,rev(Bmsyvec$ul)),
-                    col=cicol, border=cicol)
-        }
-        cicol2 <- rgb(0, 0, 1, 0.1)
-        if (!'yearsepgrowth' %in% names(inp) && rel.ci){
-            polygon(c(inp$time[BBfininds], rev(inp$time[BBfininds])),
-                    c(BB[BBfininds, 1], rev(BB[BBfininds, 3]))/scal*Bmsy[2],
-                    col=cicol2, border=cicol2)
-        }
-        if(!manflag) abline(v=inp$time[inp$indlastobs], col='gray')
-        if (plot.obs){
-            for (i in nindexseq){
-                plot.col(inp$timeI[[i]], inp$obsI[[i]]/qest[inp$mapq[i], 2], pch=i,
-                         do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
-            }
-            if (qlegend){
-                subyears <- unique(unlist(inp$timeI)%%1)
-                plot.col(subyears, numeric(length(subyears)), typ='n', add=TRUE, add.legend=TRUE) # Only plot legend
-            }
-            # Highlight influential index observations
-            if ('infl' %in% names(rep)){
-                infl <- rep$infl$infl
-                indslast <- inp$nobsC # Start after catch observations
-                for (i in nindexseq){
-                    iinds <- indslast + 1:inp$nobsI[i]
-                    infl2 <- infl[iinds, ]
-                    cols <- apply(!is.na(infl2), 1, sum)
-                    ncols <- length(unique(cols))
-                    inds <- which(cols>0)
-                    points(inp$timeI[[i]][inds], inp$obsI[[i]][inds]/qest[inp$mapq[i], 2],
-                           pch=21, cex=0.9, bg=cols[inds])
-                }
-            }
-        }
-        if ('true' %in% names(inp)){
-            lines(inp$true$time, inp$true$B/scal, col=true.col()) # Plot true
-            abline(h=inp$true$Bmsy, col=true.col(), lty=1)
-            abline(h=inp$true$Bmsy, col='black', lty=3)
-        }
-        lines(inp$time[inp$indest], Best[inp$indest,2]/scal, col='blue', lwd=1.5)
-        if (manflag){
-            if(check.man(rep, verbose=FALSE)$mantime){
-                abline(v=c(rep$man[[1]]$inp$maninterval), col="grey", lty=1, lwd=1)
-            }
-            add.manlines(rep, 'logB', plot.legend=qlegend, verbose=verbose)
-        }else{
-            lines(inp$time[inp$indpred], Best[inp$indpred,2]/scal, col='blue', lty=3)
-        }
-        lines(repmax$inp$time, Bmsyvec$msy, col='black')
-        # B CI
-        #if (inp$phases$logq>0){
-        lines(inp$time[inp$indest], Best[inp$indest,1]/scal, col=4, lty=2, lwd=1.5)
-        lines(inp$time[inp$indest], Best[inp$indest,3]/scal, col=4, lty=2, lwd=1.5)
-        if(!manflag){
-            lines(inp$time[inp$indpred], Best[inp$indpred,1]/scal, col=4, lty=2)
-            lines(inp$time[inp$indpred], Best[inp$indpred,3]/scal, col=4, lty=2)
-        }
-        #}
-        # B/Bmsy CI
-        cicol3 <- rgb(0, 0, 1, 0.2)
-        if (!'yearsepgrowth' %in% names(inp)){
-            lines(inp$time[inp$indest], BB[inp$indest,1]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
-            lines(inp$time[inp$indest], BB[inp$indest,3]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
-            if(!manflag){
-                lines(inp$time[inp$indpred], BB[inp$indpred,1]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
-                lines(inp$time[inp$indpred], BB[inp$indpred,3]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
-            }
-        }
-        if ('yearsepgrowth' %in% names(inp)){
-            abline(v=inp$yearsepgrowth, col=3)
-        }
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        txt.stamp(stamp)
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    manflag <- any(names(rep) == "man")
+    ylabflag <- is.null(ylab)
+    ylimflag <- !is.null(ylim)
+    mar <- c(5.1, 4.3, 4.1, 4.1)
+    if (dev.cur()==1){ # If plot is not open
+      opar <- par(mar=mar)
+      on.exit(par(opar))
     }
+    if (dev.cur() == 2){ # If plot is open, check if it is a 1x1 plot
+      if (all(par()$mfrow == c(1, 1))){
+        opar <- par(mar=mar)
+        on.exit(par(opar))
+      }
+    }
+    log <- ifelse(logax, 'y', '')
+    inp <- rep$inp
+
+    indest <- inp$indest
+    if(manflag){
+      repmax <- get.manmax(rep)
+      indest <- indest[-length(indest)]
+      indxmax <- which(inp$time == inp$timerange[2])
+    }else{
+      repmax <- rep
+      indxmax <- which(inp$time ==  max(inp$time))
+    }
+
+    # Biomass plot
+    Best <- get.par('logB', rep, exp=TRUE, CI = CI)[(1:indxmax),]
+    ns <- dim(Best)[1]
+    Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
+    Bmsy <- get.par('logBmsy', repmax, exp=TRUE, CI = CI)
+    Bmsyvec <- get.msyvec(repmax$inp, Bmsy)[(1:indxmax)]
+    qest <- get.par('logq', rep, exp=TRUE, CI = CI)
+    BB <- get.par('logBBmsy', rep, exp=TRUE, CI = CI)[(1:indxmax),]
+    Bp <- get.par('logBp', rep, exp=TRUE, CI = CI)
+    if(!is.null(nrow(Bmsy))) Bmsy <- Bmsy[1,] ## time-varying m leads to several (identical) Bmsy values, drop them
+    scal <- 1
+    cicol <- 'lightgray'
+    if (inp$nindex == 0){
+      nindexseq <- numeric(0)
+      obsI <- NULL
+    } else {
+      nindexseq <- 1:inp$nindex
+      obsI <- list()
+    }
+    for (i in nindexseq){
+      obsI[[i]] <- inp$obsI[[i]]/qest[inp$mapq[i], 2]
+    }
+    cvCheck <- ifelse(any(Best[,5] <= 5),5,min(Best[,5]))
+    fininds <- which(Best[, 5] <= cvCheck) # Use CV to check for large uncertainties
+    BBfininds <- unname(which(is.finite(BB[, 1]) & is.finite(BB[, 3]))) # Use CV to check for large uncertainties
+    if (!ylimflag){
+      if (length(ylim)!=2){
+        ylim <- range(BB[BBfininds, 1:3]/scal*Bmsy[2], Best[fininds, 1:3], Bp[2],
+                      unlist(obsI), 0.95*Bmsy[1], 1.05*Bmsy[3], na.rm=TRUE)/scal
+      }
+      ylim[2] <- min(c(ylim[2], 3*max(Best[fininds, 2], unlist(obsI)))) # Limit upper limit
+    }
+    xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
+    if(manflag) xlim <- get.manlimits(rep,"time")
+    #if (main==-1) main <- 'Absolute biomass'
+    if (ylabflag){
+      ylab <- expression(B[t])
+      ylab <- add.catchunit(ylab, inp$catchunit)
+    }
+    plot(inp$time[1:indxmax], Best[,2]/scal, typ='n', xlab=xlab, ylab=ylab, main=main, ylim=ylim,
+         xlim=xlim, log=log)
+    if (rel.axes){
+      axis(4, labels=pretty(ylim/Bmsy[2]), at=pretty(ylim/Bmsy[2])*Bmsy[2])
+      mtext(expression(B[t]/B[MSY]), side=4, las=0, line=2.2, cex=par('cex'))
+    }
+    if (all(is.finite(unlist(Bmsyvec)))){
+      polygon(c(repmax$inp$time, rev(repmax$inp$time)), c(Bmsyvec$ll,rev(Bmsyvec$ul)),
+              col=cicol, border=cicol)
+    }
+    cicol2 <- rgb(0, 0, 1, 0.1)
+    if (!'yearsepgrowth' %in% names(inp) && rel.ci){
+      polygon(c(inp$time[BBfininds], rev(inp$time[BBfininds])),
+              c(BB[BBfininds, 1], rev(BB[BBfininds, 3]))/scal*Bmsy[2],
+              col=cicol2, border=cicol2)
+    }
+    if(!manflag) abline(v=inp$time[inp$indlastobs], col='gray')
+    if (plot.obs){
+      for (i in nindexseq){
+        plot.col(inp$timeI[[i]], inp$obsI[[i]]/qest[inp$mapq[i], 2], pch=i,
+                 do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
+      }
+      if (qlegend){
+        subyears <- unique(unlist(inp$timeI)%%1)
+        plot.col(subyears, numeric(length(subyears)), typ='n', add=TRUE, add.legend=TRUE) # Only plot legend
+      }
+      # Highlight influential index observations
+      if ('infl' %in% names(rep)){
+        infl <- rep$infl$infl
+        indslast <- inp$nobsC # Start after catch observations
+        for (i in nindexseq){
+          iinds <- indslast + 1:inp$nobsI[i]
+          infl2 <- infl[iinds, ]
+          cols <- apply(!is.na(infl2), 1, sum)
+          ncols <- length(unique(cols))
+          inds <- which(cols>0)
+          points(inp$timeI[[i]][inds], inp$obsI[[i]][inds]/qest[inp$mapq[i], 2],
+                 pch=21, cex=0.9, bg=cols[inds])
+        }
+      }
+    }
+    if ('true' %in% names(inp)){
+      lines(inp$true$time, inp$true$B/scal, col=true.col()) # Plot true
+      abline(h=inp$true$Bmsy, col=true.col(), lty=1)
+      abline(h=inp$true$Bmsy, col='black', lty=3)
+    }
+    lines(inp$time[inp$indest], Best[inp$indest,2]/scal, col='blue', lwd=1.5)
+    if (manflag){
+      if(check.man(rep, verbose=FALSE)$mantime){
+        abline(v=c(rep$man[[1]]$inp$maninterval), col="grey", lty=1, lwd=1)
+      }
+      add.manlines(rep, 'logB', plot.legend=qlegend, verbose=verbose)
+    }else{
+      lines(inp$time[inp$indpred], Best[inp$indpred,2]/scal, col='blue', lty=3)
+    }
+    lines(repmax$inp$time, Bmsyvec$msy, col='black')
+    # B CI
+    #if (inp$phases$logq>0){
+    lines(inp$time[inp$indest], Best[inp$indest,1]/scal, col=4, lty=2, lwd=1.5)
+    lines(inp$time[inp$indest], Best[inp$indest,3]/scal, col=4, lty=2, lwd=1.5)
+    if(!manflag){
+      lines(inp$time[inp$indpred], Best[inp$indpred,1]/scal, col=4, lty=2)
+      lines(inp$time[inp$indpred], Best[inp$indpred,3]/scal, col=4, lty=2)
+    }
+    #}
+    # B/Bmsy CI
+    cicol3 <- rgb(0, 0, 1, 0.2)
+    if (!'yearsepgrowth' %in% names(inp)){
+      lines(inp$time[inp$indest], BB[inp$indest,1]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
+      lines(inp$time[inp$indest], BB[inp$indest,3]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
+      if(!manflag){
+        lines(inp$time[inp$indpred], BB[inp$indpred,1]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
+        lines(inp$time[inp$indpred], BB[inp$indpred,3]/scal*Bmsy[2], col=cicol3, lty=1, lwd=1)
+      }
+    }
+    if ('yearsepgrowth' %in% names(inp)){
+      abline(v=inp$yearsepgrowth, col=3)
+    }
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -726,103 +726,103 @@ plotspict.biomass <- function(rep, logax=FALSE, main='Absolute biomass', ylim=NU
 plotspict.bbmsy <- function(rep, logax=FALSE, main='Relative biomass', ylim=NULL,
                             plot.obs=TRUE, qlegend=TRUE, lineat=1, xlab='Time',
                             stamp=get.version(), verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        manflag <- any(names(rep) == "man")
-        log <- ifelse(logax, 'y', '')
-        inp <- rep$inp
-        indxmax <- which(inp$time == ifelse(manflag, inp$timerange[2], max(inp$time)))
-        ylimflag <- !is.null(ylim)
-        # Biomass plot
-        Kest <- get.par('logK', rep, exp=TRUE, fixed=TRUE, CI = CI)
-        Bmsy <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
-        Bmsyvec <- get.msyvec(inp, Bmsy)
-        if (!all(is.na(Bmsyvec$msy))){ # Don't plot if all are NA
-            qest <- get.par('logq', rep, fixed=TRUE, exp=TRUE, CI = CI)
-            BB <- get.par('logBBmsy', rep, exp=TRUE, CI = CI)[1:indxmax,]
-            ns <- dim(BB)[1]
-            cicol <- 'lightgray'
-            if (inp$nindex == 0){
-                nindexseq <- numeric(0)
-                obsI <- NULL
-            } else {
-                nindexseq <- 1:inp$nindex
-                obsI <- list()
-                for (i in nindexseq){
-                    obsI[[i]] <- inp$obsI[[i]]/qest[inp$mapq[i], 2]/Bmsy[1,2]
-                }
-            }
-            fininds <- which(apply(BB, 1, function(x) all(is.finite(x))))
-            BBfininds <- which(is.finite(BB[, 1]) & is.finite(BB[, 3]))
-            if (!ylimflag){
-                if (length(ylim) != 2){
-                    ylim <- range(c(lineat, BB[fininds, 1:3], unlist(obsI), 1), na.rm=TRUE)
-                }
-                ylim[2] <- min(c(ylim[2], 3*max(BB[fininds, 2], unlist(obsI)))) # Limit upper limit
-            }
-            xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
-            if(manflag) xlim <- get.manlimits(rep,"time")
-            plot(inp$time[1:indxmax], BB[,2], typ='n', xlab=xlab, ylab=expression(B[t]/B[MSY]),
-                 ylim=ylim, xlim=xlim, log=log,
-                 main=main)
-            cicol2 <- rgb(0, 0, 1, 0.1)
-            polygon(c(inp$time[1:indxmax][BBfininds], rev(inp$time[1:indxmax][BBfininds])),
-                    c(BB[BBfininds, 1], rev(BB[BBfininds, 3])), col=cicol2, border=cicol2)
-            if(!manflag)
-                abline(v=inp$time[which(inp$time == inp$timerange[2])], col='gray')
-            if (plot.obs){
-                for (i in nindexseq){
-                    plot.col(inp$timeI[[i]], obsI[[i]], pch=i, do.line=FALSE, cex=0.6,
-                             add=TRUE, add.legend=FALSE)
-                }
-                if (qlegend){
-                    subyears <- unique(unlist(inp$timeI)%%1)
-                    plot.col(subyears, numeric(length(subyears)), typ='n', add=TRUE, add.legend=TRUE) # Only plot legend
-                }
-                # Highlight influential index observations
-                if ('infl' %in% names(rep)){
-                    infl <- rep$infl$infl
-                    indslast <- inp$nobsC # Start after catch observations
-                    for (i in nindexseq){
-                        iinds <- indslast + 1:inp$nobsI[i]
-                        infl2 <- infl[iinds, ]
-                        cols <- apply(!is.na(infl2), 1, sum)
-                        ncols <- length(unique(cols))
-                        inds <- which(cols>0)
-                        points(inp$timeI[[i]][inds], inp$obsI[[i]][inds]/qest[inp$mapq[i], 2]/Bmsy[2],
-                               pch=21, cex=0.9, bg=cols[inds])
-                    }
-                }
-            }
-            if ('true' %in% names(inp)){
-                lines(inp$true$time, inp$true$B/inp$true$Bmsy, col=true.col()) # Plot true
-            }
-            lines(inp$time[inp$indest], BB[inp$indest,2], col='blue', lwd=1.5)
-            if(manflag){
-                if(check.man(rep, verbose=FALSE)$mantime){
-                    abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
-                }
-                add.manlines(rep, 'logBBmsy', plot.legend=qlegend, verbose=verbose)
-            }else{
-                lines(inp$time[inp$indpred], BB[inp$indpred,2], col='blue', lty=3)
-            }
-            cicol3 <- rgb(0, 0, 1, 0.2)
-            lines(inp$time[inp$indest], BB[inp$indest,1], col=cicol3, lty=1, lwd=1)
-            lines(inp$time[inp$indest], BB[inp$indest,3], col=cicol3, lty=1, lwd=1)
-            if(!manflag){
-                lines(inp$time[inp$indpred], BB[inp$indpred,1], col=cicol3, lty=1, lwd=1)
-                lines(inp$time[inp$indpred], BB[inp$indpred,3], col=cicol3, lty=1, lwd=1)
-            }
-            abline(h=lineat)
-            if (rep$opt$convergence != 0){
-                warning.stamp()
-            }
-        } else {
-            plot(1, typ='n', xlab='', ylab='', xaxt='n', yaxt='n', main=paste('Bmsy=NA!', main))
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    manflag <- any(names(rep) == "man")
+    log <- ifelse(logax, 'y', '')
+    inp <- rep$inp
+    indxmax <- which(inp$time == ifelse(manflag, inp$timerange[2], max(inp$time)))
+    ylimflag <- !is.null(ylim)
+    # Biomass plot
+    Kest <- get.par('logK', rep, exp=TRUE, fixed=TRUE, CI = CI)
+    Bmsy <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
+    Bmsyvec <- get.msyvec(inp, Bmsy)
+    if (!all(is.na(Bmsyvec$msy))){ # Don't plot if all are NA
+      qest <- get.par('logq', rep, fixed=TRUE, exp=TRUE, CI = CI)
+      BB <- get.par('logBBmsy', rep, exp=TRUE, CI = CI)[1:indxmax,]
+      ns <- dim(BB)[1]
+      cicol <- 'lightgray'
+      if (inp$nindex == 0){
+        nindexseq <- numeric(0)
+        obsI <- NULL
+      } else {
+        nindexseq <- 1:inp$nindex
+        obsI <- list()
+        for (i in nindexseq){
+          obsI[[i]] <- inp$obsI[[i]]/qest[inp$mapq[i], 2]/Bmsy[1,2]
         }
-        box(lwd=1.5)
-        txt.stamp(stamp)
+      }
+      fininds <- which(apply(BB, 1, function(x) all(is.finite(x))))
+      BBfininds <- which(is.finite(BB[, 1]) & is.finite(BB[, 3]))
+      if (!ylimflag){
+        if (length(ylim) != 2){
+          ylim <- range(c(lineat, BB[fininds, 1:3], unlist(obsI), 1), na.rm=TRUE)
+        }
+        ylim[2] <- min(c(ylim[2], 3*max(BB[fininds, 2], unlist(obsI)))) # Limit upper limit
+      }
+      xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
+      if(manflag) xlim <- get.manlimits(rep,"time")
+      plot(inp$time[1:indxmax], BB[,2], typ='n', xlab=xlab, ylab=expression(B[t]/B[MSY]),
+           ylim=ylim, xlim=xlim, log=log,
+           main=main)
+      cicol2 <- rgb(0, 0, 1, 0.1)
+      polygon(c(inp$time[1:indxmax][BBfininds], rev(inp$time[1:indxmax][BBfininds])),
+              c(BB[BBfininds, 1], rev(BB[BBfininds, 3])), col=cicol2, border=cicol2)
+      if(!manflag)
+        abline(v=inp$time[which(inp$time == inp$timerange[2])], col='gray')
+      if (plot.obs){
+        for (i in nindexseq){
+          plot.col(inp$timeI[[i]], obsI[[i]], pch=i, do.line=FALSE, cex=0.6,
+                   add=TRUE, add.legend=FALSE)
+        }
+        if (qlegend){
+          subyears <- unique(unlist(inp$timeI)%%1)
+          plot.col(subyears, numeric(length(subyears)), typ='n', add=TRUE, add.legend=TRUE) # Only plot legend
+        }
+        # Highlight influential index observations
+        if ('infl' %in% names(rep)){
+          infl <- rep$infl$infl
+          indslast <- inp$nobsC # Start after catch observations
+          for (i in nindexseq){
+            iinds <- indslast + 1:inp$nobsI[i]
+            infl2 <- infl[iinds, ]
+            cols <- apply(!is.na(infl2), 1, sum)
+            ncols <- length(unique(cols))
+            inds <- which(cols>0)
+            points(inp$timeI[[i]][inds], inp$obsI[[i]][inds]/qest[inp$mapq[i], 2]/Bmsy[2],
+                   pch=21, cex=0.9, bg=cols[inds])
+          }
+        }
+      }
+      if ('true' %in% names(inp)){
+        lines(inp$true$time, inp$true$B/inp$true$Bmsy, col=true.col()) # Plot true
+      }
+      lines(inp$time[inp$indest], BB[inp$indest,2], col='blue', lwd=1.5)
+      if(manflag){
+        if(check.man(rep, verbose=FALSE)$mantime){
+          abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
+        }
+        add.manlines(rep, 'logBBmsy', plot.legend=qlegend, verbose=verbose)
+      }else{
+        lines(inp$time[inp$indpred], BB[inp$indpred,2], col='blue', lty=3)
+      }
+      cicol3 <- rgb(0, 0, 1, 0.2)
+      lines(inp$time[inp$indest], BB[inp$indest,1], col=cicol3, lty=1, lwd=1)
+      lines(inp$time[inp$indest], BB[inp$indest,3], col=cicol3, lty=1, lwd=1)
+      if(!manflag){
+        lines(inp$time[inp$indpred], BB[inp$indpred,1], col=cicol3, lty=1, lwd=1)
+        lines(inp$time[inp$indpred], BB[inp$indpred,3], col=cicol3, lty=1, lwd=1)
+      }
+      abline(h=lineat)
+      if (rep$opt$convergence != 0){
+        warning.stamp()
+      }
+    } else {
+      plot(1, typ='n', xlab='', ylab='', xaxt='n', yaxt='n', main=paste('Bmsy=NA!', main))
     }
+    box(lwd=1.5)
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -840,86 +840,86 @@ plotspict.bbmsy <- function(rep, logax=FALSE, main='Relative biomass', ylim=NULL
 #' plotspict.osar(rep)
 #' @export
 plotspict.osar <- function(rep, collapse.I=TRUE, qlegend=TRUE){
-    check.rep(rep)
-    if ('osar' %in% names(rep)){
-        inp <- rep$inp
-        Cscal <- 1
-        Cpred <- rep$osar$logCpred
-        fun <- function(time, res, add=FALSE, add.legend=FALSE, col=1, pch=1,
-                        add.vline.at=NULL, ...){
-            nrem <- length(time) - length(res)
-            if (nrem > 0){
-                time <- time[-nrem]
-                warning('length of residual vector and length of corresponding time vector are not equal!')
-            }
-            plot.col(time, res, pch=pch, add=add, add.legend=add.legend, typ='p', xlab='Time',
-                     add.vline.at=add.vline.at, ...)
-            dum <- rep(NA, length(res))
-            dum[is.na(res)] <- 0
-            text(time, dum, labels='NA', cex=0.8, col=col)
-        }
-        # Catches
-        pval <- round(as.list(rep$diagn)$biasC.p, 4)
-        colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-        fun(rep$osar$timeC, rep$osar$logCpres, add.legend=qlegend, ylab='Catch OSA residuals',
-            main=paste0('Bias p-val: ', pval), col.main=colmain, xlim=range(rep$inp$timeC),
-            add.vline.at=rep$osar$timeC[1])
-        abline(h=0, lty=3)
-        # Effort
-        if (inp$nobsE > 0){
-            pval <- round(as.list(rep$diagn)$biasE.p, 4)
-            colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-            fun(rep$osar$timeE, rep$osar$logEpres, add.legend=qlegend, ylab='Effort OSA residuals',
-                main=paste0('Bias p-val: ', pval), col.main=colmain, xlim=range(rep$inp$timeE),
-                add.vline.at=rep$osar$timeE[1])
-            abline(h=0, lty=3)
-        }
-        # Indices
-        if (inp$nindex > 0){
-            pval <- round(as.list(rep$diagn)$biasI1.p, 4)
-            colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-            if (collapse.I){
-                ylim <- range(unlist(rep$osar$logIpres), na.rm=TRUE)
-                xlim <- range(unlist(rep$osar$timeI))
-            } else {
-                ylim <- range(rep$osar$logIpres[[1]], na.rm=TRUE)
-                #xlim <- range(rep$osar$timeI[[1]])
-                xlim <- range(rep$inp$timeI[[1]]) # Use observed time range
-            }
-            ylab <- ifelse(collapse.I, 'Index OSA residuals', 'Index 1 OSA residuals')
-            main <- paste0(ifelse(collapse.I, 'Index 1 ', ''), 'Bias p-val: ', pval)
-            fun(rep$osar$timeI[[1]], rep$osar$logIpres[[1]], ylab=ylab,
-                col=1, xlim=xlim, ylim=ylim, main=main, col.main=colmain,
-                add.vline.at=rep$osar$timeI[[1]][1])
-            abline(h=0, lty=3)
-            if (rep$inp$nindex > 1){
-                for (i in 2:rep$inp$nindex){
-                    ylim <- range(rep$osar$logIpres[[i]], na.rm=TRUE)
-                    #xlim <- range(unlist(rep$osar$timeI[[i]]))
-                    xlim <- range(unlist(rep$inp$timeI[[i]])) # Use observed time range
-                    if (!collapse.I){
-                        pval <- round(as.list(rep$diagn)[[paste0('biasI', i, '.p')]], 4)
-                        #pval <- round(rep$osar$logIpbias[[i]]$p.value, 4)
-                        colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-                        #main <- paste0('I', i, ' bias p-val: ', pval)
-                        main <- paste0('Bias p-val: ', pval)
-                        add.vline.at <- rep$osar$timeI[[i]][1]
-                    } else {
-                        main <- ''
-                        add.vline.at <- NULL
-                    }
-                    fun(rep$osar$timeI[[i]], rep$osar$logIpres[[i]], add=collapse.I,
-                        ylab=paste('Index', i, 'OSA residuals'), col=1, pch=i, xlim=xlim,
-                        ylim=ylim, main=main, col.main=colmain, add.vline.at=add.vline.at)
-                    if (!collapse.I){
-                        abline(h=0, lty=3)
-                    }
-                }
-            }
-        }
-    } else {
-        stop('Could not find "osar" key in rep list! did you run calc.osa.resid?')
+  check.rep(rep)
+  if ('osar' %in% names(rep)){
+    inp <- rep$inp
+    Cscal <- 1
+    Cpred <- rep$osar$logCpred
+    fun <- function(time, res, add=FALSE, add.legend=FALSE, col=1, pch=1,
+                    add.vline.at=NULL, ...){
+      nrem <- length(time) - length(res)
+      if (nrem > 0){
+        time <- time[-nrem]
+        warning('length of residual vector and length of corresponding time vector are not equal!')
+      }
+      plot.col(time, res, pch=pch, add=add, add.legend=add.legend, typ='p', xlab='Time',
+               add.vline.at=add.vline.at, ...)
+      dum <- rep(NA, length(res))
+      dum[is.na(res)] <- 0
+      text(time, dum, labels='NA', cex=0.8, col=col)
     }
+    # Catches
+    pval <- round(as.list(rep$diagn)$biasC.p, 4)
+    colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+    fun(rep$osar$timeC, rep$osar$logCpres, add.legend=qlegend, ylab='Catch OSA residuals',
+        main=paste0('Bias p-val: ', pval), col.main=colmain, xlim=range(rep$inp$timeC),
+        add.vline.at=rep$osar$timeC[1])
+    abline(h=0, lty=3)
+    # Effort
+    if (inp$nobsE > 0){
+      pval <- round(as.list(rep$diagn)$biasE.p, 4)
+      colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+      fun(rep$osar$timeE, rep$osar$logEpres, add.legend=qlegend, ylab='Effort OSA residuals',
+          main=paste0('Bias p-val: ', pval), col.main=colmain, xlim=range(rep$inp$timeE),
+          add.vline.at=rep$osar$timeE[1])
+      abline(h=0, lty=3)
+    }
+    # Indices
+    if (inp$nindex > 0){
+      pval <- round(as.list(rep$diagn)$biasI1.p, 4)
+      colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+      if (collapse.I){
+        ylim <- range(unlist(rep$osar$logIpres), na.rm=TRUE)
+        xlim <- range(unlist(rep$osar$timeI))
+      } else {
+        ylim <- range(rep$osar$logIpres[[1]], na.rm=TRUE)
+        #xlim <- range(rep$osar$timeI[[1]])
+        xlim <- range(rep$inp$timeI[[1]]) # Use observed time range
+      }
+      ylab <- ifelse(collapse.I, 'Index OSA residuals', 'Index 1 OSA residuals')
+      main <- paste0(ifelse(collapse.I, 'Index 1 ', ''), 'Bias p-val: ', pval)
+      fun(rep$osar$timeI[[1]], rep$osar$logIpres[[1]], ylab=ylab,
+          col=1, xlim=xlim, ylim=ylim, main=main, col.main=colmain,
+          add.vline.at=rep$osar$timeI[[1]][1])
+      abline(h=0, lty=3)
+      if (rep$inp$nindex > 1){
+        for (i in 2:rep$inp$nindex){
+          ylim <- range(rep$osar$logIpres[[i]], na.rm=TRUE)
+          #xlim <- range(unlist(rep$osar$timeI[[i]]))
+          xlim <- range(unlist(rep$inp$timeI[[i]])) # Use observed time range
+          if (!collapse.I){
+            pval <- round(as.list(rep$diagn)[[paste0('biasI', i, '.p')]], 4)
+            #pval <- round(rep$osar$logIpbias[[i]]$p.value, 4)
+            colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+            #main <- paste0('I', i, ' bias p-val: ', pval)
+            main <- paste0('Bias p-val: ', pval)
+            add.vline.at <- rep$osar$timeI[[i]][1]
+          } else {
+            main <- ''
+            add.vline.at <- NULL
+          }
+          fun(rep$osar$timeI[[i]], rep$osar$logIpres[[i]], add=collapse.I,
+              ylab=paste('Index', i, 'OSA residuals'), col=1, pch=i, xlim=xlim,
+              ylim=ylim, main=main, col.main=colmain, add.vline.at=add.vline.at)
+          if (!collapse.I){
+            abline(h=0, lty=3)
+          }
+        }
+      }
+    }
+  } else {
+    stop('Could not find "osar" key in rep list! did you run calc.osa.resid?')
+  }
 }
 
 
@@ -931,17 +931,17 @@ plotspict.osar <- function(rep, collapse.I=TRUE, qlegend=TRUE){
 #' @param ylab Y-axis label
 #' @return Nothing.
 osar.acf.plot <- function(res, lag.max, pval, ylab){
-    inds <- which(acf.signf(res, lag.max=lag.max))
-    if (length(inds) > 0){
-        txt <- paste0('lag.signf: ', paste0(inds, collapse=','))
-    } else {
-        txt <- ''
-    }
-    colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-    acf(res, main='', lag.max=lag.max, ylab=ylab)
-    title(main=paste0('LBox p-val: ', pval), col.main=colmain)
-    legend('topright', legend=NA, title=txt, col=2, bty='n', pt.cex=0, text.col=2)
-    box(lwd=1.5)
+  inds <- which(acf.signf(res, lag.max=lag.max))
+  if (length(inds) > 0){
+    txt <- paste0('lag.signf: ', paste0(inds, collapse=','))
+  } else {
+    txt <- ''
+  }
+  colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+  acf(res, main='', lag.max=lag.max, ylab=ylab)
+  title(main=paste0('LBox p-val: ', pval), col.main=colmain)
+  legend('topright', legend=NA, title=txt, col=2, bty='n', pt.cex=0, text.col=2)
+  box(lwd=1.5)
 }
 
 
@@ -951,10 +951,10 @@ osar.acf.plot <- function(res, lag.max, pval, ylab){
 #' @param pval P value
 #' @return Nothing.
 osar.qq.plot <- function(res, pval){
-    colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-    qqnorm(res, main=paste0('Shapiro p-val: ', pval), col.main=colmain)
-    qqline(res)
-    box(lwd=1.5)
+  colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+  qqnorm(res, main=paste0('Shapiro p-val: ', pval), col.main=colmain)
+  qqline(res)
+  box(lwd=1.5)
 }
 
 
@@ -975,97 +975,97 @@ osar.qq.plot <- function(res, pval){
 #' @export
 plotspict.diagnostic <- function(rep, lag.max=4, qlegend=TRUE, plot.data=TRUE, mfcol=FALSE,
                                  stamp=get.version()){
-    repflag <- FALSE
-    mar <- c(4.7, 4.1, 2.5, 2)
-    #op <- par()
-    if ('obsC' %in% names(rep)){ # rep is an input list
-        inp <- check.inp(rep)
-        if (inp$nindex==1) mfrow <- c(2, 1)
-        if (inp$nindex==2) mfrow <- c(3, 1)
-        if (inp$nindex==3) mfrow <- c(2, 2)
-        if (inp$nindex %in% 4:5) mfrow <- c(3, 2)
-        if (inp$nindex > 5) mfrow <- c(4, 4)
+  repflag <- FALSE
+  mar <- c(4.7, 4.1, 2.5, 2)
+  #op <- par()
+  if ('obsC' %in% names(rep)){ # rep is an input list
+    inp <- check.inp(rep)
+    if (inp$nindex==1) mfrow <- c(2, 1)
+    if (inp$nindex==2) mfrow <- c(3, 1)
+    if (inp$nindex==3) mfrow <- c(2, 2)
+    if (inp$nindex %in% 4:5) mfrow <- c(3, 2)
+    if (inp$nindex > 5) mfrow <- c(4, 4)
+  }
+  if ('inp' %in% names(rep)){ # rep is a results list
+    repflag <- TRUE
+    inp <- rep$inp
+    if (inp$nindex %in% 1:2) mfrow <- c(2, 2)
+    if (inp$nindex %in% 3:4) mfrow <- c(3, 2)
+    if (inp$nindex >=5) mfrow <- c(3, 3)
+  }
+  # Determine number of plots
+  if ('osar' %in% names(rep)){
+    mfrow <- c(3 + as.numeric(plot.data), inp$nindex + 1 + as.numeric(rep$inp$nobsE > 0))
+  } else {
+    #cat('No OSAR found in input, run calc.osa.resid to get all diagnostics.\n')
+  }
+  if (mfcol){
+    opar <- par(mfcol=rev(mfrow), mar=mar)
+  } else {
+    opar <- par(mfrow=mfrow, mar=mar)
+  }
+  on.exit(par(opar))
+  # Plot data
+  if (plot.data){
+    plot.col(inp$timeC, log(inp$obsC), ylab='log catch data', main='Catch', xlab='Time',
+             add.vline.at=rep$osar$timeC[1])
+    if (inp$nobsE > 0){
+      plot.col(inp$timeE, log(inp$obsE), ylab='log effort data', main='Effort',
+               xlab='Time', add.vline.at=rep$osar$timeE[1])
     }
-    if ('inp' %in% names(rep)){ # rep is a results list
-        repflag <- TRUE
-        inp <- rep$inp
-        if (inp$nindex %in% 1:2) mfrow <- c(2, 2)
-        if (inp$nindex %in% 3:4) mfrow <- c(3, 2)
-        if (inp$nindex >=5) mfrow <- c(3, 3)
+    if (inp$nindex > 0){
+      for (i in 1:inp$nindex){
+        plot.col(inp$timeI[[i]], log(inp$obsI[[i]]), ylab=paste('log index',i,'data'),
+                 main=paste('Index', i), pch=i, xlab='Time',
+                 add.vline.at=rep$osar$timeI[[i]][1])
+      }
     }
-    # Determine number of plots
-    if ('osar' %in% names(rep)){
-        mfrow <- c(3 + as.numeric(plot.data), inp$nindex + 1 + as.numeric(rep$inp$nobsE > 0))
-    } else {
-        #cat('No OSAR found in input, run calc.osa.resid to get all diagnostics.\n')
+  }
+  # OSAR plots
+  if ('osar' %in% names(rep)){
+    plotspict.osar(rep, collapse.I=FALSE, qlegend=qlegend)
+    # Catch ACF
+    pvalacfC <- round(as.list(rep$diagn)$LBoxC.p, 4)
+    resC <- rep$osar$logCpres[!is.na(rep$osar$logCpres)]
+    osar.acf.plot(resC, lag.max, pvalacfC, ylab='Catch ACF')
+    # Effort ACF
+    if (inp$nobsE > 0){
+      pvalacfE <- round(as.list(rep$diagn)$LBoxE.p, 4)
+      resE <- rep$osar$logEpres[!is.na(rep$osar$logEpres)]
+      osar.acf.plot(resE, lag.max, pvalacfE, ylab='Effort ACF')
     }
-    if (mfcol){
-        opar <- par(mfcol=rev(mfrow), mar=mar)
-    } else {
-        opar <- par(mfrow=mfrow, mar=mar)
+    # Index ACF
+    if (inp$nindex > 0){
+      inds <- grep('LBoxI', names(rep$diagn))
+      nms <- names(rep$diagn)[inds]
+      nos <- as.numeric(unlist(regmatches(nms, gregexpr('[0-9]+', nms))))
+      resI <- list()
+      for (i in 1:inp$nindex){
+        pvalacfI <- round(as.list(rep$diagn)[[nms[i]]], 4)
+        resI[[i]] <- rep$osar$logIpres[[i]][!is.na(rep$osar$logIpres[[i]])]
+        osar.acf.plot(resI[[nos[i]]], lag.max, pvalacfI, ylab=paste0('Index ', i, ' ACF'))
+      }
     }
-    on.exit(par(opar))
-    # Plot data
-    if (plot.data){
-        plot.col(inp$timeC, log(inp$obsC), ylab='log catch data', main='Catch', xlab='Time',
-                 add.vline.at=rep$osar$timeC[1])
-        if (inp$nobsE > 0){
-            plot.col(inp$timeE, log(inp$obsE), ylab='log effort data', main='Effort',
-                     xlab='Time', add.vline.at=rep$osar$timeE[1])
-        }
-        if (inp$nindex > 0){
-            for (i in 1:inp$nindex){
-                plot.col(inp$timeI[[i]], log(inp$obsI[[i]]), ylab=paste('log index',i,'data'),
-                         main=paste('Index', i), pch=i, xlab='Time',
-                         add.vline.at=rep$osar$timeI[[i]][1])
-            }
-        }
+    # Catch QQ
+    pvalC <- round(as.list(rep$diagn)$shapiroC.p, 4)
+    osar.qq.plot(resC, pvalC)
+    # Effort QQ
+    if (inp$nobsE > 0){
+      pvalE <- round(as.list(rep$diagn)$shapiroE.p, 4)
+      osar.qq.plot(resE, pvalE)
     }
-    # OSAR plots
-    if ('osar' %in% names(rep)){
-        plotspict.osar(rep, collapse.I=FALSE, qlegend=qlegend)
-        # Catch ACF
-        pvalacfC <- round(as.list(rep$diagn)$LBoxC.p, 4)
-        resC <- rep$osar$logCpres[!is.na(rep$osar$logCpres)]
-        osar.acf.plot(resC, lag.max, pvalacfC, ylab='Catch ACF')
-        # Effort ACF
-        if (inp$nobsE > 0){
-            pvalacfE <- round(as.list(rep$diagn)$LBoxE.p, 4)
-            resE <- rep$osar$logEpres[!is.na(rep$osar$logEpres)]
-            osar.acf.plot(resE, lag.max, pvalacfE, ylab='Effort ACF')
-        }
-        # Index ACF
-        if (inp$nindex > 0){
-            inds <- grep('LBoxI', names(rep$diagn))
-            nms <- names(rep$diagn)[inds]
-            nos <- as.numeric(unlist(regmatches(nms, gregexpr('[0-9]+', nms))))
-            resI <- list()
-            for (i in 1:inp$nindex){
-                pvalacfI <- round(as.list(rep$diagn)[[nms[i]]], 4)
-                resI[[i]] <- rep$osar$logIpres[[i]][!is.na(rep$osar$logIpres[[i]])]
-                osar.acf.plot(resI[[nos[i]]], lag.max, pvalacfI, ylab=paste0('Index ', i, ' ACF'))
-            }
-        }
-        # Catch QQ
-        pvalC <- round(as.list(rep$diagn)$shapiroC.p, 4)
-        osar.qq.plot(resC, pvalC)
-        # Effort QQ
-        if (inp$nobsE > 0){
-            pvalE <- round(as.list(rep$diagn)$shapiroE.p, 4)
-            osar.qq.plot(resE, pvalE)
-        }
-        # Index QQ
-        if (inp$nindex > 0){
-            inds <- grep('shapiroI', names(rep$diagn))
-            nms <- names(rep$diagn)[inds]
-            nos <- as.numeric(unlist(regmatches(nms, gregexpr('[0-9]+', nms))))
-            for (i in 1:inp$nindex){
-                pvalI <- round(as.list(rep$diagn)[[nms[i]]], 4)
-                osar.qq.plot(resI[[nos[i]]], pvalI)
-            }
-        }
+    # Index QQ
+    if (inp$nindex > 0){
+      inds <- grep('shapiroI', names(rep$diagn))
+      nms <- names(rep$diagn)[inds]
+      nos <- as.numeric(unlist(regmatches(nms, gregexpr('[0-9]+', nms))))
+      for (i in 1:inp$nindex){
+        pvalI <- round(as.list(rep$diagn)[[nms[i]]], 4)
+        osar.qq.plot(resI[[nos[i]]], pvalI)
+      }
     }
-    txt.stamp(stamp, do.flag=TRUE)
+  }
+  txt.stamp(stamp, do.flag=TRUE)
 }
 
 
@@ -1111,165 +1111,165 @@ plotspict.diagnostic <- function(rep, lag.max=4, qlegend=TRUE, plot.data=TRUE, m
 plotspict.f <- function(rep, logax=FALSE, main='Absolute fishing mortality', ylim=NULL,
                         plot.obs=TRUE, qlegend=TRUE, xlab='Time', ylab=NULL, rel.axes=TRUE,
                         rel.ci=TRUE, stamp=get.version(), verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        manflag <- any(names(rep) == "man")
-        ylabflag <- is.null(ylab) # If null then not manually specified
-        omar <- par()$mar
-        if (rel.axes){
-            mar <- c(5.1, 4.3, 4.1, 4.1)
-        } else {
-            mar <- omar
-        }
-        if (dev.cur()==1){ # If plot is not open
-            opar <- par(mar=mar)
-            on.exit(par(opar))
-        }
-        if (dev.cur()==2){ # If plot is open, check if it is a 1x1 plot
-            if (all(par()$mfrow == c(1, 1))){
-                opar <- par(mar=mar)
-                on.exit(par(opar))
-            }
-        }
-        log <- ifelse(logax, 'y', '')
-        inp <- rep$inp
-        cicol <- 'lightgray'
-        tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
-        qf <- get.par('logqf', rep, exp=TRUE, CI = CI)
-        Fest <- get.par('logFnotS', rep, exp=TRUE, CI = CI)
-        logFest <- get.par('logFnotS', rep, CI = CI)
-
-        indest <- inp$indest
-        if(manflag){
-            repmax <- get.manmax(rep)
-            indest <- indest[-length(indest)]
-            indxmax <- which(inp$time == inp$timerange[2]) - 1
-        }else{
-            repmax <- rep
-            indxmax <- which(inp$time ==  max(inp$time))
-        }
-
-        if (tvgflag){
-            Fmsy <- get.par('logFmsyvec', repmax, exp=TRUE, CI = CI)
-            Fmsyvec <- as.data.frame(Fmsy)
-            Fmsyvec$msy <- Fmsyvec$est
-            fmsycols <- matrix(rep(Fmsyvec$msy, each=3), ncol=3, byrow=TRUE)
-            FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)[, 1:3] * fmsycols
-            logFF <- get.par('logFFmsynotS', rep, CI = CI)[, 1:3] + log(fmsycols)
-            rel.axes <- FALSE
-        } else {
-            Fmsy <- get.par('logFmsy', repmax, exp=TRUE, CI = CI)
-            Fmsyd <- get.par('logFmsyd', repmax, exp=TRUE, CI = CI)
-            if (any(is.na(Fmsy))){
-                Fmsy <- Fmsyd
-            }
-            Fmsyvec <- get.msyvec(repmax$inp, Fmsy)
-            FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)[, 1:3] * Fmsy[2]
-            logFF <- get.par('logFFmsynotS', rep, CI = CI)[, 1:3] + log(Fmsy[2])
-        }
-        Fmsy <- Fmsy[Fmsy[, 1:3] < 50] # only use these inds to calculate ylim
-
-        time <- inp$time[indest]
-        cl <- Fest[indest, 1]
-        F <- Fest[indest, 2]
-        cu <- Fest[indest, 3]
-        timep <- inp$time[inp$indpred]
-        clp <- Fest[inp$indpred, 1]
-        Fp <- Fest[inp$indpred, 2]
-        cup <- Fest[inp$indpred, 3]
-        timef <- inp$time[1:indxmax]
-        Ff <- Fest[1:indxmax, 2]
-        clf <- FF[1:indxmax, 1] #*Fmsy[2]
-        cuf <- FF[1:indxmax, 3] #*Fmsy[2]
-
-        #ylimflag <- !is.null(ylim)
-        ylimflag <- !is.null(ylim) & length(ylim) == 2 # If FALSE ylim is manually specified
-        # Check whether nan values are present in CI limits
-        absflag <- length(cu)==0 | all(!is.finite(cu))
-        if (absflag){ # if problems with NaN in absolute
-            fininds <- which(is.finite(Ff))
-            if (!ylimflag){
-                ylim <- range(c(Ff, Fmsy, tail(Fest[, 2],1)), na.rm=TRUE)
-            }
-        } else { # No problems
-            fininds <- which(apply(cbind(cl, cu), 1, function(x) all(is.finite(x))))
-            if (!ylimflag){
-                ylim <- range(c(cl[fininds], cu[fininds], tail(Fest[, 2],1)), na.rm=TRUE)
-            }
-        }
-        relflag <-  length(cuf)==0 | all(!is.finite(cuf)) | nlevels(rep$inp$MSYregime)>1
-        if (relflag){ # Problems
-            relfininds <- which(is.finite(cuf))
-            if (!ylimflag){
-                ylim <- range(ylim, Ff, Fmsy, tail(Fest[, 2],1), na.rm=TRUE)
-            }
-        } else { # No problems
-            relfininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
-            if (!ylimflag){
-                ylim <- range(c(ylim, clf[relfininds], cuf[relfininds], na.rm=TRUE))
-            }
-        }
-        if (!ylimflag){
-            ylim[2] <- min(c(ylim[2], 3*max(Ff[fininds]))) # Limit upper limit
-        }
-        xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
-        if(manflag) xlim <- get.manlimits(rep,"time")
-        #if (main==-1) main <- 'Absolute fishing mortality'
-        if (ylabflag){
-            ylab <- expression(F[t])
-        }
-        plot(1, 1, typ='n', main=main, ylim=ylim, col='blue', ylab=ylab, xlab=xlab,
-             xlim=xlim)
-        #plot(timef, Ff, typ='n', main=main, ylim=ylim, col='blue', ylab=ylab, xlab=xlab,
-        #     xlim=range(c(inp$time, tail(inp$time, 1) + 0.5)))
-        if (rel.axes){
-            axis(4, labels=pretty(ylim/Fmsy[2]), at=pretty(ylim/Fmsy[2])*Fmsy[2])
-            mtext(expression(F[t]/F[MSY]), side=4, las=0, line=2.2, cex=par('cex'))
-        }
-        polygon(c(repmax$inp$time, rev(repmax$inp$time)),
-                c(Fmsyvec$ll, rev(Fmsyvec$ul)), col=cicol, border=cicol)
-        cicol2 <- rgb(0, 0, 1, 0.1)
-        if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci){
-            polygon(c(timef[relfininds], rev(timef[relfininds])),
-                    c(clf[relfininds], rev(cuf[relfininds])), col=cicol2, border=cicol2)
-        }
-        if (min(inp$dtc) < 1){ # Plot estimated sub annual F
-            sF <- get.par('logFs', rep, exp=TRUE, CI = CI)
-            lines(inp$time[1:indxmax], sF[1:indxmax, 2], col=rgb(0, 0, 1, 0.4))
-        }
-        if(!manflag) abline(v=inp$time[inp$indlastobs], col='gray')
-        if (plot.obs){
-            plot.col(inp$timeE, inp$obsE/inp$dte*qf[2], cex=0.7, do.line=FALSE,
-                     add=TRUE, add.legend=qlegend)
-        }
-        if ('true' %in% names(inp)){
-            lines(inp$true$time, inp$true$Fs, col=true.col()) # Plot true
-            abline(h=inp$true$Fmsy, col=true.col(), lty=1)
-            abline(h=inp$true$Fmsy, col='black', lty=3)
-        }
-        maincol <- 'blue'
-        if (!absflag) lines(time, cl, col=maincol, lwd=1.5, lty=2)
-        lines(time, F, col=maincol, lwd=1.5)
-        if (!absflag) lines(time, cu, col=maincol, lwd=1.5, lty=2)
-        if (manflag){
-            if(check.man(rep, verbose=FALSE)$mantime){
-                abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
-            }
-            add.manlines(rep, 'logFnotS', index.shift=1, plot.legend=qlegend, verbose=verbose)
-        }else{
-            if (!absflag) lines(timep, clp, col=maincol, lty=2)
-            lines(timep, Fp, col=maincol, lty=3)
-            if (!absflag) lines(timep, cup, col=maincol, lty=2)
-            if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci) lines(timef, clf, col=rgb(0, 0, 1, 0.2))
-            if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci) lines(timef, cuf, col=rgb(0, 0, 1, 0.2))
-        }
-        lines(repmax$inp$time, Fmsyvec$msy, col='black')
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        txt.stamp(stamp)
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    manflag <- any(names(rep) == "man")
+    ylabflag <- is.null(ylab) # If null then not manually specified
+    omar <- par()$mar
+    if (rel.axes){
+      mar <- c(5.1, 4.3, 4.1, 4.1)
+    } else {
+      mar <- omar
     }
+    if (dev.cur()==1){ # If plot is not open
+      opar <- par(mar=mar)
+      on.exit(par(opar))
+    }
+    if (dev.cur()==2){ # If plot is open, check if it is a 1x1 plot
+      if (all(par()$mfrow == c(1, 1))){
+        opar <- par(mar=mar)
+        on.exit(par(opar))
+      }
+    }
+    log <- ifelse(logax, 'y', '')
+    inp <- rep$inp
+    cicol <- 'lightgray'
+    tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
+    qf <- get.par('logqf', rep, exp=TRUE, CI = CI)
+    Fest <- get.par('logFnotS', rep, exp=TRUE, CI = CI)
+    logFest <- get.par('logFnotS', rep, CI = CI)
+
+    indest <- inp$indest
+    if(manflag){
+      repmax <- get.manmax(rep)
+      indest <- indest[-length(indest)]
+      indxmax <- which(inp$time == inp$timerange[2]) - 1
+    }else{
+      repmax <- rep
+      indxmax <- which(inp$time ==  max(inp$time))
+    }
+
+    if (tvgflag){
+      Fmsy <- get.par('logFmsyvec', repmax, exp=TRUE, CI = CI)
+      Fmsyvec <- as.data.frame(Fmsy)
+      Fmsyvec$msy <- Fmsyvec$est
+      fmsycols <- matrix(rep(Fmsyvec$msy, each=3), ncol=3, byrow=TRUE)
+      FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)[, 1:3] * fmsycols
+      logFF <- get.par('logFFmsynotS', rep, CI = CI)[, 1:3] + log(fmsycols)
+      rel.axes <- FALSE
+    } else {
+      Fmsy <- get.par('logFmsy', repmax, exp=TRUE, CI = CI)
+      Fmsyd <- get.par('logFmsyd', repmax, exp=TRUE, CI = CI)
+      if (any(is.na(Fmsy))){
+        Fmsy <- Fmsyd
+      }
+      Fmsyvec <- get.msyvec(repmax$inp, Fmsy)
+      FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)[, 1:3] * Fmsy[2]
+      logFF <- get.par('logFFmsynotS', rep, CI = CI)[, 1:3] + log(Fmsy[2])
+    }
+    Fmsy <- Fmsy[Fmsy[, 1:3] < 50] # only use these inds to calculate ylim
+
+    time <- inp$time[indest]
+    cl <- Fest[indest, 1]
+    F <- Fest[indest, 2]
+    cu <- Fest[indest, 3]
+    timep <- inp$time[inp$indpred]
+    clp <- Fest[inp$indpred, 1]
+    Fp <- Fest[inp$indpred, 2]
+    cup <- Fest[inp$indpred, 3]
+    timef <- inp$time[1:indxmax]
+    Ff <- Fest[1:indxmax, 2]
+    clf <- FF[1:indxmax, 1] #*Fmsy[2]
+    cuf <- FF[1:indxmax, 3] #*Fmsy[2]
+
+    #ylimflag <- !is.null(ylim)
+    ylimflag <- !is.null(ylim) & length(ylim) == 2 # If FALSE ylim is manually specified
+    # Check whether nan values are present in CI limits
+    absflag <- length(cu)==0 | all(!is.finite(cu))
+    if (absflag){ # if problems with NaN in absolute
+      fininds <- which(is.finite(Ff))
+      if (!ylimflag){
+        ylim <- range(c(Ff, Fmsy, tail(Fest[, 2],1)), na.rm=TRUE)
+      }
+    } else { # No problems
+      fininds <- which(apply(cbind(cl, cu), 1, function(x) all(is.finite(x))))
+      if (!ylimflag){
+        ylim <- range(c(cl[fininds], cu[fininds], tail(Fest[, 2],1)), na.rm=TRUE)
+      }
+    }
+    relflag <-  length(cuf)==0 | all(!is.finite(cuf)) | nlevels(rep$inp$MSYregime)>1
+    if (relflag){ # Problems
+      relfininds <- which(is.finite(cuf))
+      if (!ylimflag){
+        ylim <- range(ylim, Ff, Fmsy, tail(Fest[, 2],1), na.rm=TRUE)
+      }
+    } else { # No problems
+      relfininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
+      if (!ylimflag){
+        ylim <- range(c(ylim, clf[relfininds], cuf[relfininds], na.rm=TRUE))
+      }
+    }
+    if (!ylimflag){
+      ylim[2] <- min(c(ylim[2], 3*max(Ff[fininds]))) # Limit upper limit
+    }
+    xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
+    if(manflag) xlim <- get.manlimits(rep,"time")
+    #if (main==-1) main <- 'Absolute fishing mortality'
+    if (ylabflag){
+      ylab <- expression(F[t])
+    }
+    plot(1, 1, typ='n', main=main, ylim=ylim, col='blue', ylab=ylab, xlab=xlab,
+         xlim=xlim)
+    #plot(timef, Ff, typ='n', main=main, ylim=ylim, col='blue', ylab=ylab, xlab=xlab,
+    #     xlim=range(c(inp$time, tail(inp$time, 1) + 0.5)))
+    if (rel.axes){
+      axis(4, labels=pretty(ylim/Fmsy[2]), at=pretty(ylim/Fmsy[2])*Fmsy[2])
+      mtext(expression(F[t]/F[MSY]), side=4, las=0, line=2.2, cex=par('cex'))
+    }
+    polygon(c(repmax$inp$time, rev(repmax$inp$time)),
+            c(Fmsyvec$ll, rev(Fmsyvec$ul)), col=cicol, border=cicol)
+    cicol2 <- rgb(0, 0, 1, 0.1)
+    if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci){
+      polygon(c(timef[relfininds], rev(timef[relfininds])),
+              c(clf[relfininds], rev(cuf[relfininds])), col=cicol2, border=cicol2)
+    }
+    if (min(inp$dtc) < 1){ # Plot estimated sub annual F
+      sF <- get.par('logFs', rep, exp=TRUE, CI = CI)
+      lines(inp$time[1:indxmax], sF[1:indxmax, 2], col=rgb(0, 0, 1, 0.4))
+    }
+    if(!manflag) abline(v=inp$time[inp$indlastobs], col='gray')
+    if (plot.obs){
+      plot.col(inp$timeE, inp$obsE/inp$dte*qf[2], cex=0.7, do.line=FALSE,
+               add=TRUE, add.legend=qlegend)
+    }
+    if ('true' %in% names(inp)){
+      lines(inp$true$time, inp$true$Fs, col=true.col()) # Plot true
+      abline(h=inp$true$Fmsy, col=true.col(), lty=1)
+      abline(h=inp$true$Fmsy, col='black', lty=3)
+    }
+    maincol <- 'blue'
+    if (!absflag) lines(time, cl, col=maincol, lwd=1.5, lty=2)
+    lines(time, F, col=maincol, lwd=1.5)
+    if (!absflag) lines(time, cu, col=maincol, lwd=1.5, lty=2)
+    if (manflag){
+      if(check.man(rep, verbose=FALSE)$mantime){
+        abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
+      }
+      add.manlines(rep, 'logFnotS', index.shift=1, plot.legend=qlegend, verbose=verbose)
+    }else{
+      if (!absflag) lines(timep, clp, col=maincol, lty=2)
+      lines(timep, Fp, col=maincol, lty=3)
+      if (!absflag) lines(timep, cup, col=maincol, lty=2)
+      if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci) lines(timef, clf, col=rgb(0, 0, 1, 0.2))
+      if (!relflag & !'yearsepgrowth' %in% names(inp) & rel.ci) lines(timef, cuf, col=rgb(0, 0, 1, 0.2))
+    }
+    lines(repmax$inp$time, Fmsyvec$msy, col='black')
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -1313,103 +1313,103 @@ plotspict.f <- function(rep, logax=FALSE, main='Absolute fishing mortality', yli
 plotspict.ffmsy <- function(rep, logax=FALSE, main='Relative fishing mortality', ylim=NULL,
                             plot.obs=TRUE, qlegend=TRUE, lineat=1, xlab='Time',
                             stamp=get.version(), verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        manflag <- any(names(rep) == "man")
-        log <- ifelse(logax, 'y', '')
-        inp <- rep$inp
-        cicol <- 'lightgray'
-        qf <- get.par('logqf', rep, exp=TRUE, CI = CI)
-        FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)
-        logFF <- get.par('logFFmsynotS', rep, CI = CI)
-        FFs <- get.par('logFFmsy', rep, exp=TRUE, CI = CI)
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    manflag <- any(names(rep) == "man")
+    log <- ifelse(logax, 'y', '')
+    inp <- rep$inp
+    cicol <- 'lightgray'
+    qf <- get.par('logqf', rep, exp=TRUE, CI = CI)
+    FF <- get.par('logFFmsynotS', rep, exp=TRUE, CI = CI)
+    logFF <- get.par('logFFmsynotS', rep, CI = CI)
+    FFs <- get.par('logFFmsy', rep, exp=TRUE, CI = CI)
 
-        indest <- inp$indest
-        indpred <- c(which(inp$time == inp$timerange[2]) - 1, inp$indpred)
-        if(manflag){
-            indest <- indest[-length(indest)]
-            indxmax <- which(inp$time == inp$timerange[2]) - 1
-        }else{
-            indest <- indest[-length(indest)]
-            indxmax <- which(inp$time ==  max(inp$time)) - 1
-        }
-
-        time <- inp$time[indest]
-        cl <- FF[indest, 1]
-        F <- FF[indest, 2]
-        cu <- FF[indest, 3]
-        timep <- inp$time[indpred]
-        clp <- FF[indpred, 1]
-        Fp <- FF[indpred, 2]
-        cup <- FF[indpred, 3]
-        timef <- inp$time[1:indxmax]
-        clf <- FF[1:indxmax, 1]
-        Ff <- FF[1:indxmax, 2]
-        cuf <- FF[1:indxmax, 3]
-
-        flag <- length(cu) == 0 | all(!is.finite(cu))
-        if (flag){
-            # CIs don't exist or are not finite
-            fininds <- which(is.finite(Ff))
-            ys <- c(lineat, Ff[fininds])
-        } else {
-            fininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
-            ys <- c(lineat, cl[fininds], cu[fininds])
-        }
-        if (length(ylim) != 2){
-            ylim <- range(ys, na.rm=TRUE)
-            # Limit upper limit
-            ylim[2] <- min(c(ylim[2], 3*max(Ff[fininds])))
-            # Ensure that lineat is included in ylim
-            ylim <- c(min(ylim[1], lineat), max(ylim[2], lineat))
-        }
-        xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
-        if(manflag) xlim <- get.manlimits(rep,"time")
-        plot(timef, Ff, typ='n', main=main, ylim=ylim, col='blue', ylab=expression(F[t]/F[MSY]),
-             xlab=xlab, xlim=xlim, log=log)
-        cicol2 <- rgb(0, 0, 1, 0.1)
-        if (!flag){
-            polygon(c(timef[fininds], rev(timef[fininds])), c(clf[fininds], rev(cuf[fininds])),
-                    col=cicol2, border=cicol2)
-        }
-        if (min(inp$dtc) < 1){ # Plot estimated sub annual F
-            lines(inp$time[indest], FFs[indest, 2], col=rgb(0, 0, 1, 0.4))
-        }
-        if(!manflag) abline(v=inp$time[which(inp$time == inp$timerange[2])],
-                            col='gray')
-        if (plot.obs){
-            Fmsyvec <- get.par('logFmsyvec', rep, exp=TRUE, CI = CI)
-            ie <- cut(inp$timeE, inp$time, right=FALSE, labels=FALSE)
-            if (rep$inp$timevaryinggrowth || rep$inp$logmcovflag){
-                Fmsy <- Fmsyvec[ie, 2]
-            } else {
-                Fmsy <- get.par('logFmsy', rep, exp=TRUE, CI = CI)[2]
-            }
-            plot.col(inp$timeE, inp$obsE/inp$dte*qf[2]/Fmsy, cex=0.7, do.line=FALSE,
-                     add=TRUE, add.legend=qlegend)
-        }
-        if ('true' %in% names(inp)){
-            lines(inp$true$time, inp$true$Fs/inp$true$Fmsy, col=true.col()) # Plot true
-        }
-        maincol <- 'blue'
-        lines(time, F, col=maincol, lwd=1.5)
-        if (manflag){
-            if(check.man(rep, verbose=FALSE)$mantime){
-                abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
-            }
-            add.manlines(rep, 'logFFmsynotS', index.shift=1, plot.legend=qlegend, verbose=verbose)
-        }else{
-            lines(timep, Fp, col=maincol, lty=3)
-            if (!flag) lines(timef, clf, col=rgb(0, 0, 1, 0.2))
-            if (!flag) lines(timef, cuf, col=rgb(0, 0, 1, 0.2))
-        }
-        abline(h=lineat, col='black')
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        box(lwd=1.5)
-        txt.stamp(stamp)
+    indest <- inp$indest
+    indpred <- c(which(inp$time == inp$timerange[2]) - 1, inp$indpred)
+    if(manflag){
+      indest <- indest[-length(indest)]
+      indxmax <- which(inp$time == inp$timerange[2]) - 1
+    }else{
+      indest <- indest[-length(indest)]
+      indxmax <- which(inp$time ==  max(inp$time)) - 1
     }
+
+    time <- inp$time[indest]
+    cl <- FF[indest, 1]
+    F <- FF[indest, 2]
+    cu <- FF[indest, 3]
+    timep <- inp$time[indpred]
+    clp <- FF[indpred, 1]
+    Fp <- FF[indpred, 2]
+    cup <- FF[indpred, 3]
+    timef <- inp$time[1:indxmax]
+    clf <- FF[1:indxmax, 1]
+    Ff <- FF[1:indxmax, 2]
+    cuf <- FF[1:indxmax, 3]
+
+    flag <- length(cu) == 0 | all(!is.finite(cu))
+    if (flag){
+      # CIs don't exist or are not finite
+      fininds <- which(is.finite(Ff))
+      ys <- c(lineat, Ff[fininds])
+    } else {
+      fininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
+      ys <- c(lineat, cl[fininds], cu[fininds])
+    }
+    if (length(ylim) != 2){
+      ylim <- range(ys, na.rm=TRUE)
+      # Limit upper limit
+      ylim[2] <- min(c(ylim[2], 3*max(Ff[fininds])))
+      # Ensure that lineat is included in ylim
+      ylim <- c(min(ylim[1], lineat), max(ylim[2], lineat))
+    }
+    xlim <- range(c(inp$time, tail(inp$time, 1) + 0.5))
+    if(manflag) xlim <- get.manlimits(rep,"time")
+    plot(timef, Ff, typ='n', main=main, ylim=ylim, col='blue', ylab=expression(F[t]/F[MSY]),
+         xlab=xlab, xlim=xlim, log=log)
+    cicol2 <- rgb(0, 0, 1, 0.1)
+    if (!flag){
+      polygon(c(timef[fininds], rev(timef[fininds])), c(clf[fininds], rev(cuf[fininds])),
+              col=cicol2, border=cicol2)
+    }
+    if (min(inp$dtc) < 1){ # Plot estimated sub annual F
+      lines(inp$time[indest], FFs[indest, 2], col=rgb(0, 0, 1, 0.4))
+    }
+    if(!manflag) abline(v=inp$time[which(inp$time == inp$timerange[2])],
+                        col='gray')
+    if (plot.obs){
+      Fmsyvec <- get.par('logFmsyvec', rep, exp=TRUE, CI = CI)
+      ie <- cut(inp$timeE, inp$time, right=FALSE, labels=FALSE)
+      if (rep$inp$timevaryinggrowth || rep$inp$logmcovflag){
+        Fmsy <- Fmsyvec[ie, 2]
+      } else {
+        Fmsy <- get.par('logFmsy', rep, exp=TRUE, CI = CI)[2]
+      }
+      plot.col(inp$timeE, inp$obsE/inp$dte*qf[2]/Fmsy, cex=0.7, do.line=FALSE,
+               add=TRUE, add.legend=qlegend)
+    }
+    if ('true' %in% names(inp)){
+      lines(inp$true$time, inp$true$Fs/inp$true$Fmsy, col=true.col()) # Plot true
+    }
+    maincol <- 'blue'
+    lines(time, F, col=maincol, lwd=1.5)
+    if (manflag){
+      if(check.man(rep, verbose=FALSE)$mantime){
+        abline(v=rep$man[[1]]$inp$maninterval, col="grey", lty=1, lwd=1)
+      }
+      add.manlines(rep, 'logFFmsynotS', index.shift=1, plot.legend=qlegend, verbose=verbose)
+    }else{
+      lines(timep, Fp, col=maincol, lty=3)
+      if (!flag) lines(timef, clf, col=rgb(0, 0, 1, 0.2))
+      if (!flag) lines(timef, cuf, col=rgb(0, 0, 1, 0.2))
+    }
+    abline(h=lineat, col='black')
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    box(lwd=1.5)
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -1453,206 +1453,206 @@ plotspict.ffmsy <- function(rep, logax=FALSE, main='Relative fishing mortality',
 plotspict.fb <- function(rep, logax=FALSE, plot.legend=TRUE, man.legend=TRUE, ext=TRUE, rel.axes=FALSE,
                          xlim=NULL, ylim=NULL, labpos=c(1, 1), xlabel=NULL, stamp=get.version(),
                          verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        #omar <- par()$mar
-        mar <- c(5.1, 4.3, 4.1, 4.1)
-        if (dev.cur()==1){ # If plot is not open
-            opar <- par(mar=mar)
-            on.exit(par(opar))
-        }
-        if (dev.cur()==2){ # If plot is open, check if it is a 1x1 plot
-            if (all(par()$mfrow == c(1, 1))){
-                opar <- par(mar=mar)
-                on.exit(par(opar))
-            }
-        }
-        log <- ifelse(logax, 'xy', '')
-        inp <- rep$inp
-        tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
-        if (tvgflag){
-            rel.axes <- TRUE
-        }
-        Bmsyall <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
-        Fmsyall <- get.par('logFmsy', rep, exp=TRUE, CI = CI)
-        Bmsy <- tail(Bmsyall, 1)
-        Fmsy <- tail(Fmsyall, 1)
-        if (rel.axes){
-            ext <- FALSE
-            bscal <- Bmsy[2]
-            fscal <- Fmsy[2]
-            xlab <- expression(B[t]/B[MSY])
-            ylab <- expression(F[t]/F[MSY])
-        } else {
-            bscal <- 1
-            fscal <- 1
-            xlab <- expression(B[t])
-            xlab <- add.catchunit(xlab, inp$catchunit)
-            ylab <- expression(F[t])
-        }
-        Bp <- get.par('logBp', rep, exp=TRUE, CI = CI)
-        Best <- get.par('logB', rep, exp=TRUE, CI = CI)
-        logBest <- get.par('logB', rep, CI = CI)
-        if (tvgflag){
-            Fest <- get.par('logFFmsy', rep, exp=TRUE, CI = CI)
-            fscal <- 1
-            Fmsy <- c(1, 1)
-        } else {
-            Fest <- get.par('logFs', rep, exp=TRUE, CI = CI)
-        }
-        logFest <- get.par('logFs', rep, CI = CI)
-        ns <- dim(Best)[1]
-        Fp <- Fest[ns,]
-        ##inds <- c(max(which(names(rep$value)=='logBmsy')), max(which(names(rep$value)=='logFmsy')))
-        ##if (rep$opt$convergence == 0 & rep$inp$getReportCovariance & !tvgflag){
-        if (rep$opt$convergence == 0 & !tvgflag & requireNamespace("ellipse", quietly = TRUE)) {
-            cl <- try(make.rpellipse(rep))
-        } else {
-            cl <- numeric()
-            class(cl) <- 'try-error'
-        }
-        if (class(cl)[1] == 'try-error'){
-            cl <- matrix(c(log(Bmsy[2]), log(Fmsy[2])), 1, 2)
-        }
-        if (min(inp$dtc) < 1){ # Quarterly
-            alb <- annual(inp$time, logBest[, 2])
-            alf <- annual(inp$time, logFest[, 2])
-            aind <- which(inp$time[inp$dtprediind] == alb$anntime)
-            bbb <- exp(alb$annvec)/bscal
-            fff <- exp(alf$annvec)/fscal
-            fbtime <- alb$anntime
-        } else {
-            fff <- Fest[inp$indest, 2]/fscal
-            bbb <- Best[inp$indest, 2]/bscal
-            pind <- rep$inp$dtprediind
-            fbtime <- inp$time[inp$indest]
-        }
-        Fl <- tail(unname(fff), 1)
-        Bl <- tail(unname(bbb), 1)
-        EBinf <- get.EBinf(rep)/bscal
-        # Limits
-        if (is.null(xlim)){
-            xlim <- range(c(exp(cl[,1]), Best[,2], EBinf)/bscal, na.rm=TRUE)
-            if (min(inp$dtc) < 1){
-                # New annual limits
-                xlim <- range(c(exp(alb$annvec), exp(cl[, 1]), EBinf)/bscal, na.rm=TRUE)
-            }
-            xlim[2] <- min(c(xlim[2], 8*Bmsy[2]/bscal), 2.2*max(bbb), na.rm=TRUE)
-            xlim[2] <- max(c(xlim[2], Bmsy[2]/bscal), na.rm=TRUE)
-        }
-        if (is.null(ylim)){
-            ylim <- range(c(exp(cl[,2]), Fest[,2])/fscal, na.rm=TRUE)
-            if (min(inp$dtc) < 1){
-                # New annual limits
-                ylim <- range(c(exp(alf$annvec)/fscal, exp(cl[, 2])/fscal), na.rm=TRUE)
-            }
-            ylim[2] <- min(c(ylim[2], 8*Fmsy[2]/fscal), 2.2*max(fff), na.rm=TRUE)
-            ylim[2] <- max(c(ylim[2], Fmsy[2]/fscal), na.rm=TRUE)
-            if ('man' %in% names(rep)){
-                ylim <- range(ylim, 0)
-            }
-        }
-        logminval <- 1e-4
-        if (logax){ # Ensure that zero is not in the limit if taking log
-            xlim[1] <- max(xlim[1], logminval)
-            ylim[1] <- max(ylim[1], logminval)
-        }
-        # Plotting
-        if (!is.null(xlabel)){
-            xlab <- xlabel
-        }
-        plot(Bmsy[2]/bscal, Fmsy[2]/fscal, typ='n', xlim=xlim, xlab=xlab, ylab=ylab, ylim=ylim, log=log)
-        if (ext){
-            if (logax){
-                expx <- pretty(log10(xlim/Bmsy[2]))
-                expy <- pretty(log10(ylim/Fmsy[2]))
-                labx <- 10^expx
-                laby <- 10^expy
-            } else {
-                labx <- pretty(xlim/Bmsy[2])
-                laby <- pretty(ylim/Fmsy[2])
-            }
-            atx <- labx*Bmsy[2] #expression(10^expx)
-            aty <- laby*Fmsy[2] #expression(10^expy)
-            axis(3, labels=labx, at=atx)
-            mtext(expression(B[t]/B[MSY]), side=3, las=0, line=2, cex=par('cex'))
-            axis(4, labels=laby, at=aty)
-            mtext(expression(F[t]/F[MSY]), side=4, las=0, line=2.5, cex=par('cex'))
-        }
-        alpha <- 0.15
-        ymin <- ifelse(logax, logminval*1e-2, -10)
-        xmin <- ifelse(logax, logminval*1e-2, xlim[1]-xlim[2])
-        polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xlim[2]*2, xlim[2]*2),
-                c(Fmsy[2], ymin, ymin, Fmsy[2])/fscal, col=rgb(0.5,0.8,0.4,1), border=NA) # Green
-        yel <- rgb(1,0.925,0.55,1) # Yellow
-        polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xmin, xmin),
-                c(Fmsy[2], ymin, ymin, Fmsy[2])/fscal, col=yel, border=NA) # Yellow
-        polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xlim[2]*2, xlim[2]*2),
-                c(Fmsy[2], (ylim[2]+1)*2, (ylim[2]+1)*2, Fmsy[2])/fscal, col=yel, border=NA) # Yellow
-        polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xmin, xmin),
-                c(Fmsy[2], (ylim[2]+1)*2, (ylim[2]+1)*2, Fmsy[2])/fscal, col=rgb(1,0.188,0.188,1),
-                border=NA) # Red
-        abline(v=0, col='darkred', lty=2)
-        cicol <- 'lightgray'
-        cicolrgb <- col2rgb(cicol)/255
-        cicoluse <- rgb(cicolrgb[1], cicolrgb[2], cicolrgb[3], 0.7)
-        cicol2 <- 'gray'
-        cicol2rgb <- col2rgb(cicol2)/255
-        cicol2use <- rgb(cicol2rgb[1], cicol2rgb[2], cicol2rgb[3], 0.7)
-        polygon(exp(cl[,1])/bscal, exp(cl[,2])/fscal, col=cicoluse, border=cicol2use)
-        if ('true' %in% names(inp)){
-            points(inp$true$Bmsy/bscal, inp$true$Fmsy/fscal, pch=25, bg=true.col())
-        }
-        maincol <- rgb(0,0,1,0.8)
-        if (min(inp$dtc) < 1){
-            lines(bbb, fff, col=maincol, lwd=1.5)
-        } else {
-            lines(bbb, fff, col=maincol, lwd=1.5)
-            if ('man' %in% names(rep)){
-                add.manlines(rep, 'logF', par2='logB', index.shift=1, plot.legend=man.legend, verbose=verbose)
-            }else{
-                lines(Best[inp$indpred,2]/bscal, Fest[inp$indpred,2]/fscal, col=maincol, lty=3)
-                Bll <- tail(Best[inp$indpred,2]/bscal, 1)
-                Fll <- tail(Fest[inp$indpred,2]/fscal, 1)
-                lines(c(Bll, EBinf), rep(Fll, 2), lwd=1.5, lty=3, col='blue')
-                points(EBinf, Fll, pch=23, bg='gold')
-            }
-        }
-        nr <- length(inp$ini$logr)
-        if (nr > 1){
-            points(Bmsyall[1:(nr-1), 2]/bscal, Fmsyall[1:(nr-1), 2]/fscal, pch=3, col='magenta')
-            points(Bmsyall[nr, 2]/bscal, Fmsyall[nr, 2]/fscal, pch=3, col='black')
-        }
-        if (plot.legend){
-            if (nr > 1){
-                legend('topright', c('Current MSY', 'Previous MSY'), pch=3,
-                       col=c('black', 'magenta'), bg='transparent')
-            } else {
-                if ('true' %in% names(inp)){
-                    if (min(inp$dtc) < 1){
-                        legend('topright', 'True', pch=25, pt.bg=true.col(), bg='white')
-                    } else {
-                        legend('topright', c(expression('E(B'[infinity]*')'), 'True'),
-                               pch=c(23, 25), pt.bg=c('gold', true.col()), bg='transparent')
-                    }
-                } else {
-                    if (!min(inp$dtc) < 1){
-                        legend('topright', expression('E(B'[infinity]*')'),
-                               pch=23, pt.bg='gold', bg='transparent')
-                    }
-                }
-            }
-        }
-        points(bbb[1], fff[1], pch=21, bg='white')
-        text(bbb[1], fff[1], round(fbtime[1], 2), pos=labpos[1], cex=0.75, offset=0.5, xpd=TRUE)
-        points(Bl, Fl, pch=22, bg='white')
-        text(Bl, Fl, round(tail(fbtime, 1), 2), pos=labpos[2], cex=0.75, offset=0.5, xpd=TRUE)
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        txt.stamp(stamp)
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    #omar <- par()$mar
+    mar <- c(5.1, 4.3, 4.1, 4.1)
+    if (dev.cur()==1){ # If plot is not open
+      opar <- par(mar=mar)
+      on.exit(par(opar))
     }
+    if (dev.cur()==2){ # If plot is open, check if it is a 1x1 plot
+      if (all(par()$mfrow == c(1, 1))){
+        opar <- par(mar=mar)
+        on.exit(par(opar))
+      }
+    }
+    log <- ifelse(logax, 'xy', '')
+    inp <- rep$inp
+    tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
+    if (tvgflag){
+      rel.axes <- TRUE
+    }
+    Bmsyall <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
+    Fmsyall <- get.par('logFmsy', rep, exp=TRUE, CI = CI)
+    Bmsy <- tail(Bmsyall, 1)
+    Fmsy <- tail(Fmsyall, 1)
+    if (rel.axes){
+      ext <- FALSE
+      bscal <- Bmsy[2]
+      fscal <- Fmsy[2]
+      xlab <- expression(B[t]/B[MSY])
+      ylab <- expression(F[t]/F[MSY])
+    } else {
+      bscal <- 1
+      fscal <- 1
+      xlab <- expression(B[t])
+      xlab <- add.catchunit(xlab, inp$catchunit)
+      ylab <- expression(F[t])
+    }
+    Bp <- get.par('logBp', rep, exp=TRUE, CI = CI)
+    Best <- get.par('logB', rep, exp=TRUE, CI = CI)
+    logBest <- get.par('logB', rep, CI = CI)
+    if (tvgflag){
+      Fest <- get.par('logFFmsy', rep, exp=TRUE, CI = CI)
+      fscal <- 1
+      Fmsy <- c(1, 1)
+    } else {
+      Fest <- get.par('logFs', rep, exp=TRUE, CI = CI)
+    }
+    logFest <- get.par('logFs', rep, CI = CI)
+    ns <- dim(Best)[1]
+    Fp <- Fest[ns,]
+    ##inds <- c(max(which(names(rep$value)=='logBmsy')), max(which(names(rep$value)=='logFmsy')))
+    ##if (rep$opt$convergence == 0 & rep$inp$getReportCovariance & !tvgflag){
+    if (rep$opt$convergence == 0 & !tvgflag & requireNamespace("ellipse", quietly = TRUE)) {
+      cl <- try(make.rpellipse(rep))
+    } else {
+      cl <- numeric()
+      class(cl) <- 'try-error'
+    }
+    if (class(cl)[1] == 'try-error'){
+      cl <- matrix(c(log(Bmsy[2]), log(Fmsy[2])), 1, 2)
+    }
+    if (min(inp$dtc) < 1){ # Quarterly
+      alb <- annual(inp$time, logBest[, 2])
+      alf <- annual(inp$time, logFest[, 2])
+      aind <- which(inp$time[inp$dtprediind] == alb$anntime)
+      bbb <- exp(alb$annvec)/bscal
+      fff <- exp(alf$annvec)/fscal
+      fbtime <- alb$anntime
+    } else {
+      fff <- Fest[inp$indest, 2]/fscal
+      bbb <- Best[inp$indest, 2]/bscal
+      pind <- rep$inp$dtprediind
+      fbtime <- inp$time[inp$indest]
+    }
+    Fl <- tail(unname(fff), 1)
+    Bl <- tail(unname(bbb), 1)
+    EBinf <- get.EBinf(rep)/bscal
+    # Limits
+    if (is.null(xlim)){
+      xlim <- range(c(exp(cl[,1]), Best[,2], EBinf)/bscal, na.rm=TRUE)
+      if (min(inp$dtc) < 1){
+        # New annual limits
+        xlim <- range(c(exp(alb$annvec), exp(cl[, 1]), EBinf)/bscal, na.rm=TRUE)
+      }
+      xlim[2] <- min(c(xlim[2], 8*Bmsy[2]/bscal), 2.2*max(bbb), na.rm=TRUE)
+      xlim[2] <- max(c(xlim[2], Bmsy[2]/bscal), na.rm=TRUE)
+    }
+    if (is.null(ylim)){
+      ylim <- range(c(exp(cl[,2]), Fest[,2])/fscal, na.rm=TRUE)
+      if (min(inp$dtc) < 1){
+        # New annual limits
+        ylim <- range(c(exp(alf$annvec)/fscal, exp(cl[, 2])/fscal), na.rm=TRUE)
+      }
+      ylim[2] <- min(c(ylim[2], 8*Fmsy[2]/fscal), 2.2*max(fff), na.rm=TRUE)
+      ylim[2] <- max(c(ylim[2], Fmsy[2]/fscal), na.rm=TRUE)
+      if ('man' %in% names(rep)){
+        ylim <- range(ylim, 0)
+      }
+    }
+    logminval <- 1e-4
+    if (logax){ # Ensure that zero is not in the limit if taking log
+      xlim[1] <- max(xlim[1], logminval)
+      ylim[1] <- max(ylim[1], logminval)
+    }
+    # Plotting
+    if (!is.null(xlabel)){
+      xlab <- xlabel
+    }
+    plot(Bmsy[2]/bscal, Fmsy[2]/fscal, typ='n', xlim=xlim, xlab=xlab, ylab=ylab, ylim=ylim, log=log)
+    if (ext){
+      if (logax){
+        expx <- pretty(log10(xlim/Bmsy[2]))
+        expy <- pretty(log10(ylim/Fmsy[2]))
+        labx <- 10^expx
+        laby <- 10^expy
+      } else {
+        labx <- pretty(xlim/Bmsy[2])
+        laby <- pretty(ylim/Fmsy[2])
+      }
+      atx <- labx*Bmsy[2] #expression(10^expx)
+      aty <- laby*Fmsy[2] #expression(10^expy)
+      axis(3, labels=labx, at=atx)
+      mtext(expression(B[t]/B[MSY]), side=3, las=0, line=2, cex=par('cex'))
+      axis(4, labels=laby, at=aty)
+      mtext(expression(F[t]/F[MSY]), side=4, las=0, line=2.5, cex=par('cex'))
+    }
+    alpha <- 0.15
+    ymin <- ifelse(logax, logminval*1e-2, -10)
+    xmin <- ifelse(logax, logminval*1e-2, xlim[1]-xlim[2])
+    polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xlim[2]*2, xlim[2]*2),
+            c(Fmsy[2], ymin, ymin, Fmsy[2])/fscal, col=rgb(0.5,0.8,0.4,1), border=NA) # Green
+    yel <- rgb(1,0.925,0.55,1) # Yellow
+    polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xmin, xmin),
+            c(Fmsy[2], ymin, ymin, Fmsy[2])/fscal, col=yel, border=NA) # Yellow
+    polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xlim[2]*2, xlim[2]*2),
+            c(Fmsy[2], (ylim[2]+1)*2, (ylim[2]+1)*2, Fmsy[2])/fscal, col=yel, border=NA) # Yellow
+    polygon(c(Bmsy[2]/bscal, Bmsy[2]/bscal, xmin, xmin),
+            c(Fmsy[2], (ylim[2]+1)*2, (ylim[2]+1)*2, Fmsy[2])/fscal, col=rgb(1,0.188,0.188,1),
+            border=NA) # Red
+    abline(v=0, col='darkred', lty=2)
+    cicol <- 'lightgray'
+    cicolrgb <- col2rgb(cicol)/255
+    cicoluse <- rgb(cicolrgb[1], cicolrgb[2], cicolrgb[3], 0.7)
+    cicol2 <- 'gray'
+    cicol2rgb <- col2rgb(cicol2)/255
+    cicol2use <- rgb(cicol2rgb[1], cicol2rgb[2], cicol2rgb[3], 0.7)
+    polygon(exp(cl[,1])/bscal, exp(cl[,2])/fscal, col=cicoluse, border=cicol2use)
+    if ('true' %in% names(inp)){
+      points(inp$true$Bmsy/bscal, inp$true$Fmsy/fscal, pch=25, bg=true.col())
+    }
+    maincol <- rgb(0,0,1,0.8)
+    if (min(inp$dtc) < 1){
+      lines(bbb, fff, col=maincol, lwd=1.5)
+    } else {
+      lines(bbb, fff, col=maincol, lwd=1.5)
+      if ('man' %in% names(rep)){
+        add.manlines(rep, 'logF', par2='logB', index.shift=1, plot.legend=man.legend, verbose=verbose)
+      }else{
+        lines(Best[inp$indpred,2]/bscal, Fest[inp$indpred,2]/fscal, col=maincol, lty=3)
+        Bll <- tail(Best[inp$indpred,2]/bscal, 1)
+        Fll <- tail(Fest[inp$indpred,2]/fscal, 1)
+        lines(c(Bll, EBinf), rep(Fll, 2), lwd=1.5, lty=3, col='blue')
+        points(EBinf, Fll, pch=23, bg='gold')
+      }
+    }
+    nr <- length(inp$ini$logr)
+    if (nr > 1){
+      points(Bmsyall[1:(nr-1), 2]/bscal, Fmsyall[1:(nr-1), 2]/fscal, pch=3, col='magenta')
+      points(Bmsyall[nr, 2]/bscal, Fmsyall[nr, 2]/fscal, pch=3, col='black')
+    }
+    if (plot.legend){
+      if (nr > 1){
+        legend('topright', c('Current MSY', 'Previous MSY'), pch=3,
+               col=c('black', 'magenta'), bg='transparent')
+      } else {
+        if ('true' %in% names(inp)){
+          if (min(inp$dtc) < 1){
+            legend('topright', 'True', pch=25, pt.bg=true.col(), bg='white')
+          } else {
+            legend('topright', c(expression('E(B'[infinity]*')'), 'True'),
+                   pch=c(23, 25), pt.bg=c('gold', true.col()), bg='transparent')
+          }
+        } else {
+          if (!min(inp$dtc) < 1){
+            legend('topright', expression('E(B'[infinity]*')'),
+                   pch=23, pt.bg='gold', bg='transparent')
+          }
+        }
+      }
+    }
+    points(bbb[1], fff[1], pch=21, bg='white')
+    text(bbb[1], fff[1], round(fbtime[1], 2), pos=labpos[1], cex=0.75, offset=0.5, xpd=TRUE)
+    points(Bl, Fl, pch=22, bg='white')
+    text(Bl, Fl, round(tail(fbtime, 1), 2), pos=labpos[2], cex=0.75, offset=0.5, xpd=TRUE)
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -1733,172 +1733,172 @@ plotspict.fb <- function(rep, logax=FALSE, plot.legend=TRUE, man.legend=TRUE, ex
 plotspict.catch <- function(rep, main='Catch', ylim=NULL, qlegend=TRUE, lcol='blue',
                             xlab='Time', ylab=NULL, stamp=get.version(),
                             verbose=TRUE, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        manflag <- any(names(rep) == "man")
-        ylabflag <- is.null(ylab) # If null then not manually specified
-        inp <- rep$inp
-        ylimflag <- !is.null(ylim)
-        Cscal <- 1
-        cicol <- 'lightgray'
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    manflag <- any(names(rep) == "man")
+    ylabflag <- is.null(ylab) # If null then not manually specified
+    inp <- rep$inp
+    ylimflag <- !is.null(ylim)
+    Cscal <- 1
+    cicol <- 'lightgray'
 
-        if(manflag){
-            repmax <- get.manmax(rep)
-        }else{
-            repmax <- rep
-        }
-
-        tvgflag <- rep$inp$timevaryinggrowth || rep$inp$logmcovflag
-        if (tvgflag){
-            MSY <- get.par('logMSYvec', repmax, exp=TRUE, CI = CI)
-            MSYvec <- as.data.frame(MSY)
-            MSYvec$msy <- MSYvec$est
-        } else {
-            MSY <- get.par('logMSY', repmax, exp=TRUE, CI = CI)
-            MSYvec <- get.msyvec(repmax$inp, MSY)
-        }
-        Cpredest <- get.par('logCpred', rep, exp=TRUE, CI = CI)
-        Cpredest[Cpredest<0] <- 0
-        rep$Cp[rep$Cp<0] <- 0
-        indest <- which(inp$timeCpred <= tail(inp$timeC,1))
-        indpred <- which(inp$timeCpred >= tail(inp$timeC,1))
-        dtc <- inp$dtcp
-        if (min(inp$dtc) < 1){
-            alo <- annual(inp$timeC, inp$obsC/inp$dtc)
-            timeo <- alo$anntime
-            obs <- alo$annvec
-            al1 <- annual(inp$timeCpred[indest], Cpredest[indest, 1]/dtc[indest])
-            al2 <- annual(inp$timeCpred[indest], Cpredest[indest, 2]/dtc[indest])
-            al3 <- annual(inp$timeCpred[indest], Cpredest[indest, 3]/dtc[indest])
-            inds <- which(!is.na(al2$annvec))
-            time <- al2$anntime[inds]
-            c <- al2$annvec[inds]
-            cl <- al1$annvec[inds]
-            cu <- al3$annvec[inds]
-            al1p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 1]/dtc[indpred])
-            al2p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 2]/dtc[indpred])
-            al3p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 3]/dtc[indpred])
-            inds <- which(!is.na(al2p$annvec))
-            timep <- al2p$anntime[inds]
-            cp <- al2p$annvec[inds]
-            clp <- al1p$annvec[inds]
-            cup <- al3p$annvec[inds]
-            al1f <- annual(inp$timeCpred, Cpredest[, 1]/dtc)
-            al2f <- annual(inp$timeCpred, Cpredest[, 2]/dtc)
-            al3f <- annual(inp$timeCpred, Cpredest[, 3]/dtc)
-            inds <- which(!is.na(al2f$annvec))
-            timef <- al2f$anntime[inds]
-            clf <- al1f$annvec[inds]
-            cf <- al2f$annvec[inds]
-            cuf <- al3f$annvec[inds]
-            if (any(inp$dtc==1)){
-                inds <- which(inp$dtc==1)
-                timeo <- c(timeo, inp$timeC[inds])
-                obs <- c(obs, inp$obsC[inds])
-                timeunsort <- c(time, inp$timeCpred[inds])
-                timesort <- sort(timeunsort, index=TRUE)
-                time <- timesort$x
-                c <- c(c, Cpredest[inds, 2])[timesort$ix]
-                cl <- c(cl, Cpredest[inds, 1])[timesort$ix]
-                cu <- c(cu, Cpredest[inds, 3])[timesort$ix]
-            }
-        } else {
-            timeo <- inp$timeC
-            obs <- inp$obsC/inp$dtc
-            time <- inp$timeCpred[indest]
-            c <- Cpredest[indest, 2]/dtc[indest]
-            cl <- Cpredest[indest, 1]
-            cu <- Cpredest[indest, 3]
-            timep <- inp$timeCpred[indpred]
-            cp <- Cpredest[indpred, 2]/dtc[indpred]
-            clp <- Cpredest[indpred, 1]
-            cup <- Cpredest[indpred, 3]
-            timef <- inp$timeCpred
-            clf <- Cpredest[, 1]
-            cf <- Cpredest[, 2]/dtc
-            cuf <- Cpredest[, 3]
-        }
-        fininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
-        if (!ylimflag){
-            if (length(ylim) != 2){
-                ylim <- range(c(obs, clf[fininds], cuf[fininds],
-                                0.9*min(MSY[, 1]), 1.07*max(MSY[, 3])), na.rm=TRUE)/Cscal
-                if (inp$dtpredc > 0){
-                    ylim <- range(ylim, clf[fininds], cuf[fininds])
-                }
-            }
-            if(manflag) ylim <- range(ylim,get.manlimits(rep,"logCpred"))
-            ylim[2] <- min(c(ylim[2], 3*max(obs))) # Limit upper limit
-        }
-        xlim <- range(c(inp$time, tail(inp$time,1)))
-        if(manflag) xlim <- get.manlimits(rep,"time")
-        #if (main==-1) main <- 'Catch'
-        if (ylabflag){
-            ylab <- 'Catch'
-            ylab <- add.catchunit(ylab, inp$catchunit)
-        }
-        plot(time, c, typ='n', main=main, xlab=xlab, ylab=ylab,
-             xlim=xlim, ylim=ylim)
-        polygon(c(repmax$inp$time, rev(repmax$inp$time)),
-                c(MSYvec$ll,rev(MSYvec$ul)), col=cicol, border=cicol)
-        cicol2 <- rgb(0, 0, 1, 0.1)
-        lines(time, cl, col=lcol, lwd=1.5, lty=2)
-        lines(time, cu, col=lcol, lwd=1.5, lty=2)
-        if(!manflag) abline(v=inp$timeC[tail(which(inp$timeC%%1==0),1)], col='gray') ## account for seasonal data
-        plot.col(timeo, obs/Cscal, cex=0.7, do.line=FALSE, add=TRUE, add.legend=qlegend)
-        # Highlight influential index observations
-        if ('infl' %in% names(rep) & min(inp$dtc) == 1){
-            infl <- rep$infl$infl[1:inp$nobsC, ]
-            cols <- apply(!is.na(infl), 1, sum)
-            ncols <- length(unique(cols))
-            inds <- which(cols>0)
-            points(inp$timeC[inds], inp$obsC[inds]/Cscal, pch=21, cex=0.9, bg=cols[inds])
-        }
-        if ('true' %in% names(inp)){
-            abline(h=inp$true$MSY, col=true.col(), lty=1)
-            abline(h=inp$true$MSY, col='black', lty=3)
-        }
-        lines(repmax$inp$time, MSYvec$msy)
-        lines(time, c, col=lcol, lwd=1.5)
-        if(manflag){
-            ## management lines if all scenarios same management times
-            manint <- rep$man[[1]]$inp$maninterval
-            mandiff <- diff(manint)
-            if(mandiff %% 1 != 0){
-                if(verbose) cat("At least part of the catch during the management period cannot be aggregated into annual/seasonal catches.\n")
-            }
-            if(check.man(rep, verbose=FALSE)$mantime){
-                timecpred <- rep$man[[1]]$inp$timeCpred
-                dtcp <- rep$man[[1]]$inp$dtcp
-                ind <- which(timecpred < manint[1] & dtcp <= 1)
-                est <- get.par("logCpred",rep$man[[1]],exp=TRUE, CI = CI)[,2]
-                alo <- annual(timecpred[ind], est[ind]/dtcp[ind], mean)
-                timecpred <- alo$anntime
-                indmax <- which.max(timecpred)
-                dtcp <- diff(c(timecpred, manint[1]))
-                ind <- which(timecpred < manint[1])
-                ind2 <- unique(c(which(dtcp[ind] == 1),indmax))
-                preind <- tail(ind2,1)
-                preman <- timecpred[preind]
-                endman <- preman + manint[1] - timecpred[tail(ind,1)] + max(0,mandiff-1)
-                if(any(dtcp < 1 | dtcp > 1)) preman <- NULL
-                if(mandiff %% 1 != 0) endman <- NULL
-                abline(v=c(preman, endman), col="grey", lty=1, lwd=1)
-            }
-            add.manlines(rep, 'logCpred', index.shift=1, plot.legend=qlegend, verbose=verbose)
-        }else{
-            if (inp$dtpredc > 0){
-                lines(timep, cp, col=lcol, lty=3)
-                lines(timep, clp, col=lcol, lwd=1, lty=2)
-                lines(timep, cup, col=lcol, lwd=1, lty=2)
-            }
-        }
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        box(lwd=1.5)
-        txt.stamp(stamp)
+    if(manflag){
+      repmax <- get.manmax(rep)
+    }else{
+      repmax <- rep
     }
+
+    tvgflag <- rep$inp$timevaryinggrowth || rep$inp$logmcovflag
+    if (tvgflag){
+      MSY <- get.par('logMSYvec', repmax, exp=TRUE, CI = CI)
+      MSYvec <- as.data.frame(MSY)
+      MSYvec$msy <- MSYvec$est
+    } else {
+      MSY <- get.par('logMSY', repmax, exp=TRUE, CI = CI)
+      MSYvec <- get.msyvec(repmax$inp, MSY)
+    }
+    Cpredest <- get.par('logCpred', rep, exp=TRUE, CI = CI)
+    Cpredest[Cpredest<0] <- 0
+    rep$Cp[rep$Cp<0] <- 0
+    indest <- which(inp$timeCpred <= tail(inp$timeC,1))
+    indpred <- which(inp$timeCpred >= tail(inp$timeC,1))
+    dtc <- inp$dtcp
+    if (min(inp$dtc) < 1){
+      alo <- annual(inp$timeC, inp$obsC/inp$dtc)
+      timeo <- alo$anntime
+      obs <- alo$annvec
+      al1 <- annual(inp$timeCpred[indest], Cpredest[indest, 1]/dtc[indest])
+      al2 <- annual(inp$timeCpred[indest], Cpredest[indest, 2]/dtc[indest])
+      al3 <- annual(inp$timeCpred[indest], Cpredest[indest, 3]/dtc[indest])
+      inds <- which(!is.na(al2$annvec))
+      time <- al2$anntime[inds]
+      c <- al2$annvec[inds]
+      cl <- al1$annvec[inds]
+      cu <- al3$annvec[inds]
+      al1p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 1]/dtc[indpred])
+      al2p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 2]/dtc[indpred])
+      al3p <- annual(inp$timeCpred[indpred], Cpredest[indpred, 3]/dtc[indpred])
+      inds <- which(!is.na(al2p$annvec))
+      timep <- al2p$anntime[inds]
+      cp <- al2p$annvec[inds]
+      clp <- al1p$annvec[inds]
+      cup <- al3p$annvec[inds]
+      al1f <- annual(inp$timeCpred, Cpredest[, 1]/dtc)
+      al2f <- annual(inp$timeCpred, Cpredest[, 2]/dtc)
+      al3f <- annual(inp$timeCpred, Cpredest[, 3]/dtc)
+      inds <- which(!is.na(al2f$annvec))
+      timef <- al2f$anntime[inds]
+      clf <- al1f$annvec[inds]
+      cf <- al2f$annvec[inds]
+      cuf <- al3f$annvec[inds]
+      if (any(inp$dtc==1)){
+        inds <- which(inp$dtc==1)
+        timeo <- c(timeo, inp$timeC[inds])
+        obs <- c(obs, inp$obsC[inds])
+        timeunsort <- c(time, inp$timeCpred[inds])
+        timesort <- sort(timeunsort, index=TRUE)
+        time <- timesort$x
+        c <- c(c, Cpredest[inds, 2])[timesort$ix]
+        cl <- c(cl, Cpredest[inds, 1])[timesort$ix]
+        cu <- c(cu, Cpredest[inds, 3])[timesort$ix]
+      }
+    } else {
+      timeo <- inp$timeC
+      obs <- inp$obsC/inp$dtc
+      time <- inp$timeCpred[indest]
+      c <- Cpredest[indest, 2]/dtc[indest]
+      cl <- Cpredest[indest, 1]
+      cu <- Cpredest[indest, 3]
+      timep <- inp$timeCpred[indpred]
+      cp <- Cpredest[indpred, 2]/dtc[indpred]
+      clp <- Cpredest[indpred, 1]
+      cup <- Cpredest[indpred, 3]
+      timef <- inp$timeCpred
+      clf <- Cpredest[, 1]
+      cf <- Cpredest[, 2]/dtc
+      cuf <- Cpredest[, 3]
+    }
+    fininds <- which(apply(cbind(clf, cuf), 1, function(x) all(is.finite(x))))
+    if (!ylimflag){
+      if (length(ylim) != 2){
+        ylim <- range(c(obs, clf[fininds], cuf[fininds],
+                        0.9*min(MSY[, 1]), 1.07*max(MSY[, 3])), na.rm=TRUE)/Cscal
+        if (inp$dtpredc > 0){
+          ylim <- range(ylim, clf[fininds], cuf[fininds])
+        }
+      }
+      if(manflag) ylim <- range(ylim,get.manlimits(rep,"logCpred"))
+      ylim[2] <- min(c(ylim[2], 3*max(obs))) # Limit upper limit
+    }
+    xlim <- range(c(inp$time, tail(inp$time,1)))
+    if(manflag) xlim <- get.manlimits(rep,"time")
+    #if (main==-1) main <- 'Catch'
+    if (ylabflag){
+      ylab <- 'Catch'
+      ylab <- add.catchunit(ylab, inp$catchunit)
+    }
+    plot(time, c, typ='n', main=main, xlab=xlab, ylab=ylab,
+         xlim=xlim, ylim=ylim)
+    polygon(c(repmax$inp$time, rev(repmax$inp$time)),
+            c(MSYvec$ll,rev(MSYvec$ul)), col=cicol, border=cicol)
+    cicol2 <- rgb(0, 0, 1, 0.1)
+    lines(time, cl, col=lcol, lwd=1.5, lty=2)
+    lines(time, cu, col=lcol, lwd=1.5, lty=2)
+    if(!manflag) abline(v=inp$timeC[tail(which(inp$timeC%%1==0),1)], col='gray') ## account for seasonal data
+    plot.col(timeo, obs/Cscal, cex=0.7, do.line=FALSE, add=TRUE, add.legend=qlegend)
+    # Highlight influential index observations
+    if ('infl' %in% names(rep) & min(inp$dtc) == 1){
+      infl <- rep$infl$infl[1:inp$nobsC, ]
+      cols <- apply(!is.na(infl), 1, sum)
+      ncols <- length(unique(cols))
+      inds <- which(cols>0)
+      points(inp$timeC[inds], inp$obsC[inds]/Cscal, pch=21, cex=0.9, bg=cols[inds])
+    }
+    if ('true' %in% names(inp)){
+      abline(h=inp$true$MSY, col=true.col(), lty=1)
+      abline(h=inp$true$MSY, col='black', lty=3)
+    }
+    lines(repmax$inp$time, MSYvec$msy)
+    lines(time, c, col=lcol, lwd=1.5)
+    if(manflag){
+      ## management lines if all scenarios same management times
+      manint <- rep$man[[1]]$inp$maninterval
+      mandiff <- diff(manint)
+      if(mandiff %% 1 != 0){
+        if(verbose) cat("At least part of the catch during the management period cannot be aggregated into annual/seasonal catches.\n")
+      }
+      if(check.man(rep, verbose=FALSE)$mantime){
+        timecpred <- rep$man[[1]]$inp$timeCpred
+        dtcp <- rep$man[[1]]$inp$dtcp
+        ind <- which(timecpred < manint[1] & dtcp <= 1)
+        est <- get.par("logCpred",rep$man[[1]],exp=TRUE, CI = CI)[,2]
+        alo <- annual(timecpred[ind], est[ind]/dtcp[ind], mean)
+        timecpred <- alo$anntime
+        indmax <- which.max(timecpred)
+        dtcp <- diff(c(timecpred, manint[1]))
+        ind <- which(timecpred < manint[1])
+        ind2 <- unique(c(which(dtcp[ind] == 1),indmax))
+        preind <- tail(ind2,1)
+        preman <- timecpred[preind]
+        endman <- preman + manint[1] - timecpred[tail(ind,1)] + max(0,mandiff-1)
+        if(any(dtcp < 1 | dtcp > 1)) preman <- NULL
+        if(mandiff %% 1 != 0) endman <- NULL
+        abline(v=c(preman, endman), col="grey", lty=1, lwd=1)
+      }
+      add.manlines(rep, 'logCpred', index.shift=1, plot.legend=qlegend, verbose=verbose)
+    }else{
+      if (inp$dtpredc > 0){
+        lines(timep, cp, col=lcol, lty=3)
+        lines(timep, clp, col=lcol, lwd=1, lty=2)
+        lines(timep, cup, col=lcol, lwd=1, lty=2)
+      }
+    }
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    box(lwd=1.5)
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -1923,84 +1923,84 @@ plotspict.catch <- function(rep, main='Catch', ylim=NULL, qlegend=TRUE, lcol='bl
 #' @export
 plotspict.production <- function(rep, n.plotyears=40, main='Production curve',
                                  stamp=get.version(), CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        inp <- rep$inp
-        tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
-        Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
-        mest <- get.par('logm', rep, exp=TRUE, CI = CI)
-        nr <- dim(mest)[1]
-        gamma <- get.par('gamma', rep, CI = CI)
-        n <- get.par('logn', rep, exp=TRUE, CI = CI)
-        Pest <- get.par('P', rep, CI = CI)
-        binds <- inp$ic[1:dim(Pest)[1]]
-        Bmsy <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
-        Bmsy <- c(1,1)
-        if (tvgflag){
-            yscal <- get.par('logMSYvec', rep, exp=TRUE, CI = CI)[binds, 2]
-        } else {
-            yscal <- rep(1, length(binds))
-        }
-        nBplot <- 200
-        Bplot <- seq(0.5*1e-8, Kest[2], length=nBplot)
-        # Calculate production curve (Pst)
-        pfun <- function(gamma, m, K, n, B) gamma*m/K*B*(1 - (B/K)^(n-1))
-        Pst <- list()
-        for (i in 1:nr){
-            Pst[[i]] <- pfun(gamma[2], mest[i,2], Kest[2], n[2], Bplot)
-        }
-        Pstscal <- ifelse(tvgflag, max(unlist(Pst)), 1)
-        ylim <- c(0, max(unlist(Pst)/Pstscal, na.rm=TRUE))
-        if (inp$reportall){
-            Best <- get.par('logB', rep, exp=TRUE, CI = CI)
-            Bplot <- seq(0.5*min(c(1e-8, Best[, 2])), 1*max(c(Kest[2], Best[, 2])), length=nBplot)
-            for (i in 1:nr){
-                Pst[[i]] <- pfun(gamma[2], mest[i,2], Kest[2], n[2], Bplot)
-            }
-
-            Bvec <- Best[binds, 2]
-            xlim <- range(Bvec/Kest[2], 0, 1)
-            ylim <- c(min(0, Pest[,2]/yscal), max(Pest[,2]/yscal, unlist(Pst)/Pstscal, na.rm=TRUE))
-        } else {
-            xlim <- range(Bplot/Kest[2], na.rm=TRUE)
-        }
-        dt <- inp$dt[-1]
-        inde <- inp$indest[-length(inp$indest)]
-        indp <- inp$indpred[-1]-1
-        ylab <- 'Production'
-        if (tvgflag){
-            ylab <- paste(ylab, '(normalised)')
-        } else {
-            ylab <- add.catchunit(ylab, inp$catchunit)
-        }
-        plot(Bplot/Kest[2], Pst[[nr]]/Pstscal, typ='l', ylim=ylim, xlim=xlim,
-             xlab='B/K', ylab=ylab, col=1, main=main)
-        if (nr > 1){
-            for (i in 1:(nr-1)){
-                lines(Bplot/Kest[2], Pst[[i]]/Pstscal, col='gray')
-            }
-        }
-        if (inp$reportall){
-            lines(Bvec/Kest[2], Pest[, 2]/yscal, col=4, lwd=1.5)
-            points(Bvec/Kest[2], Pest[, 2]/yscal, col=4, pch=20, cex=0.7)
-            par(xpd=TRUE)
-            if (length(inp$ic) < n.plotyears){
-                inds <- c(1, length(Bvec), seq(1, length(Bvec), by=2))
-                labs <- round(inp$time[inp$ic], 2)
-                text(Bvec[inds]/Kest[2], Pest[inds, 2]/yscal[inds], labels=labs[inds],
-                     cex=0.75, pos=4, offset=0.25)
-            }
-            par(xpd=FALSE)
-        }
-        mx <- (1/n[2])^(1/(n[2]-1))
-        abline(v=mx, lty=3)
-        abline(h=0, lty=3)
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        txt.stamp(stamp)
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    inp <- rep$inp
+    tvgflag <- rep$inp$timevaryinggrowth | rep$inp$logmcovflag
+    Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
+    mest <- get.par('logm', rep, exp=TRUE, CI = CI)
+    nr <- dim(mest)[1]
+    gamma <- get.par('gamma', rep, CI = CI)
+    n <- get.par('logn', rep, exp=TRUE, CI = CI)
+    Pest <- get.par('P', rep, CI = CI)
+    binds <- inp$ic[1:dim(Pest)[1]]
+    Bmsy <- get.par('logBmsy', rep, exp=TRUE, CI = CI)
+    Bmsy <- c(1,1)
+    if (tvgflag){
+      yscal <- get.par('logMSYvec', rep, exp=TRUE, CI = CI)[binds, 2]
+    } else {
+      yscal <- rep(1, length(binds))
     }
+    nBplot <- 200
+    Bplot <- seq(0.5*1e-8, Kest[2], length=nBplot)
+    # Calculate production curve (Pst)
+    pfun <- function(gamma, m, K, n, B) gamma*m/K*B*(1 - (B/K)^(n-1))
+    Pst <- list()
+    for (i in 1:nr){
+      Pst[[i]] <- pfun(gamma[2], mest[i,2], Kest[2], n[2], Bplot)
+    }
+    Pstscal <- ifelse(tvgflag, max(unlist(Pst)), 1)
+    ylim <- c(0, max(unlist(Pst)/Pstscal, na.rm=TRUE))
+    if (inp$reportall){
+      Best <- get.par('logB', rep, exp=TRUE, CI = CI)
+      Bplot <- seq(0.5*min(c(1e-8, Best[, 2])), 1*max(c(Kest[2], Best[, 2])), length=nBplot)
+      for (i in 1:nr){
+        Pst[[i]] <- pfun(gamma[2], mest[i,2], Kest[2], n[2], Bplot)
+      }
+
+      Bvec <- Best[binds, 2]
+      xlim <- range(Bvec/Kest[2], 0, 1)
+      ylim <- c(min(0, Pest[,2]/yscal), max(Pest[,2]/yscal, unlist(Pst)/Pstscal, na.rm=TRUE))
+    } else {
+      xlim <- range(Bplot/Kest[2], na.rm=TRUE)
+    }
+    dt <- inp$dt[-1]
+    inde <- inp$indest[-length(inp$indest)]
+    indp <- inp$indpred[-1]-1
+    ylab <- 'Production'
+    if (tvgflag){
+      ylab <- paste(ylab, '(normalised)')
+    } else {
+      ylab <- add.catchunit(ylab, inp$catchunit)
+    }
+    plot(Bplot/Kest[2], Pst[[nr]]/Pstscal, typ='l', ylim=ylim, xlim=xlim,
+         xlab='B/K', ylab=ylab, col=1, main=main)
+    if (nr > 1){
+      for (i in 1:(nr-1)){
+        lines(Bplot/Kest[2], Pst[[i]]/Pstscal, col='gray')
+      }
+    }
+    if (inp$reportall){
+      lines(Bvec/Kest[2], Pest[, 2]/yscal, col=4, lwd=1.5)
+      points(Bvec/Kest[2], Pest[, 2]/yscal, col=4, pch=20, cex=0.7)
+      par(xpd=TRUE)
+      if (length(inp$ic) < n.plotyears){
+        inds <- c(1, length(Bvec), seq(1, length(Bvec), by=2))
+        labs <- round(inp$time[inp$ic], 2)
+        text(Bvec[inds]/Kest[2], Pest[inds, 2]/yscal[inds], labels=labs[inds],
+             cex=0.75, pos=4, offset=0.25)
+      }
+      par(xpd=FALSE)
+    }
+    mx <- (1/n[2])^(1/(n[2]-1))
+    abline(v=mx, lty=3)
+    abline(h=0, lty=3)
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -2023,93 +2023,93 @@ plotspict.production <- function(rep, n.plotyears=40, main='Production curve',
 #'
 #' @export
 plotspict.tc <- function(rep, main='Time to Bmsy', stamp=get.version(), CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep) & rep$opt$convergence == 0){
-        inp <- rep$inp
-        B0cur <- get.par('logBl', rep, exp=TRUE, CI = CI)[2]
-        Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
-        m <- get.par('logm', rep, exp=TRUE, CI = CI)
-        mmean <- tail(m, 1)[2]
-        n <- get.par('logn', rep, exp=TRUE, CI = CI)
-        gamma <- calc.gamma(n[2])
-        sdbest <- get.par('logsdb', rep, exp=TRUE, CI = CI)
-        Fmsy <- tail(get.par('logFmsy', rep, exp=TRUE, CI = CI), 1)
-        Bmsy <- tail(get.par('logBmsy', rep, exp=TRUE, CI = CI), 1)
-        if (!is.na(Bmsy[2])){
-            if (B0cur < Bmsy[2]){
-                do.flag <- ifelse(B0cur/Bmsy[2]>0.95, FALSE, TRUE)
-            }
-            if (B0cur > Bmsy[2]){
-                do.flag <- ifelse(Bmsy[2]/B0cur>0.95, FALSE, TRUE)
-            }
-            if (do.flag){
-                if (B0cur < Bmsy[2]) facvec <- c(0, 0.75, 0.95, 1)
-                if (B0cur > Bmsy[2]) facvec <- c(2, 1.25, 1.05, 1)
-                cols <- c('green3', 'blue', 'red', 'orange', 5:8)
-                Fvec <- round(facvec*Fmsy[2], digits=4)
-                nFvec <- length(Fvec)
-                g <- function(F, K, m, n, sdb, B0, dt){
-                    return(exp( log(B0) + (gamma*m/K - gamma*m/K*(B0/K)^(n-1) - F - 0.5*sdb^2)*dt ))
-                }
-                simdt <- 0.01
-                nt <- 10000
-                Bsim <- matrix(0, nFvec, nt)
-                time <- matrix(0, nFvec, nt)
-                for (i in 1:nFvec){
-                    time[i, ] <- seq(0, simdt*(nt-1), by=simdt)
-                    Bsim[i, ] <- rep(0, nt)
-                    Bsim[i, 1] <- B0cur
-                    for (j in 2:nt){
-                        Bsim[i, j] <- g(Fvec[i], Kest[2], mmean, n[2], sdbest[2], Bsim[i, j-1], simdt)
-                    }
-                }
-                Bsim <- Bsim/Bmsy[2]
-                frac <- 0.95
-                if (B0cur < Bmsy[2]){
-                    inds <- which(Bsim[nFvec, ] < 0.99)
-                }
-                if (B0cur > Bmsy[2]){
-                    inds <- which(Bsim[nFvec, ] > (1/0.99))
-                }
-                ylim <- range(Bsim[nFvec, ], na.rm=TRUE)
-                xlim <- range(time[nFvec, inds])
-                xlim[2] <- min(xlim[2], 15) # Max 15 years ahead
-                plot(time[1, ], Bsim[1, ], typ='l', xlim=xlim, ylim=ylim, col=cols[1],
-                     ylab='Proportion of Bmsy', xlab='Years to Bmsy', main=main, lwd=1.5)
-                abline(h=c(frac, 1/frac), lty=1, col='lightgray')
-                abline(h=1, lty=3)
-                for (i in 2:nFvec){
-                    lines(time[i, ], Bsim[i, ], col=cols[i], lwd=1.5)
-                }
-                vt <- rep(0, nFvec)
-                if (B0cur < Bmsy[2]){
-                    for (i in 1:nFvec){
-                        vt[i] <- time[i, max(which(Bsim[i, ] < frac))]
-                    }
-                }
-                if (B0cur > Bmsy[2]){
-                    for (i in 1:nFvec){
-                        vt[i] <- time[i, max(which(1/Bsim[i, ] < frac))]
-                    }
-                }
-                for (i in 1:nFvec){
-                    abline(v=vt[i], col=cols[i], lty=2)
-                }
-                lgnplace <- 'bottomright'
-                if (B0cur > Bmsy[2]){
-                    lgnplace <- 'topright'
-                }
-                legend(lgnplace, legend=paste('F =',facvec,'x Fmsy'), lty=1, col=cols[1:nFvec],
-                       lwd=rep(1.5,nFvec), bg='transparent')
-                points(vt, rep(par('usr')[3], nFvec), col=cols[1:nFvec], pch=4)
-                box(lwd=1.5)
-                if (rep$opt$convergence != 0){
-                    warning.stamp()
-                }
-                txt.stamp(stamp)
-            }
+  check.rep(rep)
+  if (!'sderr' %in% names(rep) & rep$opt$convergence == 0){
+    inp <- rep$inp
+    B0cur <- get.par('logBl', rep, exp=TRUE, CI = CI)[2]
+    Kest <- get.par('logK', rep, exp=TRUE, CI = CI)
+    m <- get.par('logm', rep, exp=TRUE, CI = CI)
+    mmean <- tail(m, 1)[2]
+    n <- get.par('logn', rep, exp=TRUE, CI = CI)
+    gamma <- calc.gamma(n[2])
+    sdbest <- get.par('logsdb', rep, exp=TRUE, CI = CI)
+    Fmsy <- tail(get.par('logFmsy', rep, exp=TRUE, CI = CI), 1)
+    Bmsy <- tail(get.par('logBmsy', rep, exp=TRUE, CI = CI), 1)
+    if (!is.na(Bmsy[2])){
+      if (B0cur < Bmsy[2]){
+        do.flag <- ifelse(B0cur/Bmsy[2]>0.95, FALSE, TRUE)
+      }
+      if (B0cur > Bmsy[2]){
+        do.flag <- ifelse(Bmsy[2]/B0cur>0.95, FALSE, TRUE)
+      }
+      if (do.flag){
+        if (B0cur < Bmsy[2]) facvec <- c(0, 0.75, 0.95, 1)
+        if (B0cur > Bmsy[2]) facvec <- c(2, 1.25, 1.05, 1)
+        cols <- c('green3', 'blue', 'red', 'orange', 5:8)
+        Fvec <- round(facvec*Fmsy[2], digits=4)
+        nFvec <- length(Fvec)
+        g <- function(F, K, m, n, sdb, B0, dt){
+          return(exp( log(B0) + (gamma*m/K - gamma*m/K*(B0/K)^(n-1) - F - 0.5*sdb^2)*dt ))
         }
+        simdt <- 0.01
+        nt <- 10000
+        Bsim <- matrix(0, nFvec, nt)
+        time <- matrix(0, nFvec, nt)
+        for (i in 1:nFvec){
+          time[i, ] <- seq(0, simdt*(nt-1), by=simdt)
+          Bsim[i, ] <- rep(0, nt)
+          Bsim[i, 1] <- B0cur
+          for (j in 2:nt){
+            Bsim[i, j] <- g(Fvec[i], Kest[2], mmean, n[2], sdbest[2], Bsim[i, j-1], simdt)
+          }
+        }
+        Bsim <- Bsim/Bmsy[2]
+        frac <- 0.95
+        if (B0cur < Bmsy[2]){
+          inds <- which(Bsim[nFvec, ] < 0.99)
+        }
+        if (B0cur > Bmsy[2]){
+          inds <- which(Bsim[nFvec, ] > (1/0.99))
+        }
+        ylim <- range(Bsim[nFvec, ], na.rm=TRUE)
+        xlim <- range(time[nFvec, inds])
+        xlim[2] <- min(xlim[2], 15) # Max 15 years ahead
+        plot(time[1, ], Bsim[1, ], typ='l', xlim=xlim, ylim=ylim, col=cols[1],
+             ylab='Proportion of Bmsy', xlab='Years to Bmsy', main=main, lwd=1.5)
+        abline(h=c(frac, 1/frac), lty=1, col='lightgray')
+        abline(h=1, lty=3)
+        for (i in 2:nFvec){
+          lines(time[i, ], Bsim[i, ], col=cols[i], lwd=1.5)
+        }
+        vt <- rep(0, nFvec)
+        if (B0cur < Bmsy[2]){
+          for (i in 1:nFvec){
+            vt[i] <- time[i, max(which(Bsim[i, ] < frac))]
+          }
+        }
+        if (B0cur > Bmsy[2]){
+          for (i in 1:nFvec){
+            vt[i] <- time[i, max(which(1/Bsim[i, ] < frac))]
+          }
+        }
+        for (i in 1:nFvec){
+          abline(v=vt[i], col=cols[i], lty=2)
+        }
+        lgnplace <- 'bottomright'
+        if (B0cur > Bmsy[2]){
+          lgnplace <- 'topright'
+        }
+        legend(lgnplace, legend=paste('F =',facvec,'x Fmsy'), lty=1, col=cols[1:nFvec],
+               lwd=rep(1.5,nFvec), bg='transparent')
+        points(vt, rep(par('usr')[3], nFvec), col=cols[1:nFvec], pch=4)
+        box(lwd=1.5)
+        if (rep$opt$convergence != 0){
+          warning.stamp()
+        }
+        txt.stamp(stamp)
+      }
     }
+  }
 }
 
 
@@ -2126,76 +2126,76 @@ plotspict.tc <- function(rep, main='Time to Bmsy', stamp=get.version(), CI = 0.9
 #'
 #' @export
 plotspict.season <- function(rep, stamp=get.version(), CI = 0.95){
-    check.rep(rep)
-    if (!'par.fixed' %in% names(rep)){
-        stop('Input object was not a valid output from fit.spict()!')
+  check.rep(rep)
+  if (!'par.fixed' %in% names(rep)){
+    stop('Input object was not a valid output from fit.spict()!')
+  }
+  if (!'sderr' %in% names(rep) & 'logphi' %in% names(rep$par.fixed)){
+    jan <- as.POSIXct("2015-01-01 00:00:01 UTC", tz='UTC')
+    apr <- jan+(31+28+31)*24*60*60
+    jul <- apr+(30+31+30)*24*60*60
+    oct <- jul+(31+31+30)*24*60*60
+    logF <- get.par('logF', rep, CI = CI)
+    meanlogF <- mean(logF[, 2])
+    meanlogF <- 0 # Don't add mean F
+    logphi <- get.par('logphi', rep, CI = CI)
+    naflag <- any(is.na(logphi[, 1]))
+    inds <- which(colnames(rep$cov.fixed) == 'logphi')
+    ssf <- get.par('seasonsplinefine', rep, CI = CI)
+    ##covmat <- rep$cov.fixed[inds, inds]
+    seasonsplineest <- get.spline(logphi[, 2], order=rep$inp$splineorder, dtfine=rep$inp$dteuler)
+    test <- seq(0, 1, length=length(seasonsplineest))
+    yest <- exp(meanlogF + seasonsplineest)
+    seasonsplinesmoo <-  ssf[, 2]
+    sssl <- exp(meanlogF + ssf[, 1])
+    sssu <- exp(meanlogF + ssf[, 3])
+    nsss <- length(seasonsplinesmoo)
+    t <- seq(0, 1, length=nsss)
+    y <- exp(meanlogF + seasonsplinesmoo)
+    ylim <- range(yest, y)
+    if (!naflag){
+      ylim <- range(yest, y, sssl, sssu)
     }
-    if (!'sderr' %in% names(rep) & 'logphi' %in% names(rep$par.fixed)){
-        jan <- as.POSIXct("2015-01-01 00:00:01 UTC", tz='UTC')
-        apr <- jan+(31+28+31)*24*60*60
-        jul <- apr+(30+31+30)*24*60*60
-        oct <- jul+(31+31+30)*24*60*60
-        logF <- get.par('logF', rep, CI = CI)
-        meanlogF <- mean(logF[, 2])
-        meanlogF <- 0 # Don't add mean F
-        logphi <- get.par('logphi', rep, CI = CI)
-        naflag <- any(is.na(logphi[, 1]))
-        inds <- which(colnames(rep$cov.fixed) == 'logphi')
-        ssf <- get.par('seasonsplinefine', rep, CI = CI)
-        ##covmat <- rep$cov.fixed[inds, inds]
-        seasonsplineest <- get.spline(logphi[, 2], order=rep$inp$splineorder, dtfine=rep$inp$dteuler)
-        test <- seq(0, 1, length=length(seasonsplineest))
-        yest <- exp(meanlogF + seasonsplineest)
-        seasonsplinesmoo <-  ssf[, 2]
-        sssl <- exp(meanlogF + ssf[, 1])
-        sssu <- exp(meanlogF + ssf[, 3])
-        nsss <- length(seasonsplinesmoo)
-        t <- seq(0, 1, length=nsss)
-        y <- exp(meanlogF + seasonsplinesmoo)
-        ylim <- range(yest, y)
-        if (!naflag){
-            ylim <- range(yest, y, sssl, sssu)
-        }
-        if ("true" %in% names(rep$inp)){
-            if (rep$inp$true$seasontype==1){
-                seasonsplinetrue <- get.spline(rep$inp$true$logphi, order=rep$inp$true$splineorder,
-                                               dtfine=rep$inp$true$dteuler)
-                ttrue <- seq(0, 1, length=length(seasonsplinetrue))
-                ytrue <- exp(seasonsplinetrue) # Don't add mean F
-                ylim <- range(c(yest, y, ytrue))
-            }
-        }
-        plot(t, y, typ='n', xaxt='n', xlab='Time of year', ylab='Seasonal spline',
-             main=paste('Spline order:',rep$inp$splineorder), ylim=ylim)
-        cicol2 <- rgb(0, 0, 1, 0.1)
-        cicol3 <- rgb(0, 0, 1, 0.2)
-        polygon(c(t, rev(t)), c(sssl, rev(sssu)), col=cicol2, border=cicol2)
-        if (!naflag){
-            lines(t, sssl, col=cicol3)
-            lines(t, sssu, col=cicol3)
-        }
-        lab <- strftime(c(jan, apr, jul, oct, jan), format='%b')
-        ats <- c(0, 0.25, 0.5, 0.75, 1)
-        abline(v=ats, lty=3, col='lightgray')
-        ats2 <- pretty(c(sssl, sssu))
-        if ("true" %in% names(rep$inp)){
-            ats2 <- pretty(c(sssl, sssu, ytrue))
-        }
-        abline(h=ats2, lty=3, col='lightgray')
-        lines(t, y, lwd=1, col='green')
-        lines(test, yest, lwd=1.5, col=4, typ='s')
-        if ("true" %in% names(rep$inp)){
-            if (rep$inp$true$seasontype==1){
-                lines(ttrue, ytrue, lwd=1, col=true.col(), typ='s')
-            }
-        }
-        axis(1, at=ats, labels=lab)
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
-        txt.stamp(stamp)
+    if ("true" %in% names(rep$inp)){
+      if (rep$inp$true$seasontype==1){
+        seasonsplinetrue <- get.spline(rep$inp$true$logphi, order=rep$inp$true$splineorder,
+                                       dtfine=rep$inp$true$dteuler)
+        ttrue <- seq(0, 1, length=length(seasonsplinetrue))
+        ytrue <- exp(seasonsplinetrue) # Don't add mean F
+        ylim <- range(c(yest, y, ytrue))
+      }
     }
+    plot(t, y, typ='n', xaxt='n', xlab='Time of year', ylab='Seasonal spline',
+         main=paste('Spline order:',rep$inp$splineorder), ylim=ylim)
+    cicol2 <- rgb(0, 0, 1, 0.1)
+    cicol3 <- rgb(0, 0, 1, 0.2)
+    polygon(c(t, rev(t)), c(sssl, rev(sssu)), col=cicol2, border=cicol2)
+    if (!naflag){
+      lines(t, sssl, col=cicol3)
+      lines(t, sssu, col=cicol3)
+    }
+    lab <- strftime(c(jan, apr, jul, oct, jan), format='%b')
+    ats <- c(0, 0.25, 0.5, 0.75, 1)
+    abline(v=ats, lty=3, col='lightgray')
+    ats2 <- pretty(c(sssl, sssu))
+    if ("true" %in% names(rep$inp)){
+      ats2 <- pretty(c(sssl, sssu, ytrue))
+    }
+    abline(h=ats2, lty=3, col='lightgray')
+    lines(t, y, lwd=1, col='green')
+    lines(test, yest, lwd=1.5, col=4, typ='s')
+    if ("true" %in% names(rep$inp)){
+      if (rep$inp$true$seasontype==1){
+        lines(ttrue, ytrue, lwd=1, col=true.col(), typ='s')
+      }
+    }
+    axis(1, at=ats, labels=lab)
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
+    }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -2210,21 +2210,21 @@ plotspict.season <- function(rep, stamp=get.version(), CI = 0.95){
 #'
 #' @export
 plotspict.btrend <- function(rep, CI = 0.95){
-    check.rep(rep)
-    if (!'sderr' %in% names(rep)){
-        Bind <- get.par('Bind', rep, CI = CI)
-        B <- get.par('logB', rep, exp=TRUE, CI = CI)
-        plot(rep$inp$time, Bind[, 2], typ='l', ylim=c(-2, 2), xlab='Time', ylab='B trend')
-        lines(rep$inp$time, Bind[, 1], lty=2)
-        lines(rep$inp$time, Bind[, 3], lty=2)
-        lines(rep$inp$time[-1], diff(B[, 2]), col=4, lwd=1.5)
-        abline(h=0, col='gray')
-        legend('topleft', legend=c('Expected', 'Observed'), lty=1, lwd=c(1, 1.5), col=c(1, 4), bg="transparent")
-        box(lwd=1.5)
-        if (rep$opt$convergence != 0){
-            warning.stamp()
-        }
+  check.rep(rep)
+  if (!'sderr' %in% names(rep)){
+    Bind <- get.par('Bind', rep, CI = CI)
+    B <- get.par('logB', rep, exp=TRUE, CI = CI)
+    plot(rep$inp$time, Bind[, 2], typ='l', ylim=c(-2, 2), xlab='Time', ylab='B trend')
+    lines(rep$inp$time, Bind[, 1], lty=2)
+    lines(rep$inp$time, Bind[, 3], lty=2)
+    lines(rep$inp$time[-1], diff(B[, 2]), col=4, lwd=1.5)
+    abline(h=0, col='gray')
+    legend('topleft', legend=c('Expected', 'Observed'), lty=1, lwd=c(1, 1.5), col=c(1, 4), bg="transparent")
+    box(lwd=1.5)
+    if (rep$opt$convergence != 0){
+      warning.stamp()
     }
+  }
 }
 
 
@@ -2287,74 +2287,74 @@ plotspict.btrend <- function(rep, CI = 0.95){
 #'
 #' @export
 plot.spictcls <- function(x, stamp=get.version(), verbose=TRUE, CI = 0.95, ...){
-    check.rep(x)
-    rep <- x
-    logax <- FALSE # Take log of relevant axes? default: FALSE
-    #if (!exists('stamp')){
-    #    stamp <- get.version()
-    #}
-    if ('par.fixed' %in% names(rep) & rep$inp$do.sd.report){
-        inp <- rep$inp
-        if (inp$reportall){
-            #dev.new(width=10, height=10)
-            if ('osar' %in% names(rep)){
-                opar <- par(mfrow=c(4, 3), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
-            } else {
-                opar <- par(mfrow=c(3, 3), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
-            }
-            on.exit(par(opar))
-            # Biomass
-            plotspict.biomass(rep, logax=logax, stamp='',verbose=verbose, CI = CI)
-            # F
-            plotspict.f(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-            # Catch
-            plotspict.catch(rep, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-            # B/Bmsy
-            plotspict.bbmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-            # F/Fmsy
-            plotspict.ffmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-            # F versus B
-            plotspict.fb(rep, logax=logax, plot.legend=TRUE, stamp='', CI = CI)
-        } else {
-            cat('inp$reportall = FALSE so not much to plot.\n')
-            if ('osar' %in% names(rep)){
-                opar <- par(mfrow=c(3, 2), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2,3.5))
-            } else {
-                opar <- par(mfrow=c(2, 1), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2,3.5))
-            }
-            on.exit(par(opar))
-        }
-        # Production curve
-        plotspict.production(rep, stamp='', CI = CI)
-        # Seasonal F
-        if (inp$nseasons > 1 & inp$seasontype%in%c(1,3)){
-            plotspict.season(rep, stamp='', CI = CI)
-        }
-        # Time constant
-        if (inp$nseasons == 1 & !(inp$timevaryinggrowth | inp$logmcovflag)){
-            plotspict.tc(rep, stamp='', CI = CI)
-        }
-        # Priors
-        if ('priors' %in% names(rep$inp)){
-            plotspict.priors(rep, do.plot=1, stamp='', CI = CI)
-        }
-        if ('osar' %in% names(rep)){
-            plotspict.osar(rep, qlegend=FALSE)
-        }
-        if (inp$reportall){
-            if ('infl' %in% names(rep)){
-                # Plot influence summary
-                plotspict.inflsum(rep, stamp='')
-            }
-        }
+  check.rep(x)
+  rep <- x
+  logax <- FALSE # Take log of relevant axes? default: FALSE
+  #if (!exists('stamp')){
+  #    stamp <- get.version()
+  #}
+  if ('par.fixed' %in% names(rep) & rep$inp$do.sd.report){
+    inp <- rep$inp
+    if (inp$reportall){
+      #dev.new(width=10, height=10)
+      if ('osar' %in% names(rep)){
+        opar <- par(mfrow=c(4, 3), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
+      } else {
+        opar <- par(mfrow=c(3, 3), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
+      }
+      on.exit(par(opar))
+      # Biomass
+      plotspict.biomass(rep, logax=logax, stamp='',verbose=verbose, CI = CI)
+      # F
+      plotspict.f(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+      # Catch
+      plotspict.catch(rep, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+      # B/Bmsy
+      plotspict.bbmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+      # F/Fmsy
+      plotspict.ffmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+      # F versus B
+      plotspict.fb(rep, logax=logax, plot.legend=TRUE, stamp='', CI = CI)
     } else {
-        if ('inp' %in% names(rep)){
-            plotspict.ci(rep$inp, stamp='')
-        } else {
-            stop('Nothing to plot!')
-        }
+      cat('inp$reportall = FALSE so not much to plot.\n')
+      if ('osar' %in% names(rep)){
+        opar <- par(mfrow=c(3, 2), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2,3.5))
+      } else {
+        opar <- par(mfrow=c(2, 1), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2,3.5))
+      }
+      on.exit(par(opar))
     }
-    txt.stamp(stamp, do.flag=TRUE)
+    # Production curve
+    plotspict.production(rep, stamp='', CI = CI)
+    # Seasonal F
+    if (inp$nseasons > 1 & inp$seasontype%in%c(1,3)){
+      plotspict.season(rep, stamp='', CI = CI)
+    }
+    # Time constant
+    if (inp$nseasons == 1 & !(inp$timevaryinggrowth | inp$logmcovflag)){
+      plotspict.tc(rep, stamp='', CI = CI)
+    }
+    # Priors
+    if ('priors' %in% names(rep$inp)){
+      plotspict.priors(rep, do.plot=1, stamp='', CI = CI)
+    }
+    if ('osar' %in% names(rep)){
+      plotspict.osar(rep, qlegend=FALSE)
+    }
+    if (inp$reportall){
+      if ('infl' %in% names(rep)){
+        # Plot influence summary
+        plotspict.inflsum(rep, stamp='')
+      }
+    }
+  } else {
+    if ('inp' %in% names(rep)){
+      plotspict.ci(rep$inp, stamp='')
+    } else {
+      stop('Nothing to plot!')
+    }
+  }
+  txt.stamp(stamp, do.flag=TRUE)
 }
 
 
@@ -2364,14 +2364,14 @@ plot.spictcls <- function(x, stamp=get.version(), verbose=TRUE, CI = 0.95, ...){
 #' @param rep A valid result from calc.influence().
 #' @return Nothing.
 put.xax <- function(rep){
-    inp <- rep$inp
-    sernames <- colnames(rep$infl$dosarpvals)
-    xs <- c(inp$nobsC, inp$nobsI)
-    xat <- cumsum(xs[-length(xs)]+0.5)
-    xmid <- c(0, xat) + xs/2
-    axis(1, at=xat, labels='')
-    axis(1, at=xmid, labels=sernames, tick=FALSE)
-    abline(v=xat, lty=2, col='gray')
+  inp <- rep$inp
+  sernames <- colnames(rep$infl$dosarpvals)
+  xs <- c(inp$nobsC, inp$nobsI)
+  xat <- cumsum(xs[-length(xs)]+0.5)
+  xmid <- c(0, xat) + xs/2
+  axis(1, at=xat, labels='')
+  axis(1, at=xmid, labels=sernames, tick=FALSE)
+  abline(v=xat, lty=2, col='gray')
 }
 
 
@@ -2383,78 +2383,78 @@ put.xax <- function(rep){
 #' @return Nothing.
 #' @export
 plotspict.infl <- function(rep, stamp=get.version()){
-    inp <- rep$inp
-    #sernames <- c('C', paste0('I', 1:inp$nindex))
-    dfbeta <- rep$infl$dfbeta
-    dpar <- rep$infl$dpar
-    ddetcov <- rep$infl$ddetcov
-    dosarpvals <- rep$infl$dosarpvals
-    sernames <- colnames(dosarpvals)
-    nser <- inp$nindex+1
-    nobs <- inp$nobsC + sum(inp$nobsI)
-    parnams <- colnames(dfbeta)
-    np <- length(parnams)
-    rwnms <- rownames(dfbeta)
-    infl <- rep$infl$infl
-    opar <- par(mfrow=c(2,2))
-    on.exit(par(opar))
-    # Plot covratio
-    dl <- 3*length(rep$par.fixed)/nobs
-    covratio <- exp(ddetcov)
-    ac <- abs(covratio-1)
-    inds <- which(ac > dl)
-    plot(ac, ylab='abs(covratio-1)', ylim=c(0, 1.05*max(ac)), xlab='', xaxt='n', main='COVRATIO')
-    abline(h=dl)
-    text(inds, ac[inds], rwnms[inds], pos=3, cex=0.7)
-    put.xax(rep)
-    box(lwd=1.5)
-    # Plot OSAR p-values
-    osarpvals <- get.osar.pvals(rep)
-    alpha <- 0.05
-    orgres <- osarpvals < alpha
-    newres <- dosarpvals < alpha
-    chgmat <- matrix(0, nobs, nser)
-    for (i in 1:nser){
-        chgmat[, i] <- newres[, i]-orgres[i]
-    }
-    inds <- which(chgmat!=0)
-    rc <- arrayInd(inds, dim(dosarpvals))
-    nms <- rwnms[rc[, 1]]
-    plot(dosarpvals[, 1], ylab='p-value', ylim=0:1, xlab='', xaxt='n', main='OSAR p-values')
-    for (i in 2:nser){
-        points(dosarpvals[, i], col=i)
-    }
-    abline(h=osarpvals, col=1:nser)
-    for (i in 1:length(inds)){
-        text(rc[i, 1], dosarpvals[rc[i, 1], rc[i, 2]], nms[i], pos=3, cex=0.7, col=rc[i, 2])
-    }
-    abline(h=0.05, lwd=2, lty=3)
-    legend('topleft', legend=sernames, pch=1, col=1:nser)
-    put.xax(rep)
-    box(lwd=1.5)
-    # Plot dfbeta
-    adfbeta <- abs(dfbeta)
-    al <- 2/sqrt(nobs)
-    inds <- which(adfbeta>al)
-    rc <- arrayInd(inds, dim(adfbeta))
-    nms <- rwnms[rc[, 1]]
-    plot(adfbeta[, 1], ylim=c(0, 1.05*max(adfbeta)), ylab='abs dfbeta', xlab='', xaxt='n', main='DFBETA')
-    for (i in 2:np){
-        points(adfbeta[, i], col=i)
-    }
-    abline(h=al, lwd=2, lty=3)
-    for (i in 1:length(inds)){
-        text(rc[i, 1], adfbeta[rc[i, 1], rc[i, 2]], nms[i], pos=3, cex=0.7, col=rc[i, 2])
-        text(rc[i, 1], adfbeta[rc[i, 1], rc[i, 2]], round(dpar[rc[i, 1], rc[i, 2]], 3),
-             pos=1, cex=0.7, col=rc[i, 2])
-    }
-    legend('topleft', legend=parnams, pch=1, col=1:np)
-    put.xax(rep)
-    box(lwd=1.5)
-    # Plot of influence
-    plotspict.inflsum(rep)
-    box(lwd=1.5)
-    txt.stamp(stamp)
+  inp <- rep$inp
+  #sernames <- c('C', paste0('I', 1:inp$nindex))
+  dfbeta <- rep$infl$dfbeta
+  dpar <- rep$infl$dpar
+  ddetcov <- rep$infl$ddetcov
+  dosarpvals <- rep$infl$dosarpvals
+  sernames <- colnames(dosarpvals)
+  nser <- inp$nindex+1
+  nobs <- inp$nobsC + sum(inp$nobsI)
+  parnams <- colnames(dfbeta)
+  np <- length(parnams)
+  rwnms <- rownames(dfbeta)
+  infl <- rep$infl$infl
+  opar <- par(mfrow=c(2,2))
+  on.exit(par(opar))
+  # Plot covratio
+  dl <- 3*length(rep$par.fixed)/nobs
+  covratio <- exp(ddetcov)
+  ac <- abs(covratio-1)
+  inds <- which(ac > dl)
+  plot(ac, ylab='abs(covratio-1)', ylim=c(0, 1.05*max(ac)), xlab='', xaxt='n', main='COVRATIO')
+  abline(h=dl)
+  text(inds, ac[inds], rwnms[inds], pos=3, cex=0.7)
+  put.xax(rep)
+  box(lwd=1.5)
+  # Plot OSAR p-values
+  osarpvals <- get.osar.pvals(rep)
+  alpha <- 0.05
+  orgres <- osarpvals < alpha
+  newres <- dosarpvals < alpha
+  chgmat <- matrix(0, nobs, nser)
+  for (i in 1:nser){
+    chgmat[, i] <- newres[, i]-orgres[i]
+  }
+  inds <- which(chgmat!=0)
+  rc <- arrayInd(inds, dim(dosarpvals))
+  nms <- rwnms[rc[, 1]]
+  plot(dosarpvals[, 1], ylab='p-value', ylim=0:1, xlab='', xaxt='n', main='OSAR p-values')
+  for (i in 2:nser){
+    points(dosarpvals[, i], col=i)
+  }
+  abline(h=osarpvals, col=1:nser)
+  for (i in 1:length(inds)){
+    text(rc[i, 1], dosarpvals[rc[i, 1], rc[i, 2]], nms[i], pos=3, cex=0.7, col=rc[i, 2])
+  }
+  abline(h=0.05, lwd=2, lty=3)
+  legend('topleft', legend=sernames, pch=1, col=1:nser)
+  put.xax(rep)
+  box(lwd=1.5)
+  # Plot dfbeta
+  adfbeta <- abs(dfbeta)
+  al <- 2/sqrt(nobs)
+  inds <- which(adfbeta>al)
+  rc <- arrayInd(inds, dim(adfbeta))
+  nms <- rwnms[rc[, 1]]
+  plot(adfbeta[, 1], ylim=c(0, 1.05*max(adfbeta)), ylab='abs dfbeta', xlab='', xaxt='n', main='DFBETA')
+  for (i in 2:np){
+    points(adfbeta[, i], col=i)
+  }
+  abline(h=al, lwd=2, lty=3)
+  for (i in 1:length(inds)){
+    text(rc[i, 1], adfbeta[rc[i, 1], rc[i, 2]], nms[i], pos=3, cex=0.7, col=rc[i, 2])
+    text(rc[i, 1], adfbeta[rc[i, 1], rc[i, 2]], round(dpar[rc[i, 1], rc[i, 2]], 3),
+         pos=1, cex=0.7, col=rc[i, 2])
+  }
+  legend('topleft', legend=parnams, pch=1, col=1:np)
+  put.xax(rep)
+  box(lwd=1.5)
+  # Plot of influence
+  plotspict.inflsum(rep)
+  box(lwd=1.5)
+  txt.stamp(stamp)
 }
 
 
@@ -2466,18 +2466,18 @@ plotspict.infl <- function(rep, stamp=get.version()){
 #' @return Nothing.
 #' @export
 plotspict.inflsum <- function(rep, stamp=get.version()){
-    infl <- rep$infl$infl
-    nobs <- dim(infl)[1]
-    ninfl <- dim(infl)[2]
-    matplot(infl, pch=1, col=1, yaxt='n', ylab='', xlab='', xaxt='n', main='Overall influence', type='n')
-    axis(2, at=1:ninfl, labels=colnames(infl))
-    cols <- apply(!is.na(infl), 1, sum)
-    for (i in 1:nobs){
-        abline(v=i, col=cols[i], lwd=(1+cols[i]/5))
-    }
-    matplot(infl, pch=1, col=1, add=TRUE)
-    put.xax(rep)
-    txt.stamp(stamp)
+  infl <- rep$infl$infl
+  nobs <- dim(infl)[1]
+  ninfl <- dim(infl)[2]
+  matplot(infl, pch=1, col=1, yaxt='n', ylab='', xlab='', xaxt='n', main='Overall influence', type='n')
+  axis(2, at=1:ninfl, labels=colnames(infl))
+  cols <- apply(!is.na(infl), 1, sum)
+  for (i in 1:nobs){
+    abline(v=i, col=cols[i], lwd=(1+cols[i]/5))
+  }
+  matplot(infl, pch=1, col=1, add=TRUE)
+  put.xax(rep)
+  txt.stamp(stamp)
 }
 
 
@@ -2495,50 +2495,50 @@ plotspict.inflsum <- function(rep, stamp=get.version()){
 #'
 #' @export
 plotspict.likprof <- function(input, logpar=FALSE, stamp=get.version(), CI = 0.95){
-    repflag <- 'par.fixed' %in% names(input)
-    if (repflag){ # This is a result of fit.spict
-        rep <- input
-        inp <- rep$inp
-        nll <- rep$opt$objective
-    } else { # This is an input list to fit.spict without estimates
-        inp <- input
-        nll <- min(inp$likprof$likvals)
-    }
-    likprof <- inp$likprof
-    np <- length(likprof$pars)
-    pv <- likprof$parvals
-    pars <- likprof$pars
-    loginds <- grep('log', pars)
-    expinds <- setdiff(1:np, loginds)
-    if (!logpar){
-        pv[, loginds] <- exp(pv[, loginds])
-        pars[loginds] <- gsub('log', '', pars[loginds])
-    } else {
-        pv[, expinds] <- log(pv[, expinds])
-        pars[expinds] <- paste0('log', pars[expinds])
-    }
-    if (np == 1){
-        plot(pv[, 1], likprof$likvals, typ='l', xlab=pars[1], ylab='Objective function', lwd=1.5)
-        lrlim <- 0.5*qchisq(0.95, 1) + nll
-        abline(h=lrlim, lty=2) # Significance level
-        pn <- likprof$pars
-        par <- get.par(pn, rep, CI = CI) # in log
-        pvq <- seq(min(likprof$parvals[, 1]), max(likprof$parvals[, 1]), length=100)
-        quadapprox <- -dnorm(pvq, par[2], par[4], log=TRUE)
-        quadapprox <- quadapprox + min(likprof$likvals) - min(quadapprox)
-        lines(pvq, quadapprox, lty=3)
-        legend('topleft', c('95% signf. lvl.', 'Quadratic approx.'), lty=2:3, bg='white')
-    } else {
-        pvals <- pchisq(2*(likprof$likvals - nll), np)
-        contour(pv[, 1], pv[, 2], pvals, xlab=pars[1], ylab=pars[2], levels=c(0.5, 0.8, 0.95))
-    }
-    box(lwd=1.5)
-    txt.stamp(stamp)
+  repflag <- 'par.fixed' %in% names(input)
+  if (repflag){ # This is a result of fit.spict
+    rep <- input
+    inp <- rep$inp
+    nll <- rep$opt$objective
+  } else { # This is an input list to fit.spict without estimates
+    inp <- input
+    nll <- min(inp$likprof$likvals)
+  }
+  likprof <- inp$likprof
+  np <- length(likprof$pars)
+  pv <- likprof$parvals
+  pars <- likprof$pars
+  loginds <- grep('log', pars)
+  expinds <- setdiff(1:np, loginds)
+  if (!logpar){
+    pv[, loginds] <- exp(pv[, loginds])
+    pars[loginds] <- gsub('log', '', pars[loginds])
+  } else {
+    pv[, expinds] <- log(pv[, expinds])
+    pars[expinds] <- paste0('log', pars[expinds])
+  }
+  if (np == 1){
+    plot(pv[, 1], likprof$likvals, typ='l', xlab=pars[1], ylab='Objective function', lwd=1.5)
+    lrlim <- 0.5*qchisq(0.95, 1) + nll
+    abline(h=lrlim, lty=2) # Significance level
+    pn <- likprof$pars
+    par <- get.par(pn, rep, CI = CI) # in log
+    pvq <- seq(min(likprof$parvals[, 1]), max(likprof$parvals[, 1]), length=100)
+    quadapprox <- -dnorm(pvq, par[2], par[4], log=TRUE)
+    quadapprox <- quadapprox + min(likprof$likvals) - min(quadapprox)
+    lines(pvq, quadapprox, lty=3)
+    legend('topleft', c('95% signf. lvl.', 'Quadratic approx.'), lty=2:3, bg='white')
+  } else {
+    pvals <- pchisq(2*(likprof$likvals - nll), np)
+    contour(pv[, 1], pv[, 2], pvals, xlab=pars[1], ylab=pars[2], levels=c(0.5, 0.8, 0.95))
+  }
+  box(lwd=1.5)
+  txt.stamp(stamp)
 }
 
 cols <- function() {
-    cs <- c("#000000", "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628", "#F781BF")
-    c(cs, adjustcolor(cs[-1], 0.5), adjustcolor(cs[-1], 0.2))
+  cs <- c("#000000", "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628", "#F781BF")
+  c(cs, adjustcolor(cs[-1], 0.5), adjustcolor(cs[-1], 0.2))
 }
 
 #' @name plotspict.retro
@@ -2560,158 +2560,158 @@ cols <- function() {
 #'
 #' @export
 plotspict.retro <- function(rep, stamp=get.version(), add.mohn = TRUE, CI = 0.95) {
-    opar <- par(mfrow=c(2, 2), mar=c(2.5, 3.3, 4, 0.8))
-    on.exit(par(opar))
-    if (!"spictcls" %in% class(rep)) stop("This function only works with a fitted spict object (class 'spictcls'). Please run `fit.spict` first.")
-    if (!"retro" %in% names(rep)) stop("No results of the retro function found. Please run the retrospective analysis using the `retro` function.")
-    if (add.mohn) {
-        mr <- suppressMessages(mohns_rho(rep, what = c("FFmsy", "BBmsy")))
-        mrr <- round(mr, 3)
+  opar <- par(mfrow=c(2, 2), mar=c(2.5, 3.3, 4, 0.8))
+  on.exit(par(opar))
+  if (!"spictcls" %in% class(rep)) stop("This function only works with a fitted spict object (class 'spictcls'). Please run `fit.spict` first.")
+  if (!"retro" %in% names(rep)) stop("No results of the retro function found. Please run the retrospective analysis using the `retro` function.")
+  if (add.mohn) {
+    mr <- suppressMessages(mohns_rho(rep, what = c("FFmsy", "BBmsy")))
+    mrr <- round(mr, 3)
+  }
+  nruns <- length(rep$retro)
+  bs <- bbs <- fs <- ffs <- time <- conv <- list()
+  for (i in 1:nruns) {
+    bs[[i]] <- get.par('logB', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
+    bbs[[i]] <- get.par('logBBmsy', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
+    fs[[i]] <- get.par('logFnotS', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
+    ffs[[i]] <- get.par('logFFmsynotS', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
+    time[[i]] <- rep$retro[[i]]$inp$time[rep$retro[[i]]$inp$indest]
+    conv[[i]] <- rep$retro[[i]]$opt$convergence
+  }
+  conv <- ifelse(unlist(conv) == 0, TRUE, FALSE)
+  sel <- function(x) x[,2]
+  ## Do plots
+  cols <- cols()
+  ylim <- range(0, sapply(bs[conv], sel), na.rm = TRUE) * 1.2
+  plot(time[[1]], sel(bs[[1]]), type = 'n', ylim = ylim, xlab='', ylab = "", lwd=1.5)
+  title(ylab = expression(B[t]), line = 2.2)
+  polygon(c(time[[1]], rev(time[[1]])), c(bs[[1]][,1], rev(bs[[1]][,3])), col = "lightgrey", border = NA)
+  for (i in seq(nruns)) {
+    if (conv[i]) {
+      lines(time[[i]], sel(bs[[i]]), col=cols[i], lwd=2)
     }
-    nruns <- length(rep$retro)
-    bs <- bbs <- fs <- ffs <- time <- conv <- list()
-    for (i in 1:nruns) {
-        bs[[i]] <- get.par('logB', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
-        bbs[[i]] <- get.par('logBBmsy', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
-        fs[[i]] <- get.par('logFnotS', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
-        ffs[[i]] <- get.par('logFFmsynotS', rep$retro[[i]], exp=TRUE, CI = CI)[rep$retro[[i]]$inp$indest, 1:3]
-        time[[i]] <- rep$retro[[i]]$inp$time[rep$retro[[i]]$inp$indest]
-        conv[[i]] <- rep$retro[[i]]$opt$convergence
+  }
+  par(lend = 2)
+  s <- seq(nruns)
+  lbls <- c("All", ifelse(conv[-1], paste0("-", s[-length(s)]), ""))[conv]
+  cls <- cols[s][conv]
+  if (sum(conv) <= 10) {
+    ncol <- sum(conv)
+  } else {
+    ncol <- ceiling(sum(conv) / 2)
+    a <- seq(ncol)
+    b <- seq(ncol + 1, sum(conv) + sum(conv) %% 2)
+    w <- unique(c(rbind(a, b)))
+    lbls <- lbls[w]
+    cls <- cls[w]
+  }
+  usr <- par("usr")
+  xx <- usr[2] + diff(usr[c(1, 2)]) * 0.1
+  yy <- mean(usr[4])
+  legend(xx, yy, title = "Number of retrospective years",
+         xjust = 0.5, yjust = 0.1, legend = lbls, ncol = ncol,
+         col = cls, lty = 1, seg.len = 1, lwd = 6,
+         x.intersp = 0.5, bg = "transparent", box.lwd = 0, box.lty = 0, xpd = NA)
+  par(lend = 1)
+  box(lwd=1.5)
+  plot(time[[1]], sel(fs[[1]]), typ='n',
+       ylim = range(0, sapply(fs[conv], sel), na.rm = TRUE) * 1.2,
+       xlab='', ylab = "", lwd=1.5)
+  title(ylab = expression(F[t]), line = 2.2)
+  polygon(c(time[[1]], rev(time[[1]])), c(fs[[1]][,1], rev(fs[[1]][,3])), col = "lightgrey", border = NA)
+  for (i in seq(nruns)) {
+    if (conv[i]) {
+      lines(time[[i]], sel(fs[[i]]), col=cols[i], lwd=2)
     }
-    conv <- ifelse(unlist(conv) == 0, TRUE, FALSE)
-    sel <- function(x) x[,2]
-    ## Do plots
-    cols <- cols()
-    ylim <- range(0, sapply(bs[conv], sel), na.rm = TRUE) * 1.2
-    plot(time[[1]], sel(bs[[1]]), type = 'n', ylim = ylim, xlab='', ylab = "", lwd=1.5)
-    title(ylab = expression(B[t]), line = 2.2)
-    polygon(c(time[[1]], rev(time[[1]])), c(bs[[1]][,1], rev(bs[[1]][,3])), col = "lightgrey", border = NA)
-    for (i in seq(nruns)) {
-        if (conv[i]) {
-            lines(time[[i]], sel(bs[[i]]), col=cols[i], lwd=2)
-        }
+  }
+  box(lwd=1.5)
+  par(mar=c(4, 3.3, 2.5, 0.8))
+  plot(time[[1]], sel(bbs[[1]]), typ='n',
+       ylim = range(0, sapply(bbs[conv], sel), na.rm = TRUE) * 1.2,
+       xlab='', ylab = "", lwd=1.5)
+  title(ylab = expression(B[t]/B[MSY]), line = 2.2)
+  polygon(c(time[[1]], rev(time[[1]])), c(bbs[[1]][,1], rev(bbs[[1]][,3])), col = "lightgrey", border = NA)
+  for (i in seq(nruns)){
+    if (conv[i]) {
+      lines(time[[i]], sel(bbs[[i]]), col=cols[i], lwd=2)
     }
-    par(lend = 2)
-    s <- seq(nruns)
-    lbls <- c("All", ifelse(conv[-1], paste0("-", s[-length(s)]), ""))[conv]
-    cls <- cols[s][conv]
-    if (sum(conv) <= 10) {
-        ncol <- sum(conv)
-    } else {
-        ncol <- ceiling(sum(conv) / 2)
-        a <- seq(ncol)
-        b <- seq(ncol + 1, sum(conv) + sum(conv) %% 2)
-        w <- unique(c(rbind(a, b)))
-        lbls <- lbls[w]
-        cls <- cls[w]
+  }
+  if (add.mohn) mtext(bquote("Mohn's " * rho[B/B[MSY]] * " = " * .(unname(mrr["BBmsy"]))), 3, 0.1 )
+  box(lwd=1.5)
+  plot(time[[1]], sel(ffs[[1]]), typ = 'n',
+       ylim = range(0, sapply(ffs[conv], sel), na.rm = TRUE) * 1.2, xlab = '', ylab = "", lwd=1.5)
+  title(ylab = expression(F[t] / F[MSY]), line = 2.2)
+  polygon(c(time[[1]], rev(time[[1]])), c(ffs[[1]][,1], rev(ffs[[1]][,3])), col = "lightgray", border = NA)
+  for (i in seq(nruns)){
+    if (conv[i]) {
+      lines(time[[i]], sel(ffs[[i]]), col=cols[i], lwd=2)
     }
-    usr <- par("usr")
-    xx <- usr[2] + diff(usr[c(1, 2)]) * 0.1
-    yy <- mean(usr[4])
-    legend(xx, yy, title = "Number of retrospective years",
-           xjust = 0.5, yjust = 0.1, legend = lbls, ncol = ncol,
-           col = cls, lty = 1, seg.len = 1, lwd = 6,
-           x.intersp = 0.5, bg = "transparent", box.lwd = 0, box.lty = 0, xpd = NA)
-    par(lend = 1)
-    box(lwd=1.5)
-    plot(time[[1]], sel(fs[[1]]), typ='n',
-         ylim = range(0, sapply(fs[conv], sel), na.rm = TRUE) * 1.2,
-         xlab='', ylab = "", lwd=1.5)
-    title(ylab = expression(F[t]), line = 2.2)
-    polygon(c(time[[1]], rev(time[[1]])), c(fs[[1]][,1], rev(fs[[1]][,3])), col = "lightgrey", border = NA)
-    for (i in seq(nruns)) {
-        if (conv[i]) {
-            lines(time[[i]], sel(fs[[i]]), col=cols[i], lwd=2)
-        }
-    }
-    box(lwd=1.5)
-    par(mar=c(4, 3.3, 2.5, 0.8))
-    plot(time[[1]], sel(bbs[[1]]), typ='n',
-         ylim = range(0, sapply(bbs[conv], sel), na.rm = TRUE) * 1.2,
-         xlab='', ylab = "", lwd=1.5)
-    title(ylab = expression(B[t]/B[MSY]), line = 2.2)
-    polygon(c(time[[1]], rev(time[[1]])), c(bbs[[1]][,1], rev(bbs[[1]][,3])), col = "lightgrey", border = NA)
-    for (i in seq(nruns)){
-        if (conv[i]) {
-            lines(time[[i]], sel(bbs[[i]]), col=cols[i], lwd=2)
-        }
-    }
-    if (add.mohn) mtext(bquote("Mohn's " * rho[B/B[MSY]] * " = " * .(unname(mrr["BBmsy"]))), 3, 0.1 )
-    box(lwd=1.5)
-    plot(time[[1]], sel(ffs[[1]]), typ = 'n',
-         ylim = range(0, sapply(ffs[conv], sel), na.rm = TRUE) * 1.2, xlab = '', ylab = "", lwd=1.5)
-    title(ylab = expression(F[t] / F[MSY]), line = 2.2)
-    polygon(c(time[[1]], rev(time[[1]])), c(ffs[[1]][,1], rev(ffs[[1]][,3])), col = "lightgray", border = NA)
-    for (i in seq(nruns)){
-        if (conv[i]) {
-            lines(time[[i]], sel(ffs[[i]]), col=cols[i], lwd=2)
-        }
-    }
-    #if (add.mohn) mtext(paste("Mohn's rho = ", mrr["FFmsy"]), 3, 0.2)
-    if (add.mohn) mtext(bquote("Mohn's " * rho[F/F[MSY]] * " = " * .(unname(mrr["FFmsy"]))), 3, 0.1 )
-    box(lwd=1.5)
-    txt.stamp(stamp, do.flag=TRUE)
-    nnotconv <- sum(!conv)
-    if (nnotconv > 0) {
-        message("Excluded ", nnotconv, " retrospective runs that ",
-                if (nnotconv == 1) "was" else "were" , " not converged: ",
-                paste(which(!conv) - 1, collapse = ", "))
-    }
-    if (add.mohn) mr else invisible(NULL)
+  }
+  #if (add.mohn) mtext(paste("Mohn's rho = ", mrr["FFmsy"]), 3, 0.2)
+  if (add.mohn) mtext(bquote("Mohn's " * rho[F/F[MSY]] * " = " * .(unname(mrr["FFmsy"]))), 3, 0.1 )
+  box(lwd=1.5)
+  txt.stamp(stamp, do.flag=TRUE)
+  nnotconv <- sum(!conv)
+  if (nnotconv > 0) {
+    message("Excluded ", nnotconv, " retrospective runs that ",
+            if (nnotconv == 1) "was" else "were" , " not converged: ",
+            paste(which(!conv) - 1, collapse = ", "))
+  }
+  if (add.mohn) mr else invisible(NULL)
 }
 #' @rdname plotspict.retro
 #' @export
 plotspict.retro.fixed <- function(rep, CI = 0.95) {
-    if (!"spictcls" %in% class(rep)) stop("This function only works with a fitted spict object (class 'spictcls'). Please run `fit.spict` first.")
-    if (!"retro" %in% names(rep)) stop("No results of the retro function found. Please run the retrospective analysis using the `retro` function.")
-    cols <- cols()
-    conv <- sapply(rep$retro, function(x) x$opt$convergence == 0)
-    nnotconv <- sum(!conv)
-    if (nnotconv > 0) {
-        message("Excluded ", nnotconv, " retrospective ",
-                if (nnotconv == 1) "run" else "runs" ," that ",
-                if (nnotconv == 1) "was" else "were" , " not converged: ",
-                paste(which(!conv) - 1, collapse = ", "))
-    }
-    s <- seq_along(rep$retro)
-    nms <- names(rep$par.fixed)
-    nnms <- length(nms)
-    nc <- ceiling(nnms/3)
-    nr <- ceiling(nnms/nc)
-    ## n <- ceiling(sqrt(length(nms)))
-    lbls <- c("All", ifelse(conv[-1], paste0("-", s[-length(s)]), ""))
-    opar <- par(mfrow = c(nr, nc), mar = c(3, 3, 1, 1), oma = c(3, 3, 1, 1))
-    on.exit(par(opar))
-    for (par in unique(nms)) {
-        nreps <- sum(nms == par)
-        rownames <- if (nreps == 1) par else paste0(par, seq(nreps))
-        ms <- lapply(rep$retro, function(x) {
-            if (x$opt$convergence == 0) {
-                p <- get.par(par, x, exp = TRUE, CI = CI)
-                rownames(p) <- rownames
-                p
-            } else {
-                matrix(NA, ncol = 5, nrow = nreps, dimnames = list(rownames, c("ll", "est", "ul", "sd", "cv")))
-            }
-        })
+  if (!"spictcls" %in% class(rep)) stop("This function only works with a fitted spict object (class 'spictcls'). Please run `fit.spict` first.")
+  if (!"retro" %in% names(rep)) stop("No results of the retro function found. Please run the retrospective analysis using the `retro` function.")
+  cols <- cols()
+  conv <- sapply(rep$retro, function(x) x$opt$convergence == 0)
+  nnotconv <- sum(!conv)
+  if (nnotconv > 0) {
+    message("Excluded ", nnotconv, " retrospective ",
+            if (nnotconv == 1) "run" else "runs" ," that ",
+            if (nnotconv == 1) "was" else "were" , " not converged: ",
+            paste(which(!conv) - 1, collapse = ", "))
+  }
+  s <- seq_along(rep$retro)
+  nms <- names(rep$par.fixed)
+  nnms <- length(nms)
+  nc <- ceiling(nnms/3)
+  nr <- ceiling(nnms/nc)
+  ## n <- ceiling(sqrt(length(nms)))
+  lbls <- c("All", ifelse(conv[-1], paste0("-", s[-length(s)]), ""))
+  opar <- par(mfrow = c(nr, nc), mar = c(3, 3, 1, 1), oma = c(3, 3, 1, 1))
+  on.exit(par(opar))
+  for (par in unique(nms)) {
+    nreps <- sum(nms == par)
+    rownames <- if (nreps == 1) par else paste0(par, seq(nreps))
+    ms <- lapply(rep$retro, function(x) {
+      if (x$opt$convergence == 0) {
+        p <- get.par(par, x, exp = TRUE, CI = CI)
+        rownames(p) <- rownames
+        p
+      } else {
+        matrix(NA, ncol = 5, nrow = nreps, dimnames = list(rownames, c("ll", "est", "ul", "sd", "cv")))
+      }
+    })
 
-        for (r in seq(nreps)) {
-            vals <- if (nreps == 1) do.call(rbind, ms) else t(sapply(ms, function(x) x[r, ]))
-            ylim <- range(vals[, 1:3], 0, na.rm = TRUE) * 1.05
-            plot(vals[, 2], ylim = ylim, axes = FALSE, ylab = "", xlab = "", yaxs = "i", pch = 20, col = cols, cex = 1.5)
-            arrows(s, vals[, 1], s, vals[, 3], angle = 90, length = 0.05, code = 3, lwd = 3, col = cols)
-            mtext(sub("log", "", rownames[r]), line = 0.2, cex = 1, font = 2)
-            axis(1, at = s, labels = lbls, las = 2)
-            if (nnotconv > 0) {
-                mtext(c("All", paste0("-", s[-length(s)]))[!conv], at = s[!conv], side = 1, las = 2, line = 1, col = 2, cex = 0.7)
-            }
-            axis(2)
-            box()
-        }
+    for (r in seq(nreps)) {
+      vals <- if (nreps == 1) do.call(rbind, ms) else t(sapply(ms, function(x) x[r, ]))
+      ylim <- range(vals[, 1:3], 0, na.rm = TRUE) * 1.05
+      plot(vals[, 2], ylim = ylim, axes = FALSE, ylab = "", xlab = "", yaxs = "i", pch = 20, col = cols, cex = 1.5)
+      arrows(s, vals[, 1], s, vals[, 3], angle = 90, length = 0.05, code = 3, lwd = 3, col = cols)
+      mtext(sub("log", "", rownames[r]), line = 0.2, cex = 1, font = 2)
+      axis(1, at = s, labels = lbls, las = 2)
+      if (nnotconv > 0) {
+        mtext(c("All", paste0("-", s[-length(s)]))[!conv], at = s[!conv], side = 1, las = 2, line = 1, col = 2, cex = 0.7)
+      }
+      axis(2)
+      box()
     }
-    mtext("Parameter estimate", 2, 0.5, outer=TRUE, cex = 1.2)
-    mtext("Number of retrospective years", 1, 0.5, outer=TRUE, cex = 1.2)
-    invisible(NULL)
+  }
+  mtext("Parameter estimate", 2, 0.5, outer=TRUE, cex = 1.2)
+  mtext("Number of retrospective years", 1, 0.5, outer=TRUE, cex = 1.2)
+  invisible(NULL)
 }
 
 
@@ -2722,91 +2722,91 @@ plotspict.retro.fixed <- function(rep, CI = 0.95) {
 #' @return Nothing
 #' @export
 plotspict.ci <- function(inp, stamp=get.version()){
-    #op <- par()
-    inp <- check.inp(inp)
-    if (sum(inp$nobsI) > 0){
-        # Remove effort observations as they are not used in this plot
-        inp$obsE <- NULL
-        inp$timeE <- NULL
-        c <- guess.m(inp, all.return=TRUE)
-        out <- get.catchindexoverlap(inp)
-        time <- out$ty
-        y <- out$y
-        z <- out$z
-        #time <- inp$timeC
-        #y <- inp$obsC
-        #z <- inp$obsI[[1]]
-        mfrow <- c(3, 2)
-        if (class(c) == 'list'){ # A regression line could be fitted
-            MSY <- c$MSY
-            Emsy <- c$Emsy
-            a <- c$a
-            b <- c$b
-            x <- c$x
-            mod0 <- c$mod0
-            xlim <- Re(polyroot(c(0, a, b)))
-            xp <- data.frame('x'=seq(xlim[1], xlim[2], length=100))
-            yp <- a*xp$x + b*xp$x^2 # Dome
-            yp0 <- predict(mod0, xp)
-        } else {
-            MSY <- c
-            mfrow <- c(1, 2)
-        }
-        if (inp$nseasons > 1){
-            if (inp$nindex %in% 1) mfrow <- c(2, 2)
-            if (inp$nindex %in% 2:3) mfrow <- c(2, 3)
-            if (inp$nindex %in% 4:5) mfrow <- c(2, 4)
-        }
-        opar <- par(mfrow=mfrow)
-        on.exit(par(opar))
-        plot.seasondiff <- function(time, obs, ylab='Obs'){
-            dt <- time[-length(time)]
-            dy <- diff(log(obs))
-            plot(dt, dy, typ='n', col='lightgray', ylab=ylab, xlab='Time')
-            plot.col(dt, dy, do.line=FALSE, add=TRUE, typ='l')
-            abline(h=0, lty=2, col='gray')
-            box(lwd=1.5)
-        }
-        # Plot data
-        plotspict.data(inp, MSY=MSY, one.index=1, stamp='')
-        # Plot seasonal patterns
-        if (inp$nseasons > 1){
-            plot.seasondiff(inp$timeC, inp$obsC, ylab='diff log catch')
-            for (i in 1:inp$nindex){
-                plot.seasondiff(inp$timeI[[i]], inp$obsI[[i]], ylab='diff log index 1')
-            }
-        }
-        if (class(c) == 'list' & inp$nseasons == 1){
-            #
-            plot(x, z, typ='l', xlim=xlim, ylab='Index', xlab='Catch/Index (E, effort proxy)',
-                 main=paste('R-squared:', round(summary(mod0)$r.squared, 3)), ylim=range(0, a, z))
-            plot.col(time, z, obsx=x, do.line=FALSE, add=TRUE)
-            lines(xp$x, yp0, col=4)
-            box(lwd=1.5)
-            #
-            plot(x, y, typ='l', xlim=xlim, ylim=range(0, y, yp), ylab='Catch',
-                 xlab='Catch/Index (E, effort proxy)', main=paste('Emsy guess:', round(Emsy, 3)))
-            plot.col(time, y, obsx=x, do.line=FALSE, add=TRUE)
-            abline(h=MSY, lty=2)
-            lines(xp$x, yp, col=4)
-            box(lwd=1.5)
-            #
-            plot(z, y, typ='b', ylab='Catch', xlab='Index')
-            plot.col(time, y, obsx=z, do.line=FALSE, add=TRUE)
-            abline(h=MSY, lty=2)
-            box(lwd=1.5)
-            #
-            plot(y[-length(y)], diff(z)/z[-length(z)], typ='b', xlab='Catch', ylab='Prop. incr. in index')
-            plot.col(time, diff(z)/z[-length(z)], obsx=y[-length(y)], do.line=FALSE, add=TRUE)
-            abline(h=0, lty=2)
-            abline(v=MSY, lty=2)
-            box(lwd=1.5)
-        }
+  #op <- par()
+  inp <- check.inp(inp)
+  if (sum(inp$nobsI) > 0){
+    # Remove effort observations as they are not used in this plot
+    inp$obsE <- NULL
+    inp$timeE <- NULL
+    c <- guess.m(inp, all.return=TRUE)
+    out <- get.catchindexoverlap(inp)
+    time <- out$ty
+    y <- out$y
+    z <- out$z
+    #time <- inp$timeC
+    #y <- inp$obsC
+    #z <- inp$obsI[[1]]
+    mfrow <- c(3, 2)
+    if (class(c) == 'list'){ # A regression line could be fitted
+      MSY <- c$MSY
+      Emsy <- c$Emsy
+      a <- c$a
+      b <- c$b
+      x <- c$x
+      mod0 <- c$mod0
+      xlim <- Re(polyroot(c(0, a, b)))
+      xp <- data.frame('x'=seq(xlim[1], xlim[2], length=100))
+      yp <- a*xp$x + b*xp$x^2 # Dome
+      yp0 <- predict(mod0, xp)
     } else {
-        plotspict.data(inp)
+      MSY <- c
+      mfrow <- c(1, 2)
     }
-    txt.stamp(stamp)
-    #par(op)
+    if (inp$nseasons > 1){
+      if (inp$nindex %in% 1) mfrow <- c(2, 2)
+      if (inp$nindex %in% 2:3) mfrow <- c(2, 3)
+      if (inp$nindex %in% 4:5) mfrow <- c(2, 4)
+    }
+    opar <- par(mfrow=mfrow)
+    on.exit(par(opar))
+    plot.seasondiff <- function(time, obs, ylab='Obs'){
+      dt <- time[-length(time)]
+      dy <- diff(log(obs))
+      plot(dt, dy, typ='n', col='lightgray', ylab=ylab, xlab='Time')
+      plot.col(dt, dy, do.line=FALSE, add=TRUE, typ='l')
+      abline(h=0, lty=2, col='gray')
+      box(lwd=1.5)
+    }
+    # Plot data
+    plotspict.data(inp, MSY=MSY, one.index=1, stamp='')
+    # Plot seasonal patterns
+    if (inp$nseasons > 1){
+      plot.seasondiff(inp$timeC, inp$obsC, ylab='diff log catch')
+      for (i in 1:inp$nindex){
+        plot.seasondiff(inp$timeI[[i]], inp$obsI[[i]], ylab='diff log index 1')
+      }
+    }
+    if (class(c) == 'list' & inp$nseasons == 1){
+      #
+      plot(x, z, typ='l', xlim=xlim, ylab='Index', xlab='Catch/Index (E, effort proxy)',
+           main=paste('R-squared:', round(summary(mod0)$r.squared, 3)), ylim=range(0, a, z))
+      plot.col(time, z, obsx=x, do.line=FALSE, add=TRUE)
+      lines(xp$x, yp0, col=4)
+      box(lwd=1.5)
+      #
+      plot(x, y, typ='l', xlim=xlim, ylim=range(0, y, yp), ylab='Catch',
+           xlab='Catch/Index (E, effort proxy)', main=paste('Emsy guess:', round(Emsy, 3)))
+      plot.col(time, y, obsx=x, do.line=FALSE, add=TRUE)
+      abline(h=MSY, lty=2)
+      lines(xp$x, yp, col=4)
+      box(lwd=1.5)
+      #
+      plot(z, y, typ='b', ylab='Catch', xlab='Index')
+      plot.col(time, y, obsx=z, do.line=FALSE, add=TRUE)
+      abline(h=MSY, lty=2)
+      box(lwd=1.5)
+      #
+      plot(y[-length(y)], diff(z)/z[-length(z)], typ='b', xlab='Catch', ylab='Prop. incr. in index')
+      plot.col(time, diff(z)/z[-length(z)], obsx=y[-length(y)], do.line=FALSE, add=TRUE)
+      abline(h=0, lty=2)
+      abline(v=MSY, lty=2)
+      box(lwd=1.5)
+    }
+  } else {
+    plotspict.data(inp)
+  }
+  txt.stamp(stamp)
+  #par(op)
 }
 
 
@@ -2826,95 +2826,95 @@ plotspict.ci <- function(inp, stamp=get.version()){
 #'
 #' @export
 plotspict.priors <- function(rep, do.plot=NULL, stamp=get.version(), automfrow=TRUE, CI = 0.95){
-    inp <- rep$inp
-    useflags <- inp$priorsuseflags
-    inds <- which(useflags == 1)
-    ninds <- length(inds)
-    if(!is.null(do.plot)) automfrow <- FALSE
-    if(automfrow) {
-        nopriors <- get.no.active.priors(inp)
-        op <- par(mfrow=n2mfrow(nopriors))
-        on.exit(par(op))
-    }
-    counter <- 0
-    nused <- sum(useflags)
-    if (ninds > 0){
-        for (i in 1:ninds){
-            j <- inds[i]
-            priorvec <- inp$priors[[j]]
-            nm <- names(inp$priors)[j]
-            isGamma <- FALSE
-            nmpl <- sub('log', '', nm)
-            nmpl <- sub('gamma','',nmpl)
-            par <- get.par(nm, rep, exp=FALSE, CI = CI)
+  inp <- rep$inp
+  useflags <- inp$priorsuseflags
+  inds <- which(useflags == 1)
+  ninds <- length(inds)
+  if(!is.null(do.plot)) automfrow <- FALSE
+  if(automfrow) {
+    nopriors <- get.no.active.priors(inp)
+    op <- par(mfrow=n2mfrow(nopriors))
+    on.exit(par(op))
+  }
+  counter <- 0
+  nused <- sum(useflags)
+  if (ninds > 0){
+    for (i in 1:ninds){
+      j <- inds[i]
+      priorvec <- inp$priors[[j]]
+      nm <- names(inp$priors)[j]
+      isGamma <- FALSE
+      nmpl <- sub('log', '', nm)
+      nmpl <- sub('gamma','',nmpl)
+      par <- get.par(nm, rep, exp=FALSE, CI = CI)
 
-            if (length(grep('gamma', nm)) == 1){
-                isGamma <- TRUE
-                if(nm=="logngamma") par <- get.par("logn",rep,exp=FALSE, CI = CI)
-            }
+      if (length(grep('gamma', nm)) == 1){
+        isGamma <- TRUE
+        if(nm=="logngamma") par <- get.par("logn",rep,exp=FALSE, CI = CI)
+      }
 
-            repriors <- c('logB', 'logF', 'logBBmsy', 'logFFmsy')
-            if (nm %in% repriors){
-                par <- par[priorvec[5], , drop=FALSE]
-                nmpl <- paste0(nmpl, fd(priorvec[4]))
-                if (nm == 'logB'){
-                    nmpl <- add.catchunit(nmpl, inp$catchunit)
-                }
-            }
-            for (rr in 1:nrow(par)){
-                if (nrow(par) > 1){
-                    nmpl <- paste0(nmpl, rr)
-                }
-                prvec <- priorvec
-                if(is.list(priorvec)) prvec <- priorvec[[rr]]
-                mu <- ifelse(is.na(par[rr, 4]), prvec[1], par[rr, 2])
-                sd <- ifelse(is.na(par[rr, 4]), prvec[2], par[rr, 4])
-                if(isGamma && is.na(par[rr, 4])){
-                    xmin <- 1e-12
-                    xmax <- qgamma(0.99,shape=mu,rate=sd)
-                } else {
-                    xmin <- mu - 3*sd
-                    xmax <- mu + 3*sd
-                }
-                xpr <- xpo <- seq(xmin, xmax, length=200)
-                if(!isGamma) {
-                    priorvals <- dnorm(xpr, prvec[1], prvec[2])
-                }  else  {
-                    priorvals <- dgamma(xpr, prvec[1], prvec[2])
-                }
-
-                if (is.na(par[rr, 4])){
-                    posteriorvals <- NULL
-                } else {
-                    if(isGamma) xpo <- seq(mu - 3*sd, mu + 3*sd, length=200)
-                    posteriorvals <- dnorm(xpo, par[rr, 2], par[rr, 4])
-                }
-                plot(exp(xpr), priorvals, typ='l', xlab=nmpl, ylab='Density', log='x',
-                     lwd=1.5, ylim=c(0, max(priorvals, posteriorvals)*1.3))
-                if (is.na(par[rr, 4])){
-                    if (!is.na(par[rr, 2])){
-                        abline(v=exp(par[rr, 2]), lty=2, col=3, lwd=1.5)
-                    }
-                    legend('topright', legend=c('Prior', 'Post. Mean'), lty=1:2,
-                           col=c(1, 3), lwd=1.5, bg="transparent")
-                } else {
-                    lines(exp(xpo), posteriorvals, col=3, lwd=1.5)
-                    legend('topright', legend=c('Prior', 'Post.'), lty=1,
-                           col=c(1, 3), lwd=1.5, bg="transparent", box.lwd = 0)
-                }
-                box(lwd=1.5)
-                if (rep$opt$convergence != 0){
-                    warning.stamp()
-                }
-                counter <- counter + 1
-                if(!is.null(do.plot) && counter >= do.plot) {
-                    txt.stamp(stamp)
-                    return()
-                }
-            }
+      repriors <- c('logB', 'logF', 'logBBmsy', 'logFFmsy')
+      if (nm %in% repriors){
+        par <- par[priorvec[5], , drop=FALSE]
+        nmpl <- paste0(nmpl, fd(priorvec[4]))
+        if (nm == 'logB'){
+          nmpl <- add.catchunit(nmpl, inp$catchunit)
         }
-        txt.stamp(stamp)
+      }
+      for (rr in 1:nrow(par)){
+        if (nrow(par) > 1){
+          nmpl <- paste0(nmpl, rr)
+        }
+        prvec <- priorvec
+        if(is.list(priorvec)) prvec <- priorvec[[rr]]
+        mu <- ifelse(is.na(par[rr, 4]), prvec[1], par[rr, 2])
+        sd <- ifelse(is.na(par[rr, 4]), prvec[2], par[rr, 4])
+        if(isGamma && is.na(par[rr, 4])){
+          xmin <- 1e-12
+          xmax <- qgamma(0.99,shape=mu,rate=sd)
+        } else {
+          xmin <- mu - 3*sd
+          xmax <- mu + 3*sd
+        }
+        xpr <- xpo <- seq(xmin, xmax, length=200)
+        if(!isGamma) {
+          priorvals <- dnorm(xpr, prvec[1], prvec[2])
+        }  else  {
+          priorvals <- dgamma(xpr, prvec[1], prvec[2])
+        }
+
+        if (is.na(par[rr, 4])){
+          posteriorvals <- NULL
+        } else {
+          if(isGamma) xpo <- seq(mu - 3*sd, mu + 3*sd, length=200)
+          posteriorvals <- dnorm(xpo, par[rr, 2], par[rr, 4])
+        }
+        plot(exp(xpr), priorvals, typ='l', xlab=nmpl, ylab='Density', log='x',
+             lwd=1.5, ylim=c(0, max(priorvals, posteriorvals)*1.3))
+        if (is.na(par[rr, 4])){
+          if (!is.na(par[rr, 2])){
+            abline(v=exp(par[rr, 2]), lty=2, col=3, lwd=1.5)
+          }
+          legend('topright', legend=c('Prior', 'Post. Mean'), lty=1:2,
+                 col=c(1, 3), lwd=1.5, bg="transparent")
+        } else {
+          lines(exp(xpo), posteriorvals, col=3, lwd=1.5)
+          legend('topright', legend=c('Prior', 'Post.'), lty=1,
+                 col=c(1, 3), lwd=1.5, bg="transparent", box.lwd = 0)
+        }
+        box(lwd=1.5)
+        if (rep$opt$convergence != 0){
+          warning.stamp()
+        }
+        counter <- counter + 1
+        if(!is.null(do.plot) && counter >= do.plot) {
+          txt.stamp(stamp)
+          return()
+        }
+      }
     }
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -2929,159 +2929,163 @@ plotspict.priors <- function(rep, do.plot=NULL, stamp=get.version(), automfrow=T
 #' @export
 plotspict.data <- function(inpin, MSY=NULL, one.index=NULL, qlegend=TRUE, stamp=get.version()){
 
-    ## Check if fitted spict object
-    isrep <- ifelse(inherits(inpin, "spictcls") && "opt" %in% names(inpin), 1, 0)
-    if(isrep){
-        inpin <- inpin$inp
-    }
-    inp <- check.inp(inpin)
+  ## Check if fitted spict object
+  isrep <- ifelse(inherits(inpin, "spictcls") && "opt" %in% names(inpin), 1, 0)
+  if(isrep){
+    inpin <- inpin$inp
+  }
+  inp <- check.inp(inpin)
 
 
-    #nseries <- inp$nindex + 1 + as.numeric(inp$nobsE > 0)
-    nseries <- inp$nseries + as.numeric(inp$logmcovflag)
-    if ('true' %in% names(inp)){
-        nseries <- nseries + 2
-        if (inp$timevaryinggrowth){
-            nseries <- nseries + 1
-        }
+  #nseries <- inp$nindex + 1 + as.numeric(inp$nobsE > 0)
+  nseries <- inp$nseries + as.numeric(inp$logmcovflag)
+  if ('true' %in% names(inp)){
+    nseries <- nseries + 2
+    if (inp$timevaryinggrowth){
+      nseries <- nseries + 1
     }
-    mfrow <- get.mfrow(nseries)
-    if (dev.cur() == 1){
-        opar <- par(mfrow=mfrow)
-        on.exit(par(opar))
-    } else {
-        if (sum(par()$mfrow) == 2){
-            opar <- par(mfrow=mfrow)
-            on.exit(par(opar))
-        }
+  }
+  mfrow <- get.mfrow(nseries)
+  if (dev.cur() == 1){
+    opar <- par(mfrow=mfrow)
+    on.exit(par(opar))
+  } else {
+    if (sum(par()$mfrow) == 2){
+      opar <- par(mfrow=mfrow)
+      on.exit(par(opar))
     }
-    xlim <- range(inp$timeC, unlist(inp$timeI), inp$timeE)
-    # Plot simulated biomass and fishing mortality
-    if ('true' %in% names(inp)){
-        if (inp$timevaryinggrowth){
-            plot(inp$true$time, inp$true$mre, typ='l', xlim=xlim, xlab='Time', ylab='m',
-                 lwd=1.5, col=true.col(), main='True MSY')
-            box(lwd=1.5)
-        }
-      plot(inp$true$time, inp$true$F, typ='l', col=true.col(), xlim=xlim, xlab='Time',
-           ylab=expression(F[t]), lwd=1.5, main='True F')
-        box(lwd=1.5)
-        ylab <- add.catchunit(expression(B[t]), inp$catchunit)
-        plot(inp$true$time, inp$true$B, typ='l', xlim=xlim, xlab='Time', ylab=ylab,
-             lwd=1.5, col=true.col(), main='True biomass')
-        box(lwd=1.5)
+  }
+  xlim <- range(inp$timeC, unlist(inp$timeI), inp$timeE)
+  # Plot simulated biomass and fishing mortality
+  if ('true' %in% names(inp)){
+    if (inp$timevaryinggrowth){
+      plot(inp$true$time, inp$true$mre, typ='l', xlim=xlim, xlab='Time', ylab='m',
+           lwd=1.5, col=true.col(), main='True MSY')
+      box(lwd=1.5)
     }
-    # Plot catch
-    main <- paste0('Nobs C: ', inp$nobsC)
-    ylab <- 'Catch'
-    ylab <- add.catchunit(ylab, inp$catchunit)
-    plot(inp$timeC, inp$obsC, typ='l', ylab=ylab, xlab='Time', main=main, xlim=xlim)
+    plot(inp$true$time, inp$true$F, typ='l', col=true.col(), xlim=xlim, xlab='Time',
+         ylab=expression(F[t]), lwd=1.5, main='True F')
+    box(lwd=1.5)
+    ylab <- add.catchunit(expression(B[t]), inp$catchunit)
+    plot(inp$true$time, inp$true$B, typ='l', xlim=xlim, xlab='Time', ylab=ylab,
+         lwd=1.5, col=true.col(), main='True biomass')
+    box(lwd=1.5)
+  }
+  # Plot catch
+  main <- paste0('Nobs C: ', inp$nobsC)
+  ylab <- 'Catch'
+  ylab <- add.catchunit(ylab, inp$catchunit)
+  plot(inp$timeC, inp$obsC, typ='l', ylab=ylab, xlab='Time', main=main, xlim=xlim)
+  grid()
+  plot.col(inp$timeC, inp$obsC, do.line=FALSE, cex=0.6, add=TRUE, add.legend=qlegend)
+  if (!is.null(MSY)){
+    abline(h=MSY, lty=2)
+  }
+  box(lwd=1.5)
+  # Plot index
+  if (inp$nindex > 0){
+    i <- 1
+    main <- paste0('Nobs I: ', inp$nobsI[i])
+    plot(inp$timeI[[i]], inp$obsI[[i]], typ='l', ylab=paste('Index', i), xlab='Time',
+         main=main, xlim=xlim)
     grid()
-    plot.col(inp$timeC, inp$obsC, do.line=FALSE, cex=0.6, add=TRUE, add.legend=qlegend)
-    if (!is.null(MSY)){
-        abline(h=MSY, lty=2)
+    plot.col(inp$timeI[[i]], inp$obsI[[i]], pch=i, do.line=FALSE, cex=0.6, add=TRUE,
+             add.legend=FALSE)
+    if (inp$nindex>1 & is.null(one.index)){
+      for (i in 2:inp$nindex){
+        main <- paste0('Nobs I: ', inp$nobsI[i])
+        plot(inp$timeI[[i]], inp$obsI[[i]], typ='l', ylab=paste('Index', i),
+             xlab='Time', main=main, xlim=xlim)
+        grid()
+        plot.col(inp$timeI[[i]], inp$obsI[[i]], pch=i, do.line=FALSE, cex=0.6,
+                 add=TRUE, add.legend=FALSE)
+      }
     }
     box(lwd=1.5)
-    # Plot index
-    if (inp$nindex > 0){
-        i <- 1
-        main <- paste0('Nobs I: ', inp$nobsI[i])
-        plot(inp$timeI[[i]], inp$obsI[[i]], typ='l', ylab=paste('Index', i), xlab='Time',
-             main=main, xlim=xlim)
-        grid()
-        plot.col(inp$timeI[[i]], inp$obsI[[i]], pch=i, do.line=FALSE, cex=0.6, add=TRUE,
-                 add.legend=FALSE)
-        if (inp$nindex>1 & is.null(one.index)){
-            for (i in 2:inp$nindex){
-                main <- paste0('Nobs I: ', inp$nobsI[i])
-                plot(inp$timeI[[i]], inp$obsI[[i]], typ='l', ylab=paste('Index', i),
-                     xlab='Time', main=main, xlim=xlim)
-                grid()
-                plot.col(inp$timeI[[i]], inp$obsI[[i]], pch=i, do.line=FALSE, cex=0.6,
-                         add=TRUE, add.legend=FALSE)
-            }
-        }
-        box(lwd=1.5)
-    }
-    # Plot effort
-    if (inp$nobsE){
-        main <- paste0('Nobs E: ', inp$nobsE)
-        ylab <- 'Effort'
-        plot(inp$timeE, inp$obsE, typ='l', ylab=ylab, xlab='Time', main=main, xlim=xlim)
-        grid()
-        plot.col(inp$timeE, inp$obsE, do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
-        box(lwd=1.5)
-    }
-    # Plot covariate
-    if (inp$logmcovflag){
-        main <- paste0('Nobs logmcovariate: ', length(inp$logmcovariate))
-        ylab <- 'logm covariate'
-        plot(inp$time, inp$logmcovariatein, typ='l', ylab=ylab, xlab='Time',
-             main=main, xlim=xlim, col='blue', lwd=1.5)
-        grid()
-        plot.col(inp$logmcovariatetime, inp$logmcovariate, do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
-        box(lwd=1.5)
-    }
-    txt.stamp(stamp, do.flag=TRUE)
+  }
+  # Plot effort
+  if (inp$nobsE){
+    main <- paste0('Nobs E: ', inp$nobsE)
+    ylab <- 'Effort'
+    plot(inp$timeE, inp$obsE, typ='l', ylab=ylab, xlab='Time', main=main, xlim=xlim)
+    grid()
+    plot.col(inp$timeE, inp$obsE, do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
+    box(lwd=1.5)
+  }
+  # Plot covariate
+  if (inp$logmcovflag){
+    main <- paste0('Nobs logmcovariate: ', length(inp$logmcovariate))
+    ylab <- 'logm covariate'
+    plot(inp$time, inp$logmcovariatein, typ='l', ylab=ylab, xlab='Time',
+         main=main, xlim=xlim, col='blue', lwd=1.5)
+    grid()
+    plot.col(inp$logmcovariatetime, inp$logmcovariate, do.line=FALSE, cex=0.6, add=TRUE, add.legend=FALSE)
+    box(lwd=1.5)
+  }
+  txt.stamp(stamp, do.flag=TRUE)
 }
 
 
-#' @name plotspict.growth
-#' @title Plot estimated time-varying growth
-#' @details Plots estimated time-varying growth
-#' @param rep A result report as generated by running fit.spict.
-#' @param logax Take log of y-axis? default: FALSE
-#' @param main Title of plot.
-#' @param ylim Limits for y-axis.
-#' @param xlim Limits for x-axis.
-#' @param xlab Label of x-axis.
-#' @param plot.ci If TRUE 95\% CIs are included.
-#' @param stamp Stamp plot with this character string.
-#' @param CI Confidence intervals to be calculated, e.g. 0.9 for the 90\%
-#'     confidence intervals. By default (CI = 0.95), the 95\% confidence
-#'     intervals are estimated.
+#' Plot estimated time-varying growth
 #'
-#' @return Nothing.
+#' Plots the estimated time-varying growth trajectory from a fitted ELU/SPiCT-style model.
+#'
+#' @param rep A fitted result object as returned by [fit.elu2()] (or
+#'   \code{spict::fit.spict()} upstream).
+#' @param logax Logical; plot the y-axis on a log scale? Default \code{FALSE}.
+#' @param main Character plot title. Default \code{"Time-varying growth"}.
+#' @param ylim,xlim Numeric length-2 axis limits. Default \code{NULL}.
+#' @param xlab Character x-axis label. Default \code{"Time"}.
+#' @param plot.ci Logical; if \code{TRUE}, draw 95\% intervals. Default \code{TRUE}.
+#' @param stamp Character stamp placed on the plot (e.g., version string).
+#'   Default \code{get.version()}.
+#' @param CI Confidence level for intervals (e.g., \code{0.90} for 90\%). Default \code{0.95}.
+#'
+#' @return Invisibly, \code{NULL}.
+#'
+#' @examplesIf FALSE
+#' rep <- fit.elu2(inp)
+#' plotspict.growth(rep, plot.ci = TRUE)
 #'
 #' @export
 plotspict.growth <- function(rep, logax=FALSE, main='Time-varying growth', ylim=NULL,
                              xlim=NULL, xlab='Time', plot.ci=TRUE, stamp=get.version(), CI = 0.95){
-    if (!'sderr' %in% names(rep) & rep$inp$timevaryinggrowth){
-        log <- ifelse(logax, 'y', '')
-        inp <- rep$inp
-        rre <- get.par('logrre', rep, exp=TRUE, CI = CI)
-        r <- get.par('logr', rep, exp=TRUE, CI = CI)[, 2]
-        time <- inp$time
-        if (is.null(ylim)){
-            if (length(ylim) != 2){
-                if (plot.ci){
-                    ylim <- range(rre[, 1:3], na.rm=TRUE)
-                } else {
-                    ylim <- range(rre[, 2], na.rm=TRUE)
-                }
-            }
-        }
-        if (is.null(xlim)){
-            if (length(xlim) != 2){
-                xlim <- range(c(time, tail(time, 1) + 0.5))
-            }
-        }
-        plot(time, rre[, 2], typ='n', xlab=xlab, ylab=expression(r[t]), ylim=ylim,
-             xlim=xlim, log=log, main=main)
-        gr <- 0.7
-        cicol2 <- rgb(0, gr, 0, 0.1)
-        abline(h=r, col=1)
+  if (!'sderr' %in% names(rep) & rep$inp$timevaryinggrowth){
+    log <- ifelse(logax, 'y', '')
+    inp <- rep$inp
+    rre <- get.par('logrre', rep, exp=TRUE, CI = CI)
+    r <- get.par('logr', rep, exp=TRUE, CI = CI)[, 2]
+    time <- inp$time
+    if (is.null(ylim)){
+      if (length(ylim) != 2){
         if (plot.ci){
-            polygon(c(time, rev(time)), c(rre[, 1], rev(rre[, 3])), col=cicol2, border=cicol2)
-            cicol3 <- rgb(0, gr, 0, 0.2)
-            lines(time, rre[, 1], col=cicol3, lty=1, lwd=1)
-            lines(time, rre[, 3], col=cicol3, lty=1, lwd=1)
+          ylim <- range(rre[, 1:3], na.rm=TRUE)
+        } else {
+          ylim <- range(rre[, 2], na.rm=TRUE)
         }
-        abline(v=inp$time[inp$indlastobs], col='gray')
-        lines(time, rre[, 2], col=rgb(0, gr, 0), lwd=1.5)
-        box(lwd=1.5)
-        txt.stamp(stamp)
+      }
     }
+    if (is.null(xlim)){
+      if (length(xlim) != 2){
+        xlim <- range(c(time, tail(time, 1) + 0.5))
+      }
+    }
+    plot(time, rre[, 2], typ='n', xlab=xlab, ylab=expression(r[t]), ylim=ylim,
+         xlim=xlim, log=log, main=main)
+    gr <- 0.7
+    cicol2 <- rgb(0, gr, 0, 0.1)
+    abline(h=r, col=1)
+    if (plot.ci){
+      polygon(c(time, rev(time)), c(rre[, 1], rev(rre[, 3])), col=cicol2, border=cicol2)
+      cicol3 <- rgb(0, gr, 0, 0.2)
+      lines(time, rre[, 1], col=cicol3, lty=1, lwd=1)
+      lines(time, rre[, 3], col=cicol3, lty=1, lwd=1)
+    }
+    abline(v=inp$time[inp$indlastobs], col='gray')
+    lines(time, rre[, 2], col=rgb(0, gr, 0), lwd=1.5)
+    box(lwd=1.5)
+    txt.stamp(stamp)
+  }
 }
 
 
@@ -3133,22 +3137,22 @@ plotspict.growth <- function(rep, logax=FALSE, main='Time-varying growth', ylim=
 #'
 #' @export
 plot2 <- function(rep, stamp=get.version(), verbose=TRUE, CI = 0.95, ...){
-    check.rep(rep)
-    logax <- FALSE # Take log of relevant axes? default: FALSE
-    inp <- rep$inp
-    if (inp$reportall) {
-        opar <- par(mfrow=c(2, 2), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
-        on.exit(par(opar))
-        # B/Bmsy
-        plotspict.bbmsy(rep, logax=logax, stamp='',verbose=verbose, CI = CI)
-        # F/Fmsy
-        plotspict.ffmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-        # Catch
-        plotspict.catch(rep, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
-        # F versus B
-        plotspict.fb(rep, logax=logax, man.legend=FALSE, stamp='', CI = CI)
-    }
-    txt.stamp(stamp, do.flag=TRUE)
+  check.rep(rep)
+  logax <- FALSE # Take log of relevant axes? default: FALSE
+  inp <- rep$inp
+  if (inp$reportall) {
+    opar <- par(mfrow=c(2, 2), oma=c(0.2, 0.2, 0, 0), mar=c(5,4,2.5,3.5))
+    on.exit(par(opar))
+    # B/Bmsy
+    plotspict.bbmsy(rep, logax=logax, stamp='',verbose=verbose, CI = CI)
+    # F/Fmsy
+    plotspict.ffmsy(rep, logax=logax, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+    # Catch
+    plotspict.catch(rep, qlegend=FALSE, stamp='',verbose=verbose, CI = CI)
+    # F versus B
+    plotspict.fb(rep, logax=logax, man.legend=FALSE, stamp='', CI = CI)
+  }
+  txt.stamp(stamp, do.flag=TRUE)
 }
 
 
@@ -3177,45 +3181,45 @@ plot2 <- function(rep, stamp=get.version(), verbose=TRUE, CI = 0.95, ...){
 #' plotspict.hcr(rep)
 #'
 plotspict.hcr <- function(rep, xlim = c(0, 3), CI = 0.95) {
-    check.rep(rep)
-    lm <- length(rep$man)
-    if (lm == 0) stop("rep does not contain management scenarios, please run `manage` or `add.man.scenario`")
-    alltacs <- spict::man.tac(rep)
-    opar <- par(mfrow = get.mfrow(lm), mar = c(3.1, 3.1, 1.5, 3))
-    on.exit(par(opar))
-    for (i in seq(rep$man)) {
-        r <- rep$man[[i]]
-        nm <- names(rep$man)[i]
-        bbp <- r$inp$manBreakpointB
-        if (length(bbp) == 1) {
-            Btrig <- bbp
-            Blim <- 0
-        } else {
-            Btrig <- max(bbp)
-            Blim <- min(bbp)
-        }
-        Fmsy <- get.par("logFmsy", r, exp = TRUE, CI = CI)[2]
-        Fm <- get.par("logFm", r, exp = TRUE, CI = CI)[, 2]
-        BBmsy <- if (r$inp$manEvalBreakpointB == 0) {
-            get.par("logBmBmsy", r, exp = TRUE, CI = CI)[, 2]
-        } else {
-            get.par("logBpBmsy", r, exp = TRUE, CI = CI)[, 2]
-        }
-        Bs <- seq(0, max(xlim), 0.01)
-        sl <- (1 / (Btrig - Blim))
-        Fs <- sapply(Bs, function(b)  Fmsy * min(max(sl * b - sl * Blim, 0), 1))
-        ylim <- range(0, max(Fmsy, Fm) * 1.1)
-        plot(Bs, Fs, type = "n", xlab = "", ylab = "",
-             xlim = xlim, ylim = ylim, main = nm)
-        xlab <- if (r$inp$manEvalBreakpointB == 0) "Bm/Bmsy" else "Bp/Bmsy"
-        title(ylab = "Fishing mortality (F)", xlab = xlab, line = 2.1)
-        points(BBmsy, Fm, pch = 20, cex = 2)
-        text(BBmsy, Fm, labels = paste("TAC=", round(alltacs[[i]])), adj = -0.2)
-        abline(h = Fmsy, v = c(Blim, Btrig), col = "darkgray", lty = 2)
-        lines(Bs, Fs, type = "l", lwd = 2)
-        text(c("Fmsy"), x = max(xlim), y = Fmsy, las = 2, cex = 0.8, adj = c(1, -0.1))
+  check.rep(rep)
+  lm <- length(rep$man)
+  if (lm == 0) stop("rep does not contain management scenarios, please run `manage` or `add.man.scenario`")
+  alltacs <- spict::man.tac(rep)
+  opar <- par(mfrow = get.mfrow(lm), mar = c(3.1, 3.1, 1.5, 3))
+  on.exit(par(opar))
+  for (i in seq(rep$man)) {
+    r <- rep$man[[i]]
+    nm <- names(rep$man)[i]
+    bbp <- r$inp$manBreakpointB
+    if (length(bbp) == 1) {
+      Btrig <- bbp
+      Blim <- 0
+    } else {
+      Btrig <- max(bbp)
+      Blim <- min(bbp)
     }
-    invisible(NULL)
+    Fmsy <- get.par("logFmsy", r, exp = TRUE, CI = CI)[2]
+    Fm <- get.par("logFm", r, exp = TRUE, CI = CI)[, 2]
+    BBmsy <- if (r$inp$manEvalBreakpointB == 0) {
+      get.par("logBmBmsy", r, exp = TRUE, CI = CI)[, 2]
+    } else {
+      get.par("logBpBmsy", r, exp = TRUE, CI = CI)[, 2]
+    }
+    Bs <- seq(0, max(xlim), 0.01)
+    sl <- (1 / (Btrig - Blim))
+    Fs <- sapply(Bs, function(b)  Fmsy * min(max(sl * b - sl * Blim, 0), 1))
+    ylim <- range(0, max(Fmsy, Fm) * 1.1)
+    plot(Bs, Fs, type = "n", xlab = "", ylab = "",
+         xlim = xlim, ylim = ylim, main = nm)
+    xlab <- if (r$inp$manEvalBreakpointB == 0) "Bm/Bmsy" else "Bp/Bmsy"
+    title(ylab = "Fishing mortality (F)", xlab = xlab, line = 2.1)
+    points(BBmsy, Fm, pch = 20, cex = 2)
+    text(BBmsy, Fm, labels = paste("TAC=", round(alltacs[[i]])), adj = -0.2)
+    abline(h = Fmsy, v = c(Blim, Btrig), col = "darkgray", lty = 2)
+    lines(Bs, Fs, type = "l", lwd = 2)
+    text(c("Fmsy"), x = max(xlim), y = Fmsy, las = 2, cex = 0.8, adj = c(1, -0.1))
+  }
+  invisible(NULL)
 }
 
 
@@ -3296,151 +3300,151 @@ plotspict.hindcast <- function(rep, add.mase = TRUE, CI = 0.95, verbose = TRUE,
                                asp = 2,
                                stamp = get.version()){
 
-    hcInfo <- extract.hindcast.info(rep, CI = CI, verbose = verbose)
-    hindcast <- rep$hindcast
-    inpin <- rep$inp
-    npeels <- length(rep$hindcast) - 1
-    peels <- seq_len(npeels)
-    ## Account for interpretation of cont time
-    if(max(unlist(inpin$timeI)) == inpin$lastCatchObs){
-        peeling <- 0:(npeels-1)
-    }else{
-        peeling <- 1:npeels
+  hcInfo <- extract.hindcast.info(rep, CI = CI, verbose = verbose)
+  hindcast <- rep$hindcast
+  inpin <- rep$inp
+  npeels <- length(rep$hindcast) - 1
+  peels <- seq_len(npeels)
+  ## Account for interpretation of cont time
+  if(max(unlist(inpin$timeI)) == inpin$lastCatchObs){
+    peeling <- 0:(npeels-1)
+  }else{
+    peeling <- 1:npeels
+  }
+  ## If latest obs is midyear index than first diff could be < 1
+  peel.dtc <- ifelse(length(which(abs(diff(
+    sapply(hindcast[-1], function(x) max(c(x$inp$timeC + x$inp$dtc,
+                                           x$inp$timeE + x$inp$dte))))) < 1)) >= 2, 1, 0)
+  if(peel.dtc){
+    tmp <- seq(floor(inpin$timerange[1]), ceiling(inpin$timerange[2] + 100), tail(inpin$dtc,1))
+    hindcastTimes <- tmp[as.integer(cut(inpin$timerangeObs[2],tmp,right = FALSE)) + 1] -
+      cumsum(rev(inpin$dtc))[peeling]
+  }else{
+    hindcastTimes  <- ceiling(inpin$timerangeObs[2]) - peeling
+  }
+  conv <- sapply(rep$hindcast[-1], function(x) x$opt$convergence)
+  conv <- rev(ifelse(conv == 0, TRUE, FALSE))
+  npeels.conv <- npeels - sum(!conv)
+  nind.val <- length(hcInfo$index)
+
+  if(is.null(mfrow) || is.na(mfrow)){
+    mfrow <- n2mfrow(nind.val, asp = asp)
+  }
+  opar <- par(mfrow = mfrow, mar = mar, oma = oma)
+  on.exit(par(opar))
+
+  cols <- cols()[-1][1:npeels]
+  cols2 <- rgb(t(col2rgb(cols))/255, alpha=0.2)
+
+  ind.used <- NULL
+  for(i in 1:nind.val){
+    dat <- hcInfo$index[[i]]$dat
+    if(!plot.log){
+      dat[,c("obs","pred","lc","uc")] <- exp(dat[,c("obs","pred","lc","uc")])
     }
-    ## If latest obs is midyear index than first diff could be < 1
-    peel.dtc <- ifelse(length(which(abs(diff(
-        sapply(hindcast[-1], function(x) max(c(x$inp$timeC + x$inp$dtc,
-                                               x$inp$timeE + x$inp$dte))))) < 1)) >= 2, 1, 0)
-    if(peel.dtc){
-        tmp <- seq(floor(inpin$timerange[1]), ceiling(inpin$timerange[2] + 100), tail(inpin$dtc,1))
-        hindcastTimes <- tmp[as.integer(cut(inpin$timerangeObs[2],tmp,right = FALSE)) + 1] -
-            cumsum(rev(inpin$dtc))[peeling]
-    }else{
-        hindcastTimes  <- ceiling(inpin$timerangeObs[2]) - peeling
+    dat0 <- dat[dat$peel == min(dat$peel),]
+
+    ## Lables
+    tmp <- c(1, mfrow[2] * seq_len(mfrow[1]-1) + 1)
+    if(is.na(ylab)){
+      ylab <- ifelse(plot.log, "log(Index)", "Index")
     }
-    conv <- sapply(rep$hindcast[-1], function(x) x$opt$convergence)
-    conv <- rev(ifelse(conv == 0, TRUE, FALSE))
-    npeels.conv <- npeels - sum(!conv)
-    nind.val <- length(hcInfo$index)
+    ylabi <- ifelse(i %in% tmp, ylab, "")
+    tmp <- rev(rev(seq_len(mfrow[1] * mfrow[2]))[1:mfrow[2]])
+    xlabi <- ifelse(i %in% tmp, xlab, "")
 
-    if(is.null(mfrow) || is.na(mfrow)){
-        mfrow <- n2mfrow(nind.val, asp = asp)
+    ## Plotting ranges
+    if(is.null(xlim)){
+      xlimi <- range(dat$time)
+    }else if(inherits(xlim, "list")){
+      if(length(xlim) >= nind.val){
+        xlimi <- xlim[[i]]
+      }else{
+        xlimi <- xlim[[1]]
+      }
     }
-    opar <- par(mfrow = mfrow, mar = mar, oma = oma)
-    on.exit(par(opar))
-
-    cols <- cols()[-1][1:npeels]
-    cols2 <- rgb(t(col2rgb(cols))/255, alpha=0.2)
-
-    ind.used <- NULL
-    for(i in 1:nind.val){
-        dat <- hcInfo$index[[i]]$dat
-        if(!plot.log){
-            dat[,c("obs","pred","lc","uc")] <- exp(dat[,c("obs","pred","lc","uc")])
-        }
-        dat0 <- dat[dat$peel == min(dat$peel),]
-
-        ## Lables
-        tmp <- c(1, mfrow[2] * seq_len(mfrow[1]-1) + 1)
-        if(is.na(ylab)){
-            ylab <- ifelse(plot.log, "log(Index)", "Index")
-        }
-        ylabi <- ifelse(i %in% tmp, ylab, "")
-        tmp <- rev(rev(seq_len(mfrow[1] * mfrow[2]))[1:mfrow[2]])
-        xlabi <- ifelse(i %in% tmp, xlab, "")
-
-        ## Plotting ranges
-        if(is.null(xlim)){
-            xlimi <- range(dat$time)
-        }else if(inherits(xlim, "list")){
-            if(length(xlim) >= nind.val){
-                xlimi <- xlim[[i]]
-            }else{
-                xlimi <- xlim[[1]]
-            }
-        }
-        if(is.null(ylim)){
-            mini <- min(dat[c("obs","pred","lc","uc")], na.rm = TRUE)
-            maxi <- max(dat[c("obs","pred","lc","uc")], na.rm = TRUE)
-            ylimi <- c(ifelse(mini < 0, 1.1, 0.9), ifelse(maxi < 0, 0.9, 1.1)) * c(mini, maxi)
-        }else if(inherits(ylim, "list")){
-            if(length(ylim) >= nind.val){
-                ylimi <- ylim[[i]]
-            }else{
-                ylimi <- ylim[[1]]
-            }
-        }
-
-        ## Plot
-        plot(0, type = "n", xlim = xlimi, ylim = ylimi,
-             xlab = "", ylab = "")
-        polygon(c(dat0$time,rev(dat0$time)),c(dat0$lc,rev(dat0$uc)), col = "lightgrey", border = NA)
-        lines(dat0$time, dat0$pred, lwd = 2, col = 1)
-        ## Predictions lines
-        for(j in 1:npeels){
-            dati <- dat[dat$peel == peels[j],]
-            coli <- cols[which(hindcastTimes <= tail(dati$time,1))[1]]
-            ## only if index was peeled in that peel
-            if(tail(dati$iuse,1) == 0 && rev(conv)[j]){
-                nd <- nrow(dati)
-                lines(dati$time, dati$pred, lwd = 2, col = coli)
-                lines(dati$time[(nd-1):nd], dati$pred[(nd-1):nd], lwd = 2, col = "grey30", lty = 3)
-            }
-        }
-        ## Observations
-        ind <- which(dat0$time < min(hindcastTimes))
-        tmp <- dat0[ind,]
-        points(tmp$time, tmp$obs, pch=21, cex=1.8, bg="white",lwd = 1.5)
-        ## Observations during hindcast period
-        ind <- which(dat0$time >= min(hindcastTimes))
-        tmp <- dat0[ind,]
-        ind.cols <- sapply(tmp$time[conv], function(x) which(hindcastTimes <= x)[1])
-        ind.used <- c(ind.used, ind.cols)
-        points(tmp$time[conv], tmp$obs[conv],
-               pch = 21, cex = 1.8, lwd = 1.5,
-               bg = cols[ind.cols])
-        if(any(!conv)){
-            points(tmp$time[!conv], tmp$obs[!conv],
-                   pch = 21, cex = 1.8, lwd = 1.5,
-                   bg = "white")
-        }
-        ## Predictions points
-        for(j in 1:npeels){
-            dati <- dat[dat$peel == peels[j],]
-            coli <- cols[which(hindcastTimes <= tail(dati$time,1))[1]]
-            ## only if index was peeled in that peel
-            if(tail(dati$iuse,1) == 0 && rev(conv)[j]){
-                nd <- nrow(dati)
-                points(dati$time[nd], dati$pred[nd], pch = 21, bg = coli, col = 1, lwd = 1.5)
-            }
-        }
-
-        ## Legend and axis labels
-        if(i == nind.val){
-            mtext(xlabi, 1, 1, outer = TRUE)
-            mtext(ylabi, 2, 1, outer = TRUE)
-            ind.leg <- sort(unique(ind.used[!is.na(ind.used)]))
-            nleg <- length(ind.leg)
-            nas <- rep(NA,floor((floor((nleg+1)/legend.ncol)-2)/2))
-            if(!is.null(legend.pos) && !is.na(legend.pos)){
-                legend(legend.pos,
-                       title = legend.title,
-                       ncol = legend.ncol + 1,
-                       c("Ref",hindcastTimes[ind.leg],nas,"obs","pred",nas),
-                       col = c(1,cols[ind.leg],nas,1,1,nas),
-                       bg = "white",
-                       pt.bg = "white",
-                       pt.cex = c(NA,rep(NA,nleg),nas,1.8,1,nas),
-                       lwd = c(2.5,rep(2.5,nleg),nas,rep(NA,2.5),nas),
-                       pch = c(NA,rep(NA,nleg),nas,21,21,nas),
-                       pt.lwd = c(NA,rep(NA,nleg),nas,1.8,1.8,nas))
-            }
-        }
-        ## MASE
-        if(add.mase) mtext(paste0("Index ", i, ": MASE = ", signif(hcInfo$mase[i,2],3)), 3, 0.3, font = 2)
-        box(lwd=1.5)
+    if(is.null(ylim)){
+      mini <- min(dat[c("obs","pred","lc","uc")], na.rm = TRUE)
+      maxi <- max(dat[c("obs","pred","lc","uc")], na.rm = TRUE)
+      ylimi <- c(ifelse(mini < 0, 1.1, 0.9), ifelse(maxi < 0, 0.9, 1.1)) * c(mini, maxi)
+    }else if(inherits(ylim, "list")){
+      if(length(ylim) >= nind.val){
+        ylimi <- ylim[[i]]
+      }else{
+        ylimi <- ylim[[1]]
+      }
     }
-    txt.stamp(stamp, do.flag=TRUE)
+
+    ## Plot
+    plot(0, type = "n", xlim = xlimi, ylim = ylimi,
+         xlab = "", ylab = "")
+    polygon(c(dat0$time,rev(dat0$time)),c(dat0$lc,rev(dat0$uc)), col = "lightgrey", border = NA)
+    lines(dat0$time, dat0$pred, lwd = 2, col = 1)
+    ## Predictions lines
+    for(j in 1:npeels){
+      dati <- dat[dat$peel == peels[j],]
+      coli <- cols[which(hindcastTimes <= tail(dati$time,1))[1]]
+      ## only if index was peeled in that peel
+      if(tail(dati$iuse,1) == 0 && rev(conv)[j]){
+        nd <- nrow(dati)
+        lines(dati$time, dati$pred, lwd = 2, col = coli)
+        lines(dati$time[(nd-1):nd], dati$pred[(nd-1):nd], lwd = 2, col = "grey30", lty = 3)
+      }
+    }
+    ## Observations
+    ind <- which(dat0$time < min(hindcastTimes))
+    tmp <- dat0[ind,]
+    points(tmp$time, tmp$obs, pch=21, cex=1.8, bg="white",lwd = 1.5)
+    ## Observations during hindcast period
+    ind <- which(dat0$time >= min(hindcastTimes))
+    tmp <- dat0[ind,]
+    ind.cols <- sapply(tmp$time[conv], function(x) which(hindcastTimes <= x)[1])
+    ind.used <- c(ind.used, ind.cols)
+    points(tmp$time[conv], tmp$obs[conv],
+           pch = 21, cex = 1.8, lwd = 1.5,
+           bg = cols[ind.cols])
+    if(any(!conv)){
+      points(tmp$time[!conv], tmp$obs[!conv],
+             pch = 21, cex = 1.8, lwd = 1.5,
+             bg = "white")
+    }
+    ## Predictions points
+    for(j in 1:npeels){
+      dati <- dat[dat$peel == peels[j],]
+      coli <- cols[which(hindcastTimes <= tail(dati$time,1))[1]]
+      ## only if index was peeled in that peel
+      if(tail(dati$iuse,1) == 0 && rev(conv)[j]){
+        nd <- nrow(dati)
+        points(dati$time[nd], dati$pred[nd], pch = 21, bg = coli, col = 1, lwd = 1.5)
+      }
+    }
+
+    ## Legend and axis labels
+    if(i == nind.val){
+      mtext(xlabi, 1, 1, outer = TRUE)
+      mtext(ylabi, 2, 1, outer = TRUE)
+      ind.leg <- sort(unique(ind.used[!is.na(ind.used)]))
+      nleg <- length(ind.leg)
+      nas <- rep(NA,floor((floor((nleg+1)/legend.ncol)-2)/2))
+      if(!is.null(legend.pos) && !is.na(legend.pos)){
+        legend(legend.pos,
+               title = legend.title,
+               ncol = legend.ncol + 1,
+               c("Ref",hindcastTimes[ind.leg],nas,"obs","pred",nas),
+               col = c(1,cols[ind.leg],nas,1,1,nas),
+               bg = "white",
+               pt.bg = "white",
+               pt.cex = c(NA,rep(NA,nleg),nas,1.8,1,nas),
+               lwd = c(2.5,rep(2.5,nleg),nas,rep(NA,2.5),nas),
+               pch = c(NA,rep(NA,nleg),nas,21,21,nas),
+               pt.lwd = c(NA,rep(NA,nleg),nas,1.8,1.8,nas))
+      }
+    }
+    ## MASE
+    if(add.mase) mtext(paste0("Index ", i, ": MASE = ", signif(hcInfo$mase[i,2],3)), 3, 0.3, font = 2)
+    box(lwd=1.5)
+  }
+  txt.stamp(stamp, do.flag=TRUE)
 }
 
 
@@ -3497,202 +3501,202 @@ plotspict.compare.one <- function(rep, ...,
                                   xlab = NULL, ylab = NULL, main = NULL,
                                   plot.legend = TRUE, stamp = get.version()){
 
-    if("spictcls" %in% class(rep)){
-        replist <- list(rep, ...)
-    }else if(inherits(rep, "list")){
-        replist <- c(rep, ...)
-    }else stop("Please provide fitted spict objects either individually or as list.")
+  if("spictcls" %in% class(rep)){
+    replist <- list(rep, ...)
+  }else if(inherits(rep, "list")){
+    replist <- c(rep, ...)
+  }else stop("Please provide fitted spict objects either individually or as list.")
 
-    ## Checks
-    stopifnot(all(sapply(replist, spict:::check.rep)))
+  ## Checks
+  stopifnot(all(sapply(replist, spict:::check.rep)))
 
-    varname <- match.arg(varname)
+  varname <- match.arg(varname)
 
-    cols2 <- function(col){
-        c(col, adjustcolor(col[-1], 0.5), adjustcolor(col[-1], 0.2))
-    }
+  cols2 <- function(col){
+    c(col, adjustcolor(col[-1], 0.5), adjustcolor(col[-1], 0.2))
+  }
 
-    nrep <- length(replist)
-    cols <- cols2(col)
-    colsTrans <- adjustcolor(cols, alpha = ifelse(as.integer(plot.unc) == 2, 0.2, 0.4))
-    colsTrans2 <- adjustcolor(cols, alpha = 0.4)
+  nrep <- length(replist)
+  cols <- cols2(col)
+  colsTrans <- adjustcolor(cols, alpha = ifelse(as.integer(plot.unc) == 2, 0.2, 0.4))
+  colsTrans2 <- adjustcolor(cols, alpha = 0.4)
 
-    ## Default headers
-    defs <- data.frame(varname = c("B","F","C","BBmsy","FFmsy","P"),
-                       main = c("Absolute biomass", "Absolute fishing mortality",
-                                "Catch", "Relative biomass",
-                                "Relative fishing mortality","Production curve"),
-                       ylab = c("B[t]", "F[t]", "Catch",
-                                "B[t] / B[MSY]", "F[t]/F[MSY]", "P[t]"),
-                       xlab = c(rep("Time", 5), "B[t]/K"),
-                       par = c("logB", "logFnotS", "logCpred",
-                               "logBBmsy", "logFFmsynotS", "P"))
-    opts <- defs[defs$varname == varname, ]
-    if (is.null(main)) main <- opts$main
-    if (is.null(xlab)) xlab <- parse(text = opts$xlab)
-    if (! exp) opts$ylab <- paste0("log(", opts$ylab, ")")
-    if (is.null(ylab)) ylab <- parse(text = opts$ylab)
-    par <- opts$par
+  ## Default headers
+  defs <- data.frame(varname = c("B","F","C","BBmsy","FFmsy","P"),
+                     main = c("Absolute biomass", "Absolute fishing mortality",
+                              "Catch", "Relative biomass",
+                              "Relative fishing mortality","Production curve"),
+                     ylab = c("B[t]", "F[t]", "Catch",
+                              "B[t] / B[MSY]", "F[t]/F[MSY]", "P[t]"),
+                     xlab = c(rep("Time", 5), "B[t]/K"),
+                     par = c("logB", "logFnotS", "logCpred",
+                             "logBBmsy", "logFFmsynotS", "P"))
+  opts <- defs[defs$varname == varname, ]
+  if (is.null(main)) main <- opts$main
+  if (is.null(xlab)) xlab <- parse(text = opts$xlab)
+  if (! exp) opts$ylab <- paste0("log(", opts$ylab, ")")
+  if (is.null(ylab)) ylab <- parse(text = opts$ylab)
+  par <- opts$par
 
-    if(par == "P"){
-        tvgflags <- sapply(replist, function(x) x$inp$timevaryinggrowth || x$inp$logmcovflag)
-        mlist <- lapply(replist, function(x) get.par("logm", x, exp = TRUE, CI = CI)[,2])
-        gammalist <- lapply(replist, function(x) get.par("gamma", x, CI = CI)[,2])
-        nlist <- lapply(replist, function(x) get.par("logn", x, exp = TRUE, CI = CI)[,2])
-        ylist <- lapply(replist, function(x) get.par("P", x, CI = CI)[,2])
-        bindslist <- lapply(1:nrep, function(x) replist[[x]]$inp$ic[1:length(ylist[[x]])])
-        if(any(tvgflags)){
-            yscallist <- lapply(1:nrep, function(x)
-                if(tvgflags[x]){
-                    list(get.par("logMSYvec", replist[[x]], exp = TRUE, CI = CI)[bindslist[[x]],2])
-                }else{
-                    tmp <- get.par("logMSY", replist[[x]], exp = TRUE, CI = CI)[,2]
-                    res <- NULL
-                    for(i in 1:length(tmp)){
-                        res <- c(res, list(rep(tmp[i],length(bindslist[[x]]))))
-                    }
-                    return(res)
-                })
-            ylab <- paste(ylab, "(normalised)")
+  if(par == "P"){
+    tvgflags <- sapply(replist, function(x) x$inp$timevaryinggrowth || x$inp$logmcovflag)
+    mlist <- lapply(replist, function(x) get.par("logm", x, exp = TRUE, CI = CI)[,2])
+    gammalist <- lapply(replist, function(x) get.par("gamma", x, CI = CI)[,2])
+    nlist <- lapply(replist, function(x) get.par("logn", x, exp = TRUE, CI = CI)[,2])
+    ylist <- lapply(replist, function(x) get.par("P", x, CI = CI)[,2])
+    bindslist <- lapply(1:nrep, function(x) replist[[x]]$inp$ic[1:length(ylist[[x]])])
+    if(any(tvgflags)){
+      yscallist <- lapply(1:nrep, function(x)
+        if(tvgflags[x]){
+          list(get.par("logMSYvec", replist[[x]], exp = TRUE, CI = CI)[bindslist[[x]],2])
         }else{
-            yscallist <- lapply(1:nrep, function(x) list(rep(1, length(bindslist[[x]]))))
-            catchunit <- lapply(replist, function(x) x$inp$catchunit)
-            if(any(!is.null(catchunit))) ylab <- spict:::add.catchunit(ylab,
-                                                                       paste(unique(unlist(catchunit)),
-                                                                             collapse = " | "))
-        }
-        xlist <- lapply(1:nrep, function(x)
-            get.par("logB", replist[[x]], exp = TRUE, CI = CI)[bindslist[[x]],2])
-        klist <- lapply(replist, function(x) get.par("logK", x, exp = TRUE, CI = CI)[,2])
-        # Calculate production curve (Pst)
-        pfun <- function(gamma, m, K, n, B) gamma*m/K*B*(1 - (B/K)^(n-1))
-        Bplot <- seq(0.0001, max(c(max(unlist(klist)), max(unlist(xlist)))), length = 200)
-        pstlist <- lapply(1:nrep, function(x){
-            res <- NULL
-            for(i in 1:length(mlist[[x]])){
-                res <- c(res, list(pfun(gammalist[[x]], mlist[[x]][[i]], klist[[x]], nlist[[x]], Bplot)))
-            }
-            return(res)
+          tmp <- get.par("logMSY", replist[[x]], exp = TRUE, CI = CI)[,2]
+          res <- NULL
+          for(i in 1:length(tmp)){
+            res <- c(res, list(rep(tmp[i],length(bindslist[[x]]))))
+          }
+          return(res)
         })
-        if(any(tvgflags)){
-            pstscal <- lapply(pstlist, function(x) max(unlist(x)))
-        }else{
-            pstscal <- as.list(rep(1,nrep))
-        }
-
-        ylim <- range(c(unlist(lapply(1:nrep, function(x){
-            maxi <- 0
-            for(i in 1:length(pstlist[[x]])){
-                maxi <- max(maxi,pstlist[[x]][[i]]/pstscal[[x]])
-            }
-            return(maxi)
-        })), unlist(lapply(1:nrep, function(x){
-            rangi <- c(0,0)
-            for(i in 1:length(yscallist[[x]])){
-                rangi <- range(rangi, c(ylist[[x]] / yscallist[[x]][[i]]))
-            }
-            return(rangi)
-        }))))
-        xlim <- range(c(0,1,unlist(lapply(1:nrep, function(x) xlist[[x]] / klist[[x]]))))
-        ## plot
-        plot(xlist[[1]]/klist[[1]], ylist[[1]]/yscallist[[1]][[1]],
-             ty = "n",
-             xlim = xlim, ylim = ylim,
-             xlab = xlab, ylab = ylab)
-        for(i in 1:nrep){
-            for(j in 1:length(pstlist[[i]])){
-                lines(Bplot/klist[[i]], pstlist[[i]][[j]]/pstscal[[i]],
-                      col = cols[i], lwd = 2, lty = j)
-            }
-        }
-        for(i in 1:nrep){
-            for(j in 1:length(yscallist[[i]])){
-                lines(xlist[[i]]/klist[[i]], ylist[[i]]/yscallist[[i]][[j]],
-                      col = colsTrans2[i], lwd = 1.5, lty = j)
-            }
-            abline(v=(1/nlist[[i]])^(1/(nlist[[i]]-1)), lty=3, col = cols[i])
-        }
-        abline(h=0, lty=3)
+      ylab <- paste(ylab, "(normalised)")
     }else{
-        if(par == "logCpred"){
-            ## annual catches
-            get.annual.catch <- function(rep, par="logCpred", exp=TRUE, CI=0.95){
-                if(min(rep$inp$dtc) < 1){
-                    indest <- which(rep$inp$timeCpred <= tail(rep$inp$timeC,1))
-                    Cpredest <- get.par('logCpred', rep, exp = exp, CI = CI)
-                    if(exp) Cpredest[Cpredest<0] <- 0
-                    dtc <- rep$inp$dtcp
-                    alo <- annual(rep$inp$timeC, rep$inp$obsC/rep$inp$dtc)
-                    timeo <- alo$anntime
-                    obs <- alo$annvec
-                    al1 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 1]/dtc[indest])
-                    al2 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 2]/dtc[indest])
-                    al3 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 3]/dtc[indest])
-                    inds <- which(!is.na(al2$annvec))
-                    time <- al2$anntime[inds]
-                    catch <- data.frame(ll = al1$annvec[inds],
-                                        est = al2$annvec[inds],
-                                        ul = al3$annvec[inds])
-                }else{
-                    indest <- which(rep$inp$timeCpred <= tail(rep$inp$timeC,1))
-                    time <- rep$inp$timeCpred[indest]
-                    catch <- get.par(par, rep, exp = exp, CI = CI)[indest,1:3]
-                }
-                return(list(time = time, catch = catch))
-            }
-            ann.catch <- lapply(replist, get.annual.catch)
-            xlist <- lapply(ann.catch, "[[", 1)
-            ylist <- lapply(ann.catch, "[[", 2)
-            catchunit <- lapply(replist, function(x) x$inp$catchunit)
-            if(any(!is.null(catchunit))) ylab <- spict:::add.catchunit(ylab,
-                                                                       paste(unique(unlist(catchunit)),
-                                                                             collapse = " | "))
-        }else{
-            indi <- lapply(replist, function(x) which(x$inp$time <= x$inp$timerange[2]))
-            xlist <- lapply(1:nrep, function(x) replist[[x]]$inp$time[indi[[x]]])
-            ylist <- lapply(1:nrep, function(x) get.par(par, replist[[x]],
-                                                        exp = exp, CI = CI)[indi[[x]],1:3])
-        }
-        xlim <- range(xlist, na.rm = TRUE)
-        if(as.integer(plot.unc) > 0){
-            ylim <- range(unlist(ylist), na.rm = TRUE)
-        }else{
-            ylim <- range(unlist(lapply(ylist, function(x) x[,2])), na.rm = TRUE)
-        }
-        ## plot
-        plot(xlist[[1]], ylist[[1]][,2], ty = "n",
-             xlim = xlim, ylim = ylim,
-             xlab = xlab, ylab = ylab)
+      yscallist <- lapply(1:nrep, function(x) list(rep(1, length(bindslist[[x]]))))
+      catchunit <- lapply(replist, function(x) x$inp$catchunit)
+      if(any(!is.null(catchunit))) ylab <- spict:::add.catchunit(ylab,
+                                                                 paste(unique(unlist(catchunit)),
+                                                                       collapse = " | "))
+    }
+    xlist <- lapply(1:nrep, function(x)
+      get.par("logB", replist[[x]], exp = TRUE, CI = CI)[bindslist[[x]],2])
+    klist <- lapply(replist, function(x) get.par("logK", x, exp = TRUE, CI = CI)[,2])
+    # Calculate production curve (Pst)
+    pfun <- function(gamma, m, K, n, B) gamma*m/K*B*(1 - (B/K)^(n-1))
+    Bplot <- seq(0.0001, max(c(max(unlist(klist)), max(unlist(xlist)))), length = 200)
+    pstlist <- lapply(1:nrep, function(x){
+      res <- NULL
+      for(i in 1:length(mlist[[x]])){
+        res <- c(res, list(pfun(gammalist[[x]], mlist[[x]][[i]], klist[[x]], nlist[[x]], Bplot)))
+      }
+      return(res)
+    })
+    if(any(tvgflags)){
+      pstscal <- lapply(pstlist, function(x) max(unlist(x)))
+    }else{
+      pstscal <- as.list(rep(1,nrep))
+    }
 
-        for(i in 1:nrep){
-            if(as.integer(plot.unc) == 2){
-                polygon(c(xlist[[i]],rev(xlist[[i]])),
-                        c(ylist[[i]][,1],rev(ylist[[i]][,3])), border = NA,
-                        col = colsTrans[i])
-            }else if(as.integer(plot.unc) == 1){
-                lines(xlist[[i]], ylist[[i]][,1], col = colsTrans[i], lwd = 2, lty = 3)
-                lines(xlist[[i]], ylist[[i]][,3], col = colsTrans[i], lwd = 2, lty = 3)
-            }
-            lines(xlist[[i]], ylist[[i]][,2], col = cols[i], lwd = 2)
-        }
-        if(par %in% c("logBBmsy","logFFmsynotS")) abline(h = ifelse(exp, 1, 0), lty = 3)
+    ylim <- range(c(unlist(lapply(1:nrep, function(x){
+      maxi <- 0
+      for(i in 1:length(pstlist[[x]])){
+        maxi <- max(maxi,pstlist[[x]][[i]]/pstscal[[x]])
+      }
+      return(maxi)
+    })), unlist(lapply(1:nrep, function(x){
+      rangi <- c(0,0)
+      for(i in 1:length(yscallist[[x]])){
+        rangi <- range(rangi, c(ylist[[x]] / yscallist[[x]][[i]]))
+      }
+      return(rangi)
+    }))))
+    xlim <- range(c(0,1,unlist(lapply(1:nrep, function(x) xlist[[x]] / klist[[x]]))))
+    ## plot
+    plot(xlist[[1]]/klist[[1]], ylist[[1]]/yscallist[[1]][[1]],
+         ty = "n",
+         xlim = xlim, ylim = ylim,
+         xlab = xlab, ylab = ylab)
+    for(i in 1:nrep){
+      for(j in 1:length(pstlist[[i]])){
+        lines(Bplot/klist[[i]], pstlist[[i]][[j]]/pstscal[[i]],
+              col = cols[i], lwd = 2, lty = j)
+      }
     }
-    if(plot.legend){
-        if(is.null(names(replist))){
-            leg.text <- paste0("Fit ", seq(nrep))
+    for(i in 1:nrep){
+      for(j in 1:length(yscallist[[i]])){
+        lines(xlist[[i]]/klist[[i]], ylist[[i]]/yscallist[[i]][[j]],
+              col = colsTrans2[i], lwd = 1.5, lty = j)
+      }
+      abline(v=(1/nlist[[i]])^(1/(nlist[[i]]-1)), lty=3, col = cols[i])
+    }
+    abline(h=0, lty=3)
+  }else{
+    if(par == "logCpred"){
+      ## annual catches
+      get.annual.catch <- function(rep, par="logCpred", exp=TRUE, CI=0.95){
+        if(min(rep$inp$dtc) < 1){
+          indest <- which(rep$inp$timeCpred <= tail(rep$inp$timeC,1))
+          Cpredest <- get.par('logCpred', rep, exp = exp, CI = CI)
+          if(exp) Cpredest[Cpredest<0] <- 0
+          dtc <- rep$inp$dtcp
+          alo <- annual(rep$inp$timeC, rep$inp$obsC/rep$inp$dtc)
+          timeo <- alo$anntime
+          obs <- alo$annvec
+          al1 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 1]/dtc[indest])
+          al2 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 2]/dtc[indest])
+          al3 <- annual(rep$inp$timeCpred[indest], Cpredest[indest, 3]/dtc[indest])
+          inds <- which(!is.na(al2$annvec))
+          time <- al2$anntime[inds]
+          catch <- data.frame(ll = al1$annvec[inds],
+                              est = al2$annvec[inds],
+                              ul = al3$annvec[inds])
         }else{
-            leg.text <- names(replist)
+          indest <- which(rep$inp$timeCpred <= tail(rep$inp$timeC,1))
+          time <- rep$inp$timeCpred[indest]
+          catch <- get.par(par, rep, exp = exp, CI = CI)[indest,1:3]
         }
-        legend("topright", legend = leg.text,
-               lwd = 2,
-               col = cols[1:nrep])
+        return(list(time = time, catch = catch))
+      }
+      ann.catch <- lapply(replist, get.annual.catch)
+      xlist <- lapply(ann.catch, "[[", 1)
+      ylist <- lapply(ann.catch, "[[", 2)
+      catchunit <- lapply(replist, function(x) x$inp$catchunit)
+      if(any(!is.null(catchunit))) ylab <- spict:::add.catchunit(ylab,
+                                                                 paste(unique(unlist(catchunit)),
+                                                                       collapse = " | "))
+    }else{
+      indi <- lapply(replist, function(x) which(x$inp$time <= x$inp$timerange[2]))
+      xlist <- lapply(1:nrep, function(x) replist[[x]]$inp$time[indi[[x]]])
+      ylist <- lapply(1:nrep, function(x) get.par(par, replist[[x]],
+                                                  exp = exp, CI = CI)[indi[[x]],1:3])
     }
-    box(lwd = 1.5)
-    mtext(main, 3, 0.6, font = 2)
-    if(any(sapply(replist, function(x) x$opt$convergence != 0))){
-        warning.stamp()
+    xlim <- range(xlist, na.rm = TRUE)
+    if(as.integer(plot.unc) > 0){
+      ylim <- range(unlist(ylist), na.rm = TRUE)
+    }else{
+      ylim <- range(unlist(lapply(ylist, function(x) x[,2])), na.rm = TRUE)
     }
-    txt.stamp(stamp)
+    ## plot
+    plot(xlist[[1]], ylist[[1]][,2], ty = "n",
+         xlim = xlim, ylim = ylim,
+         xlab = xlab, ylab = ylab)
+
+    for(i in 1:nrep){
+      if(as.integer(plot.unc) == 2){
+        polygon(c(xlist[[i]],rev(xlist[[i]])),
+                c(ylist[[i]][,1],rev(ylist[[i]][,3])), border = NA,
+                col = colsTrans[i])
+      }else if(as.integer(plot.unc) == 1){
+        lines(xlist[[i]], ylist[[i]][,1], col = colsTrans[i], lwd = 2, lty = 3)
+        lines(xlist[[i]], ylist[[i]][,3], col = colsTrans[i], lwd = 2, lty = 3)
+      }
+      lines(xlist[[i]], ylist[[i]][,2], col = cols[i], lwd = 2)
+    }
+    if(par %in% c("logBBmsy","logFFmsynotS")) abline(h = ifelse(exp, 1, 0), lty = 3)
+  }
+  if(plot.legend){
+    if(is.null(names(replist))){
+      leg.text <- paste0("Fit ", seq(nrep))
+    }else{
+      leg.text <- names(replist)
+    }
+    legend("topright", legend = leg.text,
+           lwd = 2,
+           col = cols[1:nrep])
+  }
+  box(lwd = 1.5)
+  mtext(main, 3, 0.6, font = 2)
+  if(any(sapply(replist, function(x) x$opt$convergence != 0))){
+    warning.stamp()
+  }
+  txt.stamp(stamp)
 }
 
 
@@ -3748,58 +3752,58 @@ plotspict.compare <- function(rep, ...,
                               plot.legend = TRUE,
                               stamp = get.version()){
 
-    if("spictcls" %in% class(rep)){
-        replist <- list(rep, ...)
-    }else if(inherits(rep, "list")){
-        replist <- c(rep, ...)
-    }else stop("Please provide fitted spict objects either individually or as list.")
+  if("spictcls" %in% class(rep)){
+    replist <- list(rep, ...)
+  }else if(inherits(rep, "list")){
+    replist <- c(rep, ...)
+  }else stop("Please provide fitted spict objects either individually or as list.")
 
-    varname <- match.arg(varname, several.ok = TRUE)
-    nvar <- length(varname)
+  varname <- match.arg(varname, several.ok = TRUE)
+  nvar <- length(varname)
 
-    mfrow <- n2mfrow(nvar, asp = asp)
-    par(mar = c(5,5,4,2)+0.1)
-    if(as.integer(plot.legend) == 1){
-        layout(rbind(matrix(1:nvar,
-                            nrow = mfrow[1],
-                            ncol = mfrow[2], byrow = TRUE),
-                     rep(nvar+1,mfrow[2])),
-               heights = c(rep(1,mfrow[1]),0.12))
+  mfrow <- n2mfrow(nvar, asp = asp)
+  par(mar = c(5,5,4,2)+0.1)
+  if(as.integer(plot.legend) == 1){
+    layout(rbind(matrix(1:nvar,
+                        nrow = mfrow[1],
+                        ncol = mfrow[2], byrow = TRUE),
+                 rep(nvar+1,mfrow[2])),
+           heights = c(rep(1,mfrow[1]),0.12))
+  }else{
+    layout(matrix(1:nvar, nrow = mfrow[1], ncol = mfrow[2],
+                  byrow = TRUE))
+  }
+
+  for(var in 1:nvar){
+    stamp <- ifelse(!is.null(stamp) && !is.na(stamp) && var == nvar, get.version(), NA)
+    plotspict.compare.one(replist, varname = varname[var],
+                          exp = exp, CI = CI, plot.unc = plot.unc,
+                          col = col,
+                          plot.legend = as.integer(plot.legend) == 2 && var == nvar,
+                          stamp = stamp)
+  }
+
+  cols2 <- function(col){
+    c(col, adjustcolor(col[-1], 0.5), adjustcolor(col[-1], 0.2))
+  }
+
+  if(as.integer(plot.legend) == 1){
+    nrep <- length(replist)
+    if(is.null(names(replist))){
+      leg.text <- paste0("Fit ", seq(nrep))
     }else{
-        layout(matrix(1:nvar, nrow = mfrow[1], ncol = mfrow[2],
-                      byrow = TRUE))
+      leg.text <- names(replist)
     }
-
-    for(var in 1:nvar){
-        stamp <- ifelse(!is.null(stamp) && !is.na(stamp) && var == nvar, get.version(), NA)
-        plotspict.compare.one(replist, varname = varname[var],
-                              exp = exp, CI = CI, plot.unc = plot.unc,
-                              col = col,
-                              plot.legend = as.integer(plot.legend) == 2 && var == nvar,
-                              stamp = stamp)
-    }
-
-    cols2 <- function(col){
-        c(col, adjustcolor(col[-1], 0.5), adjustcolor(col[-1], 0.2))
-    }
-
-    if(as.integer(plot.legend) == 1){
-        nrep <- length(replist)
-        if(is.null(names(replist))){
-            leg.text <- paste0("Fit ", seq(nrep))
-        }else{
-            leg.text <- names(replist)
-        }
-        par(mar = c(1,5,0,0))
-        plot.new()
-        legend("topleft", legend = leg.text,
-               lwd = 2,
-               horiz = TRUE,
-               bty = "s",
-               box.lwd = 1.5,
-               col = cols2(col)[1:nrep],
-               bg = "white")
-    }
+    par(mar = c(1,5,0,0))
+    plot.new()
+    legend("topleft", legend = leg.text,
+           lwd = 2,
+           horiz = TRUE,
+           bty = "s",
+           box.lwd = 1.5,
+           col = cols2(col)[1:nrep],
+           bg = "white")
+  }
 
 }
 
@@ -3831,102 +3835,102 @@ plotspict.compare <- function(rep, ...,
 plotspict.diagnostic.process <- function(rep, lag.max=4, qlegend=TRUE, plot.data=TRUE, mfcol=FALSE,
                                          add.loess = FALSE, span = 0.75, stamp=get.version()){
 
-    check.rep(rep)
-    inp <- rep$inp
+  check.rep(rep)
+  inp <- rep$inp
 
-    ## Check that process residuals calculated
-    if(!any(names(rep) == "process.resid")){
-        stop("No process residuals found. Please run the function 'process.resid' on your fitted spict object.")
+  ## Check that process residuals calculated
+  if(!any(names(rep) == "process.resid")){
+    stop("No process residuals found. Please run the function 'process.resid' on your fitted spict object.")
+  }
+
+  testsB <- res.diagn(rep$process.resid$B, "B", "B")
+  testsF <- res.diagn(rep$process.resid$F, "F", "F")
+
+
+  fun <- function(time, res, add=FALSE, add.legend=FALSE, col=1, pch=1,
+                  add.vline.at=NULL, ...){
+    nrem <- length(time) - length(res)
+    if (nrem > 0){
+      time <- time[-nrem]
+      warning('length of residual vector and length of corresponding time vector are not equal!')
     }
+    plot.col(time, res, pch=pch, add=add, add.legend=add.legend, typ='p', xlab='Time',
+             add.vline.at=add.vline.at, ...)
+    dum <- rep(NA, length(res))
+    dum[is.na(res)] <- 0
+    text(time, dum, labels='NA', cex=0.8, col=col)
+  }
 
-    testsB <- res.diagn(rep$process.resid$B, "B", "B")
-    testsF <- res.diagn(rep$process.resid$F, "F", "F")
+  time.full <- inp$time
+  dt <- diff(rep$process.resid$time)[1]
+  time.agg <- time.full[which(time.full %% (dt) == 0)]
+  time.rep <- rep(time.agg, each = 1/(inp$dteuler/dt))
+  nta <- length(time.agg)
+  logB <- get.par("logB",rep)[,2]
+  logF <- get.par("logF",rep)[,2]
+  logFs <- get.par("logFs",rep)[,2]
+  P <- rep$obj$report()$P
+  logB.agg <- logF.agg <- rep(0, nta)
+  P.agg <- logFs.agg <- rep(0, nta)
+  for (i in 1:nta){
+    inds <- which(time.agg[i]==time.rep)
+    logB.agg[i] <- mean(logB[inds])
+    logF.agg[i] <- mean(logF[inds])
+    logFs.agg[i] <- mean(logFs[inds])
+    P.agg[i] <- sum(P[inds])
+  }
 
+  mar <- c(4.7, 4.1, 2.5, 2)
+  mfrow <- c(3 + as.numeric(plot.data), 2)
+  if (mfcol){
+    opar <- par(mfcol=rev(mfrow), mar=mar)
+  } else {
+    opar <- par(mfrow=mfrow, mar=mar)
+  }
+  on.exit(par(opar))
 
-    fun <- function(time, res, add=FALSE, add.legend=FALSE, col=1, pch=1,
-                    add.vline.at=NULL, ...){
-        nrem <- length(time) - length(res)
-        if (nrem > 0){
-            time <- time[-nrem]
-            warning('length of residual vector and length of corresponding time vector are not equal!')
-        }
-        plot.col(time, res, pch=pch, add=add, add.legend=add.legend, typ='p', xlab='Time',
-                 add.vline.at=add.vline.at, ...)
-        dum <- rep(NA, length(res))
-        dum[is.na(res)] <- 0
-        text(time, dum, labels='NA', cex=0.8, col=col)
-    }
+  ## Plot data
+  if(plot.data){
+    plot.col(time.agg, logB.agg, ylab='logB',
+             main='Biomass', xlab='Time')
+    plot.col(time.agg, logF.agg, ylab='logF',
+             main='Fishing mortality', xlab='Time')
+  }
 
-    time.full <- inp$time
-    dt <- diff(rep$process.resid$time)[1]
-    time.agg <- time.full[which(time.full %% (dt) == 0)]
-    time.rep <- rep(time.agg, each = 1/(inp$dteuler/dt))
-    nta <- length(time.agg)
-    logB <- get.par("logB",rep)[,2]
-    logF <- get.par("logF",rep)[,2]
-    logFs <- get.par("logFs",rep)[,2]
-    P <- rep$obj$report()$P
-    logB.agg <- logF.agg <- rep(0, nta)
-    P.agg <- logFs.agg <- rep(0, nta)
-    for (i in 1:nta){
-        inds <- which(time.agg[i]==time.rep)
-        logB.agg[i] <- mean(logB[inds])
-        logF.agg[i] <- mean(logF[inds])
-        logFs.agg[i] <- mean(logFs[inds])
-        P.agg[i] <- sum(P[inds])
-    }
+  pval <- round(testsB$biasB.p, 4)
+  colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+  fun(rep$process.resid$time, rep$process.resid$B,
+      add.legend=qlegend, ylab='B residuals',
+      main=paste0('Bias p-val: ', pval),
+      col.main=colmain)
+  abline(h=0, lty=3)
+  if(add.loess){
+    mod <- loess(B ~ time, data=rep$process.resid, span = span)
+    j <- order(rep$process.resid$time)
+    lines(rep$process.resid$time[j],mod$fitted[j], lwd=1.5)
+  }
+  pval <- round(testsF$biasF.p, 4)
+  colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
+  fun(rep$process.resid$time, rep$process.resid$F,
+      add.legend=FALSE, ylab='F residuals',
+      main=paste0('Bias p-val: ', pval),
+      col.main=colmain)
+  abline(h=0, lty=3)
+  if(add.loess){
+    mod <- loess(F ~ time, data=rep$process.resid, span = span)
+    j <- order(rep$process.resid$time)
+    lines(rep$process.resid$time[j], mod$fitted[j], lwd=1.5)
+  }
 
-    mar <- c(4.7, 4.1, 2.5, 2)
-    mfrow <- c(3 + as.numeric(plot.data), 2)
-    if (mfcol){
-        opar <- par(mfcol=rev(mfrow), mar=mar)
-    } else {
-        opar <- par(mfrow=mfrow, mar=mar)
-    }
-    on.exit(par(opar))
+  pvalacfB <- round(testsB$LBoxB.p, 4)
+  osar.acf.plot(rep$process.resid$B, lag.max, pvalacfB, ylab='B ACF')
+  pvalacfF <- round(testsF$LBoxF.p, 4)
+  osar.acf.plot(rep$process.resid$F, lag.max, pvalacfF, ylab='F ACF')
 
-    ## Plot data
-    if(plot.data){
-        plot.col(time.agg, logB.agg, ylab='logB',
-                 main='Biomass', xlab='Time')
-        plot.col(time.agg, logF.agg, ylab='logF',
-                 main='Fishing mortality', xlab='Time')
-    }
+  pvalB <- round(testsB$shapiroB.p, 4)
+  osar.qq.plot(rep$process.resid$B, pvalB)
+  pvalF <- round(testsF$shapiroF.p, 4)
+  osar.qq.plot(rep$process.resid$F, pvalF)
 
-    pval <- round(testsB$biasB.p, 4)
-    colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-    fun(rep$process.resid$time, rep$process.resid$B,
-        add.legend=qlegend, ylab='B residuals',
-        main=paste0('Bias p-val: ', pval),
-        col.main=colmain)
-    abline(h=0, lty=3)
-    if(add.loess){
-        mod <- loess(B ~ time, data=rep$process.resid, span = span)
-        j <- order(rep$process.resid$time)
-        lines(rep$process.resid$time[j],mod$fitted[j], lwd=1.5)
-    }
-    pval <- round(testsF$biasF.p, 4)
-    colmain <- ifelse(pval < 0.05, 'red', 'forestgreen')
-    fun(rep$process.resid$time, rep$process.resid$F,
-        add.legend=FALSE, ylab='F residuals',
-        main=paste0('Bias p-val: ', pval),
-        col.main=colmain)
-    abline(h=0, lty=3)
-    if(add.loess){
-        mod <- loess(F ~ time, data=rep$process.resid, span = span)
-        j <- order(rep$process.resid$time)
-        lines(rep$process.resid$time[j], mod$fitted[j], lwd=1.5)
-    }
-
-    pvalacfB <- round(testsB$LBoxB.p, 4)
-    osar.acf.plot(rep$process.resid$B, lag.max, pvalacfB, ylab='B ACF')
-    pvalacfF <- round(testsF$LBoxF.p, 4)
-    osar.acf.plot(rep$process.resid$F, lag.max, pvalacfF, ylab='F ACF')
-
-    pvalB <- round(testsB$shapiroB.p, 4)
-    osar.qq.plot(rep$process.resid$B, pvalB)
-    pvalF <- round(testsF$shapiroF.p, 4)
-    osar.qq.plot(rep$process.resid$F, pvalF)
-
-    txt.stamp(stamp, do.flag=TRUE)
+  txt.stamp(stamp, do.flag=TRUE)
 }

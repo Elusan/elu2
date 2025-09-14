@@ -55,7 +55,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
   CI_FILL_ALPHA  <- 0.12   # ribbon opacity (fill)
   CI_EDGE_ALPHA  <- 0.25   # band-border opacity (lwr/upr lines)
   CI_EDGE_WIDTH  <- 0.6    # band-border line width
-  EST_LINE_WIDTH <- 1    # main estimate line width
+  EST_LINE_WIDTH <- 1      # main estimate line width
   VLINE_COL      <- "grey50"
   VLINE_SIZE     <- 0.2
 
@@ -227,7 +227,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
       geom_hline(yintercept = 1, linetype = "dashed", color = "black", linewidth = 0.8) +
       scale_color_manual(values = model_colors) +
       scale_fill_manual(values = fill_cols, guide = "none") +
-      labs(x = "Year", y = expression(bold(B/B[MSY]))) +
+      labs(x = "Year", y = expression(bold(B / B[italic(MSY)]))) +
       theme_minimal_compact2_good() +
       guides(color = guide_legend(override.aes = list(linewidth = 1.8)))
 
@@ -277,7 +277,7 @@ plot_spict_scenarios_by_model_NEW5 <- function(models,
   plots <- list(
     biomass = make_biomass_plot(get_series("logB")),
     bbmsy   = make_bbmsy_plot(get_series("logBBmsy")),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F / F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 

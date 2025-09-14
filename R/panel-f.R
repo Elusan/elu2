@@ -66,6 +66,7 @@ plot_elu2_panel_f <- function(model,
     Fmsy_band <- data.frame(time = repmax$inp$time, ymin = Fmsyvec$ll, ymax = Fmsyvec$ul)
     Fmsy_line <- data.frame(time = repmax$inp$time, y = Fmsyvec$msy)
     fmsy_mult <- Fmsy_est
+    # FIX: use plotmath, not '\emph'
     sec_axis_obj <- ggplot2::sec_axis(~ . / Fmsy_est, name = expression(F[t]/F[MSY]))
   }
 
@@ -135,4 +136,4 @@ plot_elu2_panel_f <- function(model,
 
   p
 
-}  # (body unchanged)
+}  # (body unchanged). Update and give the final version

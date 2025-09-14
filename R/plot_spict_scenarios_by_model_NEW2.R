@@ -37,18 +37,10 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
   }
 
   # Assign model colors based on number of models
-  # Assign model colors based on number of models
   if (is.null(scenario_colors)) {
     if (length(models) == 6) {
-      # Fixed colors for 3 canonical models: Pella, Fox, Schaefe
-
-      #model_colors <- setNames(c("#D7191C", "#2B83BA","#4DAF4A","blue","#FF7F00","#A65628"), model_names)
-
-      model_colors <- setNames(c("blue","#FF7F00","#A65628", "#D7191C", "#2B83BA","#4DAF4A"), model_names)
-
-      #model_colors <- setNames(c("#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628"), model_names)
-
-
+      # Fixed colors for 3 canonical models: Pella, Fox, Schaefer
+      model_colors <- setNames(c("blue", "#FF7F00", "#A65628", "#D7191C", "#2B83BA", "#4DAF4A"), model_names)
     } else {
       # Use your predefined full scenario color set
       default_scenario_colors <- c(
@@ -61,13 +53,10 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
         "S7P" = "#e5c494", "S7S" = "#b3b3b3", "S7F" = "#1b7837",
         "S8P" = "#762a83", "S8S" = "#af8dc3", "S8F" = "#7fbf7b"
       )
-
-      # Ensure that model names are present in the palette
       missing_colors <- setdiff(model_names, names(default_scenario_colors))
       if (length(missing_colors) > 0) {
         stop("Some model names have no defined colors: ", paste(missing_colors, collapse = ", "))
       }
-
       model_colors <- default_scenario_colors[model_names]
     }
   } else {
@@ -133,20 +122,20 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
 
   plots <- list(
     biomass = make_plot(get_series("logB"), "Biomass (tons)"),
-    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[MSY])), hline = 1),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[italic(MSY)])), hline = 1),
+    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[italic(MSY)])), hline = 1),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 
   # Catch plot if available
   if (!is.null(extract_catch_data)) {
-    catch_all <- bind_rows(lapply(model_names, function(mod) {
+    catch_all <- dplyr::bind_rows(lapply(model_names, function(mod) {
       extract_catch_data(models[[mod]], scenario_name = mod)
     }))
     catch_all$scenario <- as.character(catch_all$scenario)
 
-    predicted <- catch_all %>% filter(catch_type == "Predicted")
-    observed  <- catch_all %>% filter(catch_type == "Observed")
+    predicted <- dplyr::filter(catch_all, catch_type == "Predicted")
+    observed  <- dplyr::filter(catch_all, catch_type == "Observed")
 
     predicted$model <- factor(predicted$scenario, levels = model_names)
     observed$model  <- factor(observed$scenario,  levels = model_names)
@@ -165,11 +154,11 @@ plot_spict_scenarios_by_model_NEW2 <- function(models,
 
   # Production plot if available
   if (!is.null(production_fun)) {
-    prod_df <- bind_rows(lapply(model_names, function(mod) {
+    prod_df <- dplyr::bind_rows(lapply(model_names, function(mod) {
       production_fun(models[[mod]], model_name = mod)
     }))
     prod_df$Model <- factor(prod_df$Model, levels = model_names)
-    max_pts <- prod_df %>% group_by(Model) %>% slice_max(Production, n = 1) %>% ungroup()
+    max_pts <- prod_df %>% dplyr::group_by(Model) %>% dplyr::slice_max(Production, n = 1) %>% dplyr::ungroup()
     plots$production <- ggplot(prod_df, aes(x = B_K, y = Production, color = Model)) +
       geom_line(size = lindwd, linetype = "dashed") +
       geom_point(data = max_pts, aes(shape = Model), size = 3) +

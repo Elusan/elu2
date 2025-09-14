@@ -20,7 +20,7 @@
 #'
 #' @return A `ggplot` object, with the mini-legend added (or unchanged for
 #'   seasonal inputs).
-#'
+#' @seealso [kobe_all_in_one_gg()]
 #' @examples
 #' \dontrun{
 #'   # Suppose `p_kobe` is a ggplot Kobe panel and `rep` is a spictcls-like object
@@ -153,7 +153,7 @@
 #'   panels$kobe
 #' }
 #'
-#' @seealso [kobe_all_in_one_gg.EE()], [.add_kobe_original_mini_legend()]
+#' @seealso [kobe_all_in_one_gg()], \code{.add_kobe_original_mini_legend()}
 #' @export
 #'
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_vline geom_hline
@@ -333,8 +333,16 @@ plot_spict_scenarios_by_model_NEW499_WITH_KOBE <- function(models,
   # --- assemble panels (except catch & kobe for now) ---
   plots <- list(
     biomass = make_biomass_plot(get_series("logB")),
-    bbmsy   = make_plot(get_series("logBBmsy"), expression(bold(B/B[MSY])), hline = 1),
-    ffmsy   = make_plot(get_series("logFFmsy"), expression(bold(F/F[MSY])), hline = 1),
+    bbmsy   = make_plot(
+      get_series("logBBmsy"),
+      expression(bold(B / B[italic(MSY)])),
+      hline = 1
+    ),
+    ffmsy   = make_plot(
+      get_series("logFFmsy"),
+      expression(bold(F / F[italic(MSY)])),
+      hline = 1
+    ),
     f       = make_plot(get_series("logF"), "Fishing mortality")
   )
 

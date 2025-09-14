@@ -145,7 +145,10 @@ plot_elu2_panel_biomass <- function(model,
   p <- p +
     labs(title = "Absolute biomass", x = "Year", y = expression(B[t])) +
     .spict_theme_minimal_compact2() +
-    scale_y_continuous(sec.axis = sec_axis(~ . / Bmsy_est, name = expression(B[t]/B[MSY])))
+  scale_y_continuous(
+    sec.axis = ggplot2::sec_axis(~ . / Bmsy_est, name = expression(B[t]/B[MSY]))
+  )
+
 
   p
 }

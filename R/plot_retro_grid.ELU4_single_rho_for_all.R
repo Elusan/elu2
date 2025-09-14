@@ -5,8 +5,8 @@
 #' grid showing:
 #' - **Top-left:** Biomass *B[t]* (with 95% CI ribbons),
 #' - **Top-right:** Fishing mortality *F[t]*,
-#' - **Bottom-left:** Relative biomass *B[t]/B[MSY]*,
-#' - **Bottom-right:** Relative fishing mortality *F[t]/F[MSY]*.
+#' - **Bottom-left:** Relative biomass *B[t]/B\emph{MSY}*,
+#' - **Bottom-right:** Relative fishing mortality *F[t]/F\emph{MSY}*.
 #'
 #' Each panel overlays the **baseline** and **peel** runs from `retro()` and
 #' annotates **Mohn’s ρ** for its corresponding quantity (B, F, B/Bmsy, F/Fmsy)
@@ -47,8 +47,8 @@
 #' @section Panels:
 #' - **B[t]** (biomass) with CI ribbon and Mohn’s ρ\eqn{(B)}.
 #' - **F[t]** (fishing mortality) with CI ribbon and Mohn’s ρ\eqn{(F)}.
-#' - **B[t]/B[MSY]** with CI ribbon and Mohn’s ρ\eqn{(B/B_{MSY})}.
-#' - **F[t]/F[MSY]** with CI ribbon and Mohn’s ρ\eqn{(F/F_{MSY})}.
+#' - **B[t]/B\emph{MSY}** with CI ribbon and Mohn’s ρ\eqn{(B/B_{MSY})}.
+#' - **F[t]/F\emph{MSY}** with CI ribbon and Mohn’s ρ\eqn{(F/F_{MSY})}.
 #'
 #' @seealso
 #' [retro()], [mohns_rho()], [get.par()], [list.quantities()],
@@ -180,10 +180,11 @@ plot_retro_grid.ELU4_single_rho_for_all <- function(
       error = function(e) setNames(rep(NA_real_, 4), c("FFmsy", "BBmsy", "B", "F"))
     )
 
-    lab_BB <- make_rho_label(paste0("Mohn*\"'s\"~rho[B/B[MSY]]==", rho["BBmsy"]))
-    lab_FF <- make_rho_label(paste0("Mohn*\"'s\"~rho[F/F[MSY]]==",  rho["FFmsy"]))
-    lab_B  <- make_rho_label(paste0("Mohn*\"'s\"~rho[B]==",         rho["B"]))
-    lab_F  <- make_rho_label(paste0("Mohn*\"'s\"~rho[F]==",         rho["F"]))
+    # Build plotmath strings safely: use [MSY], not \emph{MSY}
+    lab_BB <- make_rho_label(paste0('Mohn*"\\"s"~rho[B/B[MSY]]==', rho["BBmsy"]))
+    lab_FF <- make_rho_label(paste0('Mohn*"\\"s"~rho[F/F[MSY]]==',  rho["FFmsy"]))
+    lab_B  <- make_rho_label(paste0('Mohn*"\\"s"~rho[B]==',         rho["B"]))
+    lab_F  <- make_rho_label(paste0('Mohn*"\\"s"~rho[F]==',         rho["F"]))
 
     # quantities (with gentle fallback names)
     q_B    <- "logB"
@@ -213,11 +214,11 @@ plot_retro_grid.ELU4_single_rho_for_all <- function(
     df_Bmsy$peel <- factor(df_Bmsy$peel, levels = ordered_peels)
     df_Fmsy$peel <- factor(df_Fmsy$peel, levels = ordered_peels)
 
-    # Panels (now with rho also on B and F)
-    p_B    <- make_panel(df_B,    expression(bold(B[t])),           rho_text = lab_B,  peel_colors_used = peel_colors_used)
-    p_F    <- make_panel(df_F,    expression(bold(F[t])),           rho_text = lab_F,  peel_colors_used = peel_colors_used)
-    p_Bmsy <- make_panel(df_Bmsy, expression(bold(B[t]/B[MSY])),    rho_text = lab_BB, peel_colors_used = peel_colors_used)
-    p_Fmsy <- make_panel(df_Fmsy, expression(bold(F[t]/F[MSY])),    rho_text = lab_FF, peel_colors_used = peel_colors_used)
+    # Panels (rho on all four)
+    p_B    <- make_panel(df_B,    expression(bold(B[t])),            rho_text = lab_B,  peel_colors_used = peel_colors_used)
+    p_F    <- make_panel(df_F,    expression(bold(F[t])),            rho_text = lab_F,  peel_colors_used = peel_colors_used)
+    p_Bmsy <- make_panel(df_Bmsy, expression(bold(B[t]/B[MSY])),     rho_text = lab_BB, peel_colors_used = peel_colors_used)
+    p_Fmsy <- make_panel(df_Fmsy, expression(bold(F[t]/F[MSY])),     rho_text = lab_FF, peel_colors_used = peel_colors_used)
 
     p_grid <- (p_B + p_F) / (p_Bmsy + p_Fmsy)
 

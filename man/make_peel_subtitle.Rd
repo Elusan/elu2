@@ -15,10 +15,12 @@ make_peel_subtitle(peel_names, peel_colors)
 A single character string containing HTML for use as a plot subtitle.
 }
 \description{
-Generates an HTML-formatted subtitle for retrospective (peel) plots, displaying colored dots and bold peel names for each peel.
+Generates an HTML-formatted subtitle for retrospective (peel) plots,
+displaying colored dots and bold peel names for each peel.
 }
 \details{
-This function is designed for use with \code{ggtext::element_markdown()} in ggplot2 plot subtitles, so that each peel's name is shown in its associated color.
+Designed for use with \code{ggtext::element_markdown()} in ggplot2 plot
+subtitles, so that each peel's name is shown in its associated color.
 }
 \examples{
 subtitle <- make_peel_subtitle(c("All", "-1", "-2"), c("black", "red", "blue"))

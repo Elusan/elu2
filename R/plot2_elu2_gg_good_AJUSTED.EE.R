@@ -49,11 +49,11 @@
 #'   library(spict)
 #'   # fit <- fit.spict(inp)
 #'   # rep <- manage(fit)
-#'   # p <- plot2_elu2_gg_good_AJUSTED88(rep)
+#'   # p <- plot2_elu2_gg_good_AJUSTED.EE(rep)
 #'   # p
 #' }
 #'
-#' @seealso [spict::manage()]
+#' @seealso [manage()], [get.manlimits()], [add.manlines()]
 #'
 #' @import ggplot2
 #' @import patchwork
@@ -678,10 +678,7 @@ kobe_all_in_one_gg.EE <- function(rep,
                                   CI = 0.95,
                                   scenario_colors = NULL,
                                   origin_offset_frac = 0.04) {
-  # (body unchanged from your version; left here verbatim)
-  # ...  [KEEP YOUR EXISTING IMPLEMENTATION] ...
-  # For brevity in this snippet, the full function body you provided remains as-is.
-  # Make sure it lives in the same file.
+  # ----- small helpers (local) -----
   check_rep <- function(rep, reportmode0 = TRUE) {
     if (!inherits(rep, "spictcls") || !"opt" %in% names(rep)) stop("The argument 'rep' must be a fitted spict object (fit.spict()).")
     if (reportmode0 && rep$inp$reportmode != 0) stop("All states must be reported! Set 'inp$reportmode <- 0' and refit.")
@@ -1165,7 +1162,6 @@ kobe_all_in_one_gg.EE <- function(rep,
   }
   p
 }
-
 
 # ---- Backwards-compat wrapper to fix the user error --------------------------
 #' @keywords internal

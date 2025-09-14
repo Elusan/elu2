@@ -17,11 +17,11 @@ make_hindcast_panel(
 )
 }
 \arguments{
-\item{fit}{Fitted SPiCT/elu2 model (no hindcast attached yet).}
+\item{fit}{Fitted ELU/SPiCT-style model (no hindcast attached yet).}
 
 \item{panel_label}{Character to draw at top-left inside the panel (e.g., \code{"S1P.SDM"}).}
 
-\item{npeels, peel.dtc, mc.cores}{Hindcast controls (passed to \code{\link[spict:hindcast]{spict::hindcast()}}).}
+\item{npeels, peel.dtc, mc.cores}{Hindcast controls; forwarded to \code{\link[=hindcast]{hindcast()}}.}
 
 \item{CI, verbose, add.mase}{Passed to \code{\link[=plotspict.hindcast_elu2_gg_exact_FOR_GRIDS]{plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()}}.}
 
@@ -35,4 +35,7 @@ Runs a hindcast on a fitted model and returns a labeled panel using
 \code{\link[=plotspict.hindcast_elu2_gg_exact_FOR_GRIDS]{plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()}}. On error, returns a
 placeholder panel carrying the error note. The label is nudged slightly
 inward from the top-left border to avoid overlap with the panel frame.
+}
+\seealso{
+\code{\link[=hindcast]{hindcast()}}, \code{\link[=plotspict.hindcast_elu2_gg_exact_FOR_GRIDS]{plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()}}
 }

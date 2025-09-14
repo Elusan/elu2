@@ -66,6 +66,7 @@ elu_plot_kobe <- function(rep, logax=FALSE, plot.legend=TRUE, man.legend=TRUE, e
       ext <- FALSE
       bscal <- Bmsy[2]
       fscal <- Fmsy[2]
+      # NEW:
       xlab <- expression(B[t]/B[MSY])
       ylab <- expression(F[t]/F[MSY])
     } else {
@@ -160,9 +161,10 @@ elu_plot_kobe <- function(rep, logax=FALSE, plot.legend=TRUE, man.legend=TRUE, e
       atx <- labx*Bmsy[2] #expression(10^expx)
       aty <- laby*Fmsy[2] #expression(10^expy)
       axis(3, labels=labx, at=atx)
-      mtext(expression(B[t]/B[MSY]), side=3, las=0, line=2, cex=par('cex'))
+      # NEW:
+      mtext(expression(B[t]/B[MSY]), side=3,  las=0, line=2,   cex=par('cex'))
       axis(4, labels=laby, at=aty)
-      mtext(expression(F[t]/F[MSY]), side=4, las=0, line=2.5, cex=par('cex'))
+      mtext(expression(F[t]/F[MSY]), side=4,  las=0, line=2.5, cex=par('cex'))
     }
     alpha <- 0.15
     ymin <- ifelse(logax, logminval*1e-2, -10)

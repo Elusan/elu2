@@ -351,7 +351,7 @@ All_scenarios_Tables_Grouped_WAIC_MAPE <- function(
       df_out[, 1:8],
       format = "latex",
       escape = FALSE,
-      linesep = "\\hline",
+      linesep = "\\addlinespace",
       booktabs = TRUE,
       align = "llllllll",
       col.names = c(

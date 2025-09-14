@@ -23,7 +23,6 @@
 #' }
 #'
 #' @import ggplot2
-#' @importFrom spict get.par get.version
 #' @importFrom grid unit
 #' @importFrom stats dnorm dgamma qgamma
 #' @export

@@ -24,6 +24,8 @@ export_spict_all_scenario_tables_SDM_GLM_grouped(
 \item{param_groups}{Optional: parameter grouping for group separation.}
 
 \item{verbose}{Print progress?}
+
+\item{caption}{Optional caption string (or named list by scenario).}
 }
 \value{
 Invisibly, a named list of kableExtra objects.
@@ -31,5 +33,5 @@ Invisibly, a named list of kableExtra objects.
 \description{
 Automatically summarizes all models, creates wide summary tables, and exports
 a fully formatted LaTeX table for each scenario, with left-aligned columns and
-group separation (\addlinespace and \hline) after desired parameter groups.
+group separation (\verb{\\addlinespace} and \verb{\\hline}) after desired parameter groups.
 }

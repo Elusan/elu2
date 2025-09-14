@@ -37,8 +37,8 @@ grid showing:
 \itemize{
 \item \strong{Top-left:} Biomass \emph{B\link{t}} (with 95\% CI ribbons),
 \item \strong{Top-right:} Fishing mortality \emph{F\link{t}},
-\item \strong{Bottom-left:} Relative biomass \emph{B\link{t}/B\link{MSY}},
-\item \strong{Bottom-right:} Relative fishing mortality \emph{F\link{t}/F\link{MSY}}.
+\item \strong{Bottom-left:} Relative biomass \emph{B\link{t}/B\emph{MSY}},
+\item \strong{Bottom-right:} Relative fishing mortality \emph{F\link{t}/F\emph{MSY}}.
 }
 
 Each panel overlays the \strong{baseline} and \strong{peel} runs from \code{retro()} and
@@ -68,8 +68,8 @@ your package namespace.
 \itemize{
 \item \strong{B\link{t}} (biomass) with CI ribbon and Mohn’s ρ\eqn{(B)}.
 \item \strong{F\link{t}} (fishing mortality) with CI ribbon and Mohn’s ρ\eqn{(F)}.
-\item \strong{B\link{t}/B\link{MSY}} with CI ribbon and Mohn’s ρ\eqn{(B/B_{MSY})}.
-\item \strong{F\link{t}/F\link{MSY}} with CI ribbon and Mohn’s ρ\eqn{(F/F_{MSY})}.
+\item \strong{B\link{t}/B\emph{MSY}} with CI ribbon and Mohn’s ρ\eqn{(B/B_{MSY})}.
+\item \strong{F\link{t}/F\emph{MSY}} with CI ribbon and Mohn’s ρ\eqn{(F/F_{MSY})}.
 }
 }
 
