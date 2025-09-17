@@ -1,3 +1,149 @@
+# R/hc_helpers_SAFE.R
+# Not exported (internal); robustly finds an extractor or uses a local copy.
+
+# Try to locate a function by name in (1) global env, (2) elu2, (3) spict
+.find_fun <- function(fname) {
+  if (exists(fname, mode = "function", inherits = TRUE)) return(get(fname, mode = "function"))
+  if ("elu2" %in% loadedNamespaces() && exists(fname, envir = asNamespace("elu2"), inherits = FALSE))
+    return(get(fname, envir = asNamespace("elu2")))
+  if ("spict" %in% loadedNamespaces() && exists(fname, envir = asNamespace("spict"), inherits = FALSE))
+    return(get(fname, envir = asNamespace("spict")))
+  NULL
+}
+
+# Local implementation of extract.hindcast.info() based on your provided code,
+# but bulletproofed to resolve get.par() and check.rep() dynamically.
+.extract_hindcast_info_local <- function(rep, CI = 0.95, verbose = TRUE) {
+  check.rep <- .find_fun("check.rep")
+  if (!is.null(check.rep)) check.rep(rep)
+
+  if (!"hindcast" %in% names(rep)) {
+    stop("No results of the hindcast function found. Please run hindcasting using the `hindcast` function.")
+  }
+
+  inpin    <- rep$inp
+  hindcast <- rep$hindcast
+  npeels   <- length(hindcast) - 1L
+  peels    <- 1:npeels
+
+  # Account for interpretation of cont time
+  if (max(unlist(inpin$timeI)) == inpin$lastCatchObs) {
+    peeling <- 0:(npeels - 1L)
+  } else {
+    peeling <- 1:npeels
+  }
+
+  # Peel on dtc?
+  peel.dtc <- ifelse(length(which(abs(diff(
+    sapply(hindcast[-1], function(x) max(c(x$inp$timeC + x$inp$dtc,
+                                           x$inp$timeE + x$inp$dte))))) < 1)) >= 2, 1, 0)
+
+  if (peel.dtc) {
+    tmp <- seq(floor(inpin$timerange[1]), ceiling(inpin$timerange[2] + 100), tail(inpin$dtc, 1))
+    hindcastTimes <- tmp[as.integer(cut(inpin$timerangeObs[2], tmp, right = FALSE)) + 1] -
+      cumsum(rev(inpin$dtc))[peeling]
+  } else {
+    hindcastTimes <- ceiling(inpin$timerangeObs[2]) - peeling
+  }
+
+  # Which indices overlap the hindcast years
+  nind   <- length(rep$inp$timeI)
+  valid  <- logical(0)
+  for (i in seq_len(nind)) {
+    valid <- c(valid, ifelse(max(rep$inp$timeI[[i]]) >= min(hindcastTimes), TRUE, FALSE))
+  }
+  nind.val <- length(which(valid))
+  if (nind.val < 1) {
+    stop("Not a single index overlaps with the chosen peels. Increase `npeels` and re-run hindcasting.")
+  }
+
+  # Convergence (reverse order)
+  conv <- sapply(hindcast[-1], function(x) x$opt$convergence)
+  conv <- rev(ifelse(conv == 0, TRUE, FALSE))
+
+  # Build index pointers per run
+  nobsI <- lapply(hindcast, function(x) x$inp$nobsI)
+  indI  <- vector("list", length(nobsI))
+  for (i in seq_along(nobsI)) {
+    indI[[i]] <- vector("list", length(nobsI[[i]]))
+    for (j in seq_along(nobsI[[i]])) {
+      if (j == 1) {
+        indI[[i]][[j]] <- seq_len(nobsI[[i]][j])
+      } else {
+        indI[[i]][[j]] <- seq(cumsum(nobsI[[i]])[j - 1] + 1, cumsum(nobsI[[i]])[j], 1)
+      }
+    }
+  }
+
+  gpar <- .find_fun("get.par")
+  if (is.null(gpar)) stop("get.par() not found in elu2/spict/global. Please ensure it is available.")
+
+  mase <- NULL
+  res.index <- vector("list", nind.val)
+  ival <- 0L
+  for (i in seq_len(nind)) if (valid[i]) {
+    ival <- ival + 1L
+    # observations and predictions per peel (including base peel 0)
+    dat.list <- vector("list", npeels + 1L)
+    for (j in 1:(npeels + 1L)) {
+      obs  <- log(hindcast[[j]]$inp$obsI[[i]])
+      iuse <- hindcast[[j]]$inp$iuse[indI[[j]][[i]]]
+      pr   <- gpar("logIpred", hindcast[[j]], exp = FALSE)[indI[[j]][[i]], 1:3, drop = FALSE]
+      colnames(pr) <- c("lc", "pred", "uc")
+      time <- hindcast[[j]]$inp$timeI[[i]]
+      peel <- rep(j - 1L, hindcast[[j]]$inp$nobsI[i])
+      dat.list[[j]] <- data.frame(obs, iuse, pr, time, peel)
+    }
+    dat  <- do.call(rbind, dat.list)
+    dat0 <- dat[dat$peel == min(dat$peel), , drop = FALSE]
+
+    # Predictions for MASE
+    pred <- data.frame(matrix(NA_real_, nrow = npeels, ncol = 4))
+    for (j in seq_len(npeels)) {
+      dati <- dat[dat$peel == peels[j], , drop = FALSE]
+      if (!tail(dati$iuse, 1)) { # only if index was peeled in that peel
+        pred[j, 1] <- tail(dati$time, 1)
+        pred[j, 2] <- tail(dati$pred, 1) - tail(dati$obs, 1)  # model residual
+        pred[j, 3] <- tail(dat0$obs[dat0$time < tail(dati$time, 1)], 1) - tail(dati$obs, 1) # naive residual
+        pred[j, 4] <- tail(dati$time, 1) - tail(dat0$time[dat0$time < tail(dati$time, 1)], 1) # spacing
+      }
+    }
+    colnames(pred) <- c("time", "pred", "naive", "spacing")
+    pred <- pred[rev(conv), , drop = FALSE]  # keep converged in reverse order
+
+    if (nrow(pred) < 1) stop("Not enough converged naive predictions. Increase `npeels` and re-run hindcasting!")
+    if (isTRUE(verbose) && !all(abs(pred$spacing[!is.na(pred$spacing)] - 1) * 12 <= 1)) {
+      cat(paste0("Warning: Index ", i, " timing varies by >1 month; MASE interpretation may be affected.\n"))
+    }
+
+    mase <- rbind(mase, data.frame(Index = i,
+                                   MASE   = mean(abs(pred$pred),  na.rm = TRUE) /
+                                     mean(abs(pred$naive), na.rm = TRUE),
+                                   npeels = nrow(pred)))
+    res.index[[ival]] <- list(dat = dat, pred = pred)
+  } else {
+    if (isTRUE(verbose)) cat(paste0("No observations in evaluation years for Index ", i, "\n"))
+  }
+
+  nnotconv <- sum(!conv)
+  if (isTRUE(verbose) && nnotconv > 0) {
+    message(nnotconv, " peel(s) (year(s) ",
+            paste(hindcastTimes[which(!rev(conv))], collapse = ", "),
+            ") did not converge.")
+  }
+
+  list(index = res.index, mase = mase)
+}
+
+# Public helper used by plotting code
+extract_hc_info_safe <- function(rep, CI = 0.95, verbose = TRUE) {
+  # Prefer user/package versions if they exist
+  ext <- .find_fun("extract.hindcast.info")
+  if (!is.null(ext)) return(ext(rep, CI = CI, verbose = verbose))
+  # Else, use the local implementation
+  .extract_hindcast_info_local(rep, CI = CI, verbose = verbose)
+}
+
 # R/plotspict_hindcast_elu2_gg_exact_FOR_GRIDS.R
 
 #' SPiCT hindcast plot (elu2 exact version; grid-friendly)
@@ -53,7 +199,9 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
     asp = 2,
     stamp = get.version()
 ) {
-  hcInfo    <- extract.hindcast.info(rep, CI = CI, verbose = verbose)
+  # 🔒 Use the robust extractor
+  hcInfo    <- extract_hc_info_safe(rep, CI = CI, verbose = verbose)
+
   inpin     <- rep$inp
   hindcast  <- rep$hindcast
   npeels    <- length(hindcast) - 1L
@@ -120,7 +268,6 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
     })
     peel_draw_df <- Filter(function(dd) is.data.frame(dd) && nrow(dd) > 0, peel_draw)
 
-    # peel lines (colored by last time of the peel)
     df_peels <- safe_rbind(peel_draw)
     if (nrow(df_peels)) {
       df_peels <- do.call(rbind, lapply(split(df_peels, df_peels$peel), function(dd) {
@@ -131,7 +278,6 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
       }))
     }
 
-    # short dashed grey tail segment (last 2 points)
     seg_list <- lapply(peel_draw_df, function(dd) {
       if (!is.data.frame(dd) || nrow(dd) < 2) return(NULL)
       nd <- nrow(dd); pid <- peel_index_for_time(dd$time[nd])
@@ -142,7 +288,6 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
     })
     df_segments <- safe_rbind(seg_list)
 
-    # observations split
     t0        <- suppressWarnings(min(hindcastTimes, na.rm = TRUE))
     obs_pre   <- dat0[dat0$time <  t0, , drop = FALSE]
     obs_hind  <- dat0[dat0$time >= t0, , drop = FALSE]
@@ -156,7 +301,6 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
       obs_hind$.peel_lab <- factor(ifelse(is.na(peel_ids), NA, peel_lab[peel_ids]), levels = peel_lab)
     }
 
-    # end points per peel
     end_list <- lapply(peel_draw_df, function(dd) if (nrow(dd)) dd[nrow(dd), , drop = FALSE] else NULL)
     df_pred_end <- safe_rbind(end_list)
     if (nrow(df_pred_end)) {
@@ -176,12 +320,12 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
   }
 
   idx_list   <- lapply(seq_len(nind.val), make_index_df)
-  bind0      <- safe_rbind(lapply(idx_list, `[[`, "dat0"))
-  bind_peels <- safe_rbind(lapply(idx_list, `[[`, "peels"))
-  bind_segs  <- safe_rbind(lapply(idx_list, `[[`, "segments"))
-  bind_pre   <- safe_rbind(lapply(idx_list, `[[`, "obs_pre"))
-  bind_hind  <- safe_rbind(lapply(idx_list, `[[`, "obs_hind"))
-  bind_end   <- safe_rbind(lapply(idx_list, `[[`, "pred_end"))
+  bind0      <- do.call(rbind, lapply(idx_list, `[[`, "dat0"))
+  bind_peels <- do.call(rbind, lapply(idx_list, `[[`, "peels"))
+  bind_segs  <- do.call(rbind, lapply(idx_list, `[[`, "segments"))
+  bind_pre   <- do.call(rbind, lapply(idx_list, `[[`, "obs_pre"))
+  bind_hind  <- do.call(rbind, lapply(idx_list, `[[`, "obs_hind"))
+  bind_end   <- do.call(rbind, lapply(idx_list, `[[`, "pred_end"))
 
   used_peel_levels <- character(0)
   if (nrow(bind_hind)) {
@@ -258,7 +402,6 @@ plotspict.hindcast_elu2_gg_exact_FOR_GRIDS <- function(
                           show.legend = FALSE)
   }
 
-  # Legend (2 columns; col1 = Ref + peels, col2 = obs/pred) without drawing stray points
   base_breaks <- c("Ref", used_peel_levels)
   A <- length(base_breaks)
   n_rows <- max(A, 2L)
