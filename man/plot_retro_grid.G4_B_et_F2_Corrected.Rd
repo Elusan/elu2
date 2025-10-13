@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_retro_grid.G4_B_et_F2_Corrected.R
 \name{plot_retro_grid.G4_B_et_F2_Corrected}
 \alias{plot_retro_grid.G4_B_et_F2_Corrected}
-\title{Plot retrospective diagnostics grid for multiple SPiCT models}
+\title{Retrospective diagnostics grid (B, F, B/Bmsy, F/Fmsy) for multiple SPiCT models}
 \usage{
 plot_retro_grid.G4_B_et_F2_Corrected(
   models,
@@ -17,57 +17,47 @@ plot_retro_grid.G4_B_et_F2_Corrected(
 )
 }
 \arguments{
-\item{models}{A named list of fitted SPiCT models, typically including retro results.
-Example: \code{list(S1F = model_fox, S1P = model_pella, S1S = model_schaefer)}}
+\item{models}{Named list of fitted SPiCT models \strong{with} \code{rep$retro} already computed.
+Each element must be a \code{spictcls}-like list containing \verb{$retro} (a list of peel fits).
+Names of \code{models} are used as column headers (e.g. \code{"S1P"}, \code{"S1F"}, \code{"S1S"}).}
 
-\item{scenario_name}{A character string used as the title of the plot. Also used
-to generate the output filename if \code{filename} is not provided.}
+\item{scenario_name}{Title shown above the grid.}
 
-\item{peel_colors}{Optional character vector of colors to assign to each peel.
-If NULL, a default palette is used (JABBA or MetBrewer).}
+\item{peel_colors}{\code{NULL} (auto), a character vector of colors, or a function
+returning a color vector given \code{n} (e.g., \code{function(n) scales::hue_pal()(n)}).}
 
-\item{palette}{A character string specifying the color palette to use for peels.
-Options include "JABBA" or any valid palette from \code{MetBrewer::list_met_palettes()}.}
+\item{palette}{Palette keyword. \code{"JABBA"} uses a fixed fallback palette unless
+\code{jabba_colors} exists in the search path. Any valid MetBrewer palette name
+(if the package is installed) is also accepted; otherwise a hue palette is used.}
 
-\item{width}{Numeric. Width (in inches) of the output PNG file if saved.}
+\item{width, height, dpi}{Size/hardcopy parameters (used only if \code{output_dir} is non-\code{NULL}).}
 
-\item{height}{Numeric. Height (in inches) of the output PNG file if saved.}
+\item{output_dir}{Optional directory to save a PNG. If provided, a file is written.}
 
-\item{dpi}{Resolution of the saved figure in dots per inch.}
-
-\item{output_dir}{Optional character string specifying the directory where the figure
-should be saved. If NULL, the plot is not saved.}
-
-\item{filename}{Optional filename (with .png extension) for saving the figure. If NULL,
-a name will be auto-generated from \code{scenario_name}.}
+\item{filename}{Optional filename for the PNG. If missing, one is derived from \code{scenario_name}.}
 }
 \value{
-A \code{patchwork} plot object displaying the full grid of retrospective plots.
-Invisibly returns the plot for further customization or saving.
+A \code{ggplot}/\code{patchwork} object combining all panels.
 }
 \description{
-Generates a grid of retrospective plots (B, F, B/Bmsy, F/Fmsy) for each model
-in a named list. Each column represents one model, and each row a metric.
-The function also annotates Mohn's rho for B/Bmsy and F/Fmsy. Optionally saves
-the output to file.
-}
-\details{
-The function extracts B, F, B/Bmsy, and F/Fmsy trajectories for each model and
-peel, computes Mohn’s rho values for B/Bmsy and F/Fmsy, and assembles them into
-a clean grid using the \pkg{patchwork} package. Confidence intervals are shown
-with shaded bands. The peel legend is embedded as a subtitle using colored dots.
+Builds a multi-column grid (one column per model) with 4 panels per model:
+biomass \eqn{B_t}, fishing mortality \eqn{F_t}, \eqn{B_t/B_{MSY}}, and
+\eqn{F_t/F_{MSY}}. Includes Mohn's rho annotations when available.
 
-If \code{output_dir} is provided, the figure is saved as a high-resolution PNG.
-This function is useful for summarizing and comparing retrospective performance
-across multiple production model fits (e.g., Fox, Schaefer, Pella).
+Robust color handling:
+\itemize{
+\item \code{peel_colors} may be \code{NULL}, a character vector of hex/color names, or a
+function that returns a character vector (e.g. \code{function(n) ...}).
+\item Deterministic naming/order of peels (\"All\" then numeric peels in
+descending order, then non-numeric).
+}
 }
 \examples{
 \dontrun{
-models <- list(S1F = model_fox, S1P = model_pella, S1S = model_schaefer)
-plot_retro_grid.ELU4(models, scenario_name = "Scenario 1", output_dir = "FIG")
+# Suppose 'mods' is a named list of models with $retro already computed:
+p <- plot_retro_grid.G4_B_et_F2_Corrected(
+  models = mods, scenario_name = "Scenario 1", palette = "JABBA"
+)
+print(p)
 }
-
-}
-\seealso{
-\code{\link{retro}}, \code{\link{mohns_rho}}, \code{\link{plot_retro_grid.ELU5}}
 }

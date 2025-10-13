@@ -51,13 +51,13 @@ plot_spict_NICES_CIs_NEW <- function(models,
 
   model_names <- names(models)
 
-  # ---- Visual knobs (match the "good" style) ----------------------------------
-  CI_FILL_ALPHA  <- 0.12   # ribbon opacity (fill)
-  CI_EDGE_ALPHA  <- 0.25   # band-border opacity (lwr/upr lines)
-  CI_EDGE_WIDTH  <- 0.6    # band-border line width
-  EST_LINE_WIDTH <- 0.9    # main estimate line width
+  # ---- Visual knobs (awesome & very transparent overlaps) ---------------------
+  CI_FILL_ALPHA  <- 0.12   # very transparent ribbons
+  CI_EDGE_ALPHA  <- 0.45   # subtle band borders
+  CI_EDGE_WIDTH  <- 0.22   # thin band-border lines
+  EST_LINE_WIDTH <- 1.2    # main estimate line width
   VLINE_COL      <- "grey50"
-  VLINE_SIZE     <- 0.2
+  VLINE_SIZE     <- 0.8
 
   # ---- Theme (compact, crisp border, tidy legend) -----------------------------
   theme_minimal_compact2_good <- function(base_size = 10, base_family = "") {
@@ -87,7 +87,7 @@ plot_spict_NICES_CIs_NEW <- function(models,
   # Colors (same logic as your version)
   if (is.null(scenario_colors)) {
     if (length(models) == 6) {
-      model_colors <- setNames(c("blue","#FF7F00","#A65628","#D7191C","#2B83BA","#4DAF4A"), model_names)
+      model_colors <- setNames(c("#A65628","#FF7F00","#4DAF4A","blue","#D7191C","#2B83BA"), model_names)
     } else {
       default_scenario_colors <- c(
         "S1P"="#1b9e77","S1S"="#d95f02","S1F"="#7570b3",

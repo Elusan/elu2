@@ -14,21 +14,24 @@ All_scenarios_Tables_Grouped(
 )
 }
 \arguments{
-\item{model_list}{Named list of SPiCT model fits for all scenarios (names like S1F.SDM).}
+\item{model_list}{Named list of SPiCT model fits for all scenarios (names like \code{S1F.SDM}).}
 
-\item{output_dir}{Directory for .tex files.}
+\item{output_dir}{Directory for \code{.tex} files (must exist).}
 
-\item{scenarios}{Character vector of scenario names (default auto-detected from names(model_list)).}
+\item{scenarios}{Character vector of scenario names; default auto-detected from \code{names(model_list)}.}
 
-\item{param_groups}{Optional: parameter grouping for group separation.}
+\item{param_groups}{Optional list of character vectors defining parameter groupings (for separation).}
 
-\item{verbose}{Print progress?}
+\item{verbose}{Logical; print progress messages?}
+
+\item{caption}{Optional LaTeX caption override (character). If \code{NULL}, a default is used.}
 }
 \value{
-Invisibly, a named list of kableExtra objects.
+Invisibly returns a named list of \pkg{kableExtra} table objects (one per scenario).
 }
 \description{
 Automatically summarizes all models, creates wide summary tables, and exports
 a fully formatted LaTeX table for each scenario, with left-aligned columns and
-group separation (\addlinespace and \hline) after desired parameter groups.
+group separation (shown in LaTeX as \verb{\addlinespace} and \verb{\hline})
+after desired parameter groups.
 }

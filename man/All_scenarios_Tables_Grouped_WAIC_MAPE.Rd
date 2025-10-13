@@ -2,7 +2,7 @@
 % Please edit documentation in R/All_scenarios_Tables_Grouped_WAIC_MAPE.R
 \name{All_scenarios_Tables_Grouped_WAIC_MAPE}
 \alias{All_scenarios_Tables_Grouped_WAIC_MAPE}
-\title{Export Combined SDM+GLM SPiCT Scenario Tables with Grouped Separation}
+\title{Export Combined SDM+GLM SPiCT Scenario Tables with Grouped Separation (+ WAIC & MAPE)}
 \usage{
 All_scenarios_Tables_Grouped_WAIC_MAPE(
   model_list,
@@ -19,34 +19,34 @@ All_scenarios_Tables_Grouped_WAIC_MAPE(
 )
 }
 \arguments{
-\item{model_list}{Named flat list of SPiCT fits with names like "S1F.SDM".}
+\item{model_list}{Named flat list of SPiCT fits with names like \code{"S1F.SDM"}.}
 
-\item{output_dir}{Directory for .tex files (must exist).}
+\item{output_dir}{Directory for \code{.tex} files (must exist).}
 
-\item{scenarios}{Character vector of scenario names (default auto-detected).}
+\item{scenarios}{Character vector of scenario names; default auto-detected.}
 
-\item{param_groups}{Optional parameter grouping (same behavior as before).}
+\item{param_groups}{Optional parameter grouping (same behavior as \code{All_scenarios_Tables_Grouped}).}
 
-\item{verbose}{logical}
+\item{verbose}{Logical; print progress?}
 
-\item{caption}{Optional caption override.}
+\item{caption}{Optional caption override (character).}
 
-\item{include_waic}{logical; append WAIC row (default TRUE).}
+\item{include_waic}{Logical; append WAIC row (default \code{TRUE}).}
 
-\item{include_mape}{logical; append pooled MAPE row (default TRUE).}
+\item{include_mape}{Logical; append pooled MAPE row (default \code{TRUE}).}
 
-\item{waic_digits}{integer; decimals for WAIC (default 1).}
+\item{waic_digits}{Integer; decimals for WAIC (default 1).}
 
-\item{mape_digits}{integer; decimals for MAPE (default 1).}
+\item{mape_digits}{Integer; decimals for MAPE (default 1).}
 
-\item{cand_pred_names}{optional; forwarded to mape_by_scenario() / mape_for_fit_elu2() to help find predictions.}
+\item{cand_pred_names}{Optional; forwarded to \code{mape_by_scenario()} / \code{mape_for_fit_elu2()}.}
 }
 \value{
-Invisibly, a named list of kableExtra objects.
+Invisibly returns a named list of \pkg{kableExtra} table objects (one per scenario).
 }
 \description{
-Automatically summarizes all models, creates wide summary tables, and exports
-a fully formatted LaTeX table for each scenario, with left-aligned columns and
-group separation (\addlinespace and \hline) after desired parameter groups.
-Adds WAIC and pooled MAPE (\%) rows per scenario.
+Summarizes all models, creates wide summary tables, and exports a formatted LaTeX
+table per scenario. Columns are left-aligned; parameter groups are visually separated
+(shown in LaTeX as \verb{\addlinespace} and \verb{\hline}). Appends WAIC and pooled
+MAPE (\\%) rows per scenario.
 }

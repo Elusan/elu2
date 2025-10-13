@@ -1,5 +1,3 @@
-# R/plot_hindcast_grid_scenario.R
-
 #' Hindcast grid (2×3) for one scenario
 #'
 #' Builds a 2×3 grid: columns = **Pella**, **Schaefer**, **Fox**;
@@ -8,18 +6,37 @@
 #'
 #' @param all_models Named list-of-lists by scenario, e.g. `all_models$S1$S1P.SDM`.
 #' @param scenario Name of the scenario to plot, e.g. `"S1"`.
-#' @param npeels,peel.dtc,mc.cores Hindcast controls.
-#' @param CI,verbose,add.mase Passed to [plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()].
+#' @param npeels,peel.dtc,mc.cores Hindcast controls (passed to the internal panel constructor).
+#' @param CI,verbose,add.mase Passed through to \code{plotspict.hindcast_elu2_gg_exact_FOR_GRIDS()}.
+#'   (Shown for provenance only; this symbol is not linked to avoid roxygen link warnings.)
 #' @param show_legends Logical; keep per-panel legends (default `TRUE`). Set `FALSE` to declutter.
 #' @param save Logical; save PNG to `out_dir`. Default `TRUE`.
 #' @param out_dir Output directory (created if missing). Default `file.path("FIG", "Hindcast")`.
 #' @param filename Optional filename; default `"HindcastGrid_<scenario>_2x3.png"`.
 #' @param width,height,dpi PNG device settings (inches, inches, dpi).
 #'
-#' @return Invisibly, a list with `patch` (patchwork object) and `file` (path or `NA`).
+#' @return Invisibly, a list with elements:
+#'   \itemize{
+#'     \item \code{patch}: the patchwork object
+#'     \item \code{file}: the saved file path (or \code{NA} if \code{save = FALSE})
+#'   }
+#'
+#' @seealso \link[=plot_hindcast_grid_many]{plot_hindcast_grid_many()} for batch rendering
+#'   across multiple scenarios.
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose all_models is a named list-of-lists as described:
+#' res <- plot_hindcast_grid_scenario(all_models, scenario = "S1",
+#'                                    npeels = 3, peel.dtc = FALSE,
+#'                                    out_dir = file.path("FIG", "Hindcast"),
+#'                                    width = 12, height = 5, dpi = 300)
+#' res$file  # saved path
+#' }
 #'
 #' @export
 #' @importFrom patchwork wrap_plots
+#' @importFrom ggplot2 ggsave
 plot_hindcast_grid_scenario <- function(
     all_models, scenario,
     npeels = 2, peel.dtc = FALSE, mc.cores = 1,
@@ -36,16 +53,17 @@ plot_hindcast_grid_scenario <- function(
   }
   mods <- all_models[[scenario]]
 
-  # expected keys by design (columns = P,S,F ; rows = SDM, GLM)
+  # Expected keys by design (columns = P,S,F ; rows = SDM, GLM)
   keys <- c(
     paste0(scenario, c("P", "S", "F"), ".SDM"),
     paste0(scenario, c("P", "S", "F"), ".GLM")
   )
 
-  panels <- lapply(keys, function(k) {
+  # Helper: robust panel maker (placeholder on error or missing fit)
+  make_safe_panel <- function(k) {
     if (!k %in% names(mods)) {
       message("[", k, "] not found; placing placeholder panel.")
-      return(make_hindcast_panel(fit = NULL, panel_label = k))  # will error -> placeholder
+      return(make_hindcast_panel(fit = NULL, panel_label = k))
     }
     fit <- mods[[k]]
     msg <- paste0("[", k, "]")
@@ -64,7 +82,9 @@ plot_hindcast_grid_scenario <- function(
     } else {
       p
     }
-  })
+  }
+
+  panels <- lapply(keys, make_safe_panel)
 
   patch <- patchwork::wrap_plots(panels, nrow = 2, byrow = TRUE)
 
@@ -80,4 +100,38 @@ plot_hindcast_grid_scenario <- function(
   }
 
   invisible(list(patch = patch, file = outfile))
+}
+
+
+#' Hindcast grid for many scenarios (batch)
+#'
+#' Iterates scenarios in \code{scenario_names} (default: all found in \code{all_models})
+#' and writes one 2×3 grid PNG per scenario using
+#' \link[=plot_hindcast_grid_scenario]{plot_hindcast_grid_scenario()}.
+#'
+#' @param all_models See \link[=plot_hindcast_grid_scenario]{plot_hindcast_grid_scenario()}.
+#' @param scenario_names Character vector of scenarios to process; default \code{names(all_models)}.
+#' @param ... Passed through to \link[=plot_hindcast_grid_scenario]{plot_hindcast_grid_scenario()}.
+#'
+#' @return Invisibly, a named list of results (one per scenario), each as returned by
+#'   \link[=plot_hindcast_grid_scenario]{plot_hindcast_grid_scenario()}.
+#'
+#' @examples
+#' \dontrun{
+#' # Render all scenarios:
+#' out <- plot_hindcast_grid_many(all_models,
+#'                                out_dir = file.path("FIG", "Hindcast"),
+#'                                width = 12, height = 5, dpi = 300,
+#'                                show_legends = FALSE)
+#' }
+#'
+#' @export
+plot_hindcast_grid_many <- function(all_models, scenario_names = names(all_models), ...) {
+  stopifnot(is.list(all_models))
+  out <- list()
+  for (sc in scenario_names) {
+    message("== Scenario ", sc, " ==")
+    out[[sc]] <- plot_hindcast_grid_scenario(all_models, scenario = sc, ...)
+  }
+  invisible(out)
 }
