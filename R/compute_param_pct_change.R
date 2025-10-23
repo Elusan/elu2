@@ -1,20 +1,13 @@
-# ============================================================
-# Percent-change vs. a base scenario (default S4), for SDM/GLM
-# ============================================================
-
 #' Compute % changes vs base scenario (default "S4")
-#'
-#' @param param_df Tidy df from your extractor, with columns at least:
-#'   scenario, type, family, param, year, est, lo, hi.
-#' @param base_scenario Character, your base (default "S4").
-#' @param keep_ratio_year Integer; keep only this year for ratio panels (default 2022).
-#' @param include_ci Logical; also compute CI % changes (default FALSE).
-#' @param families_order Character vector for row ordering (default c("Pella","Fox","Schaefer")).
-#' @param params_order Character vector for col ordering in wide (default c("K","r","MSY","B/Bmsy","F/Fmsy")).
-#' @return A list with:
-#'   $tidy  — long df of % changes vs base (one row per scenario/type/family/param),
-#'   $wide  — named list with two data.frames: $SDM and $GLM (pretty wide tables),
-#'   $base  — the base rows used for the comparison (for auditing).
+#' @param param_df ...
+#' @param base_scenario ...
+#' @param keep_ratio_year ...
+#' @param include_ci ...
+#' @param families_order ...
+#' @param params_order ...
+#' @return ...
+#' @export
+# add export above (normal comment)
 compute_param_pct_change <- function(
     param_df,
     base_scenario   = "S4",

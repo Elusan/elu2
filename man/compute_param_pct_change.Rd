@@ -14,24 +14,20 @@ compute_param_pct_change(
 )
 }
 \arguments{
-\item{param_df}{Tidy df from your extractor, with columns at least:
-scenario, type, family, param, year, est, lo, hi.}
+\item{param_df}{...}
 
-\item{base_scenario}{Character, your base (default "S4").}
+\item{base_scenario}{...}
 
-\item{keep_ratio_year}{Integer; keep only this year for ratio panels (default 2022).}
+\item{keep_ratio_year}{...}
 
-\item{include_ci}{Logical; also compute CI \% changes (default FALSE).}
+\item{include_ci}{...}
 
-\item{families_order}{Character vector for row ordering (default c("Pella","Fox","Schaefer")).}
+\item{families_order}{...}
 
-\item{params_order}{Character vector for col ordering in wide (default c("K","r","MSY","B/Bmsy","F/Fmsy")).}
+\item{params_order}{...}
 }
 \value{
-A list with:
-$tidy  — long df of \% changes vs base (one row per scenario/type/family/param),
-$wide  — named list with two data.frames: $SDM and $GLM (pretty wide tables),
-$base  — the base rows used for the comparison (for auditing).
+...
 }
 \description{
 Compute \% changes vs base scenario (default "S4")
