@@ -2,13 +2,14 @@
 % Please edit documentation in R/plot_param_grid_3rows_by_family888.R
 \name{plot_param_grid_3rows_by_family888}
 \alias{plot_param_grid_3rows_by_family888}
-\title{Grid Plot of SDM vs GLM CIs by Family (3×5 Panels, Robust)}
+\title{Parameter Grid (SDM vs GLM): 3 Rows by Family × 5 Columns}
 \usage{
 plot_param_grid_3rows_by_family888(
   param_df,
   scenario_levels = NULL,
   families_row = c("Pella", "Fox", "Schaefer"),
   params_cols = c("K", "r", "MSY", "B/Bmsy", "F/Fmsy"),
+  keep_ratio_year = 2022,
   width = 16,
   height = 10,
   dpi = 400,
@@ -27,7 +28,7 @@ plot_param_grid_3rows_by_family888(
 
 \item{scenario_levels}{Optional character vector controlling scenario order on the x-axis
 (e.g., \code{paste0("S", 1:7)}). If \code{NULL}, order is inferred numerically from \code{scenario}.
-Any levels not present in the data are ignored; any scenarios present but not listed will be appended.}
+Levels not present are ignored; scenarios present but not listed are appended.}
 
 \item{families_row}{Character vector giving the row order of families.
 Default \code{c("Pella","Fox","Schaefer")}. Families not present are dropped; present-but-unlisted
@@ -37,49 +38,54 @@ families are appended at the end in alphabetical order.}
 Default \code{c("K","r","MSY","B/Bmsy","F/Fmsy")}. Parameters not present are dropped; present-but-unlisted
 parameters are appended at the end in alphabetical order.}
 
+\item{keep_ratio_year}{Numeric year to keep for \code{B/Bmsy} and \code{F/Fmsy} panels. Default \code{2022}.}
+
 \item{width, height, dpi}{Device size and resolution used only when saving to file.}
 
 \item{output_dir}{Optional directory to save a PNG. If \code{NULL}, no file is saved.}
 
 \item{filename}{File name for the PNG (used when \code{output_dir} is non-\code{NULL}).}
 
-\item{ci_linewidth}{Numeric CI line thickness (smaller = thinner). Default \code{0.45}.}
+\item{ci_linewidth}{Numeric CI line thickness (default \code{0.45}).}
 
-\item{ci_alpha}{Numeric CI opacity in \code{[0,1]}. Default \code{0.95}.}
+\item{ci_alpha}{Numeric CI opacity in \code{[0,1]} (default \code{0.95}).}
 
-\item{point_size}{Numeric point size for estimates. Default \code{2.4}.}
+\item{point_size}{Numeric point size for estimates (default \code{2.4}).}
 
-\item{dodge_width}{Horizontal dodge between SDM and GLM at each scenario. Default \code{0.45}.}
+\item{dodge_width}{Horizontal dodge between SDM and GLM at each scenario (default \code{0.45}).}
 
 \item{use_errorbar}{Logical; if \code{TRUE}, use \code{geom_errorbar()} (hairline option)
-instead of \code{geom_linerange()} for CIs. Default \code{FALSE}.}
+instead of \code{geom_linerange()} for CIs (default \code{FALSE}).}
 
-\item{errorbar_cap_width}{Width of errorbar caps (set \code{0} for hairlines). Default \code{0}.}
+\item{errorbar_cap_width}{Width of errorbar caps (set \code{0} for hairlines; default \code{0}).}
 }
 \value{
-A \pkg{patchwork} object representing the combined grid. If \code{output_dir}
-is provided, a PNG is also saved.
+A \pkg{patchwork} object representing the combined grid.
+If \code{output_dir} is provided, a PNG is also saved.
 }
 \description{
-Produces a clean \strong{3 rows × 5 columns} grid of panels showing \strong{SDM} and \strong{GLM}
-point estimates with confidence intervals across scenarios, split by family:
-rows are \strong{Pella}, \strong{Fox}, \strong{Schaefer} (by default), and columns are
-\strong{K}, \strong{r}, \strong{MSY}, \strong{B/Bmsy}, \strong{F/Fmsy}.
+Produces a clean \strong{3 rows × 5 columns} grid of panels showing
+\strong{SDM} and \strong{GLM} point estimates with confidence intervals
+across scenarios, split by family. Rows correspond to families
+(default: \code{"Pella"}, \code{"Fox"}, \code{"Schaefer"}) and columns to
+\code{"K"}, \code{"r"}, \code{"MSY"}, \code{"B/Bmsy"}, \code{"F/Fmsy"}.
 }
 \details{
-Features:
+Design choices:
 \itemize{
 \item X-axis shows scenario indices \code{1..N} (no x-title).
-\item Only the \strong{rightmost panel in each row} carries a \strong{secondary y-axis title}
-with the \strong{family name} (no numbers or ticks on that secondary axis).
-\item Panels have a clean white background with subtle borders.
-\item For ratio panels (\code{B/Bmsy}, \code{F/Fmsy}), only \strong{year = 2022} is kept.
-\item Defensive checks for inputs, columns, and missing data; non-finite values are dropped.
+\item Only the \emph{rightmost} panel in each row gets a \emph{secondary y-axis title}
+displaying the family name (no ticks/labels on the secondary axis).
+\item White background, subtle panel borders, compact bold strip labels.
+\item For ratio panels (\code{B/Bmsy}, \code{F/Fmsy}), only a single year is kept
+(default \code{2022}) via \code{.keep_ratio_year()}.
+\item Defensive checks: required columns, packages, finite values; non-finite rows dropped.
 }
 
-Internally, the function filters ratio panels to \code{year = 2022} via an internal helper.
-Only the rightmost panel in each family row receives a secondary y-axis with the family
-name and no tick labels on that secondary axis. Non-finite rows in \code{est/lo/hi} are dropped.
+Internally, ratio panels are reduced to \code{year = keep_ratio_year} via
+\code{.keep_ratio_year()}. Non-finite rows in \code{est/lo/hi} are dropped
+before plotting. The rightmost column in each family row gets a secondary y-axis
+title with the family name for visual grouping.
 }
 \section{Expected input}{
 
@@ -87,32 +93,30 @@ name and no tick labels on that secondary axis. Non-finite rows in \code{est/lo/
 \describe{
 \item{scenario}{Scenario ID (e.g., \code{"S1"}, \code{"S2"}, ...).}
 \item{type}{Model type: \code{"SDM"} or \code{"GLM"}.}
-\item{family}{One of \code{"Pella"}, \code{"Fox"}, \code{"Schaefer"}.}
+\item{family}{One of \code{"Pella"}, \code{"Fox"}, \code{"Schaefer"} (others allowed).}
 \item{param}{One of \code{"K"}, \code{"r"}, \code{"MSY"}, \code{"B/Bmsy"}, \code{"F/Fmsy"}.}
-\item{year}{Numeric year for ratio parameters (e.g., \code{2022}); may be \code{NA} for others.}
-\item{est, lo, hi}{Point estimate and CI bounds (numeric).}
+\item{year}{Numeric year for ratio parameters (may be \code{NA} for others).}
+\item{est, lo, hi}{Point estimate and CI bounds (numeric; non-finite dropped).}
 }
 }
 
 \examples{
 \dontrun{
-# Assuming 'param_df' was built by your extractor:
+# Basic usage (order scenarios 1..7 on x):
 p <- plot_param_grid_3rows_by_family888(
   param_df,
   scenario_levels = paste0("S", 1:7),
-  ci_linewidth = 0.35,
-  dodge_width  = 0.40,
-  point_size   = 2.2
+  keep_ratio_year = 2022
 )
 print(p)
 
-# Hairline CIs
+# Hairline CIs with error bars:
 p2 <- plot_param_grid_3rows_by_family888(
   param_df,
-  scenario_levels = paste0("S", 1:7),
-  use_errorbar   = TRUE,
-  ci_linewidth   = 0.35,
-  errorbar_cap_width = 0
+  scenario_levels     = paste0("S", 1:7),
+  use_errorbar        = TRUE,
+  ci_linewidth        = 0.35,
+  errorbar_cap_width  = 0
 )
 }
 
