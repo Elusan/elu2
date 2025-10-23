@@ -287,7 +287,6 @@ plot_param_grid_3rows_by_family888 <- function(
   if (!requireNamespace("ggplot2",  quietly = TRUE)) stop("Package 'ggplot2' is required.", call. = FALSE)
   if (!requireNamespace("patchwork", quietly = TRUE)) stop("Package 'patchwork' is required.", call. = FALSE)
 
-  gg <- ggplot2
 
   # Ultra-clean theme aligned with your compact theme (fallbacks included)
   .clean_panel_theme <- {
