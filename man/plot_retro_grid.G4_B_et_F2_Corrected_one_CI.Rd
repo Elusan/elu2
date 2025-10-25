@@ -57,9 +57,9 @@ available, Mohn’s \eqn{\rho} is annotated in each panel for the corresponding 
 \verb{$retro} component (the output of \code{retro()}), where list names become the column headers.
 \item \strong{Peel handling:} Peel names are normalized so the first element is \code{"All"}. Peels are
 ordered deterministically: \code{"All"}
-gWgeE8OjzbbWHkcePt1LtyH9MefBGZv5-\if{latex}{\eqn{\rightarrow}{->}}
+U0eHMrr6oCAvewZcUrnaCXAJaleLoxoX-\if{latex}{\eqn{\rightarrow}{->}}
 numeric peels in \strong{descending} order
-gWgeE8OjzbbWHkcePt1LtyH9MefBGZv5-\if{latex}{\eqn{\rightarrow}{->}}
+U0eHMrr6oCAvewZcUrnaCXAJaleLoxoX-\if{latex}{\eqn{\rightarrow}{->}}
 any non-numeric peels.
 \item \strong{Colors:} \code{peel_colors} may be \code{NULL}, a character vector, or a function returning
 a vector of colors given \code{n}. If \code{palette = "JABBA"}, a fixed fallback palette is used
